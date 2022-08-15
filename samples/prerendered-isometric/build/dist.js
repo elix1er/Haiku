@@ -263,12 +263,13 @@ class EventSubscriber {
 
 module.exports.EventSubscriber = EventSubscriber;
 },{}],6:[function(require,module,exports){
-// 
-// Massive mathematics known-edge database
-// http://www.faqs.org/faqs/graphics/algorithms-faq/
-//
-
 class Utils {
+  static FAIL(message) {
+    let elem = document.querySelector('#APP_FAIL');
+    elem.classList.add('SHOW');
+    elem.textContent = message;
+  }
+
   static BIND(fn, ctx) {
     return fn.bind(ctx);
   }
@@ -1317,11 +1318,13 @@ class Gfx3Manager {
 
   async initialize() {
     if (!navigator.gpu) {
+      Utils.FAIL('This browser does not support webgpu');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - navigator.gpu not found');
     }
 
     this.adapter = await navigator.gpu.requestAdapter();
     if (!this.adapter) {
+      Utils.FAIL('This browser appears to support WebGPU but it\'s disabled');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Adapter not found');
     }
 
@@ -1331,6 +1334,10 @@ class Gfx3Manager {
     });
 
     this.canvas = document.getElementById('CANVAS_3D');
+    if (!this.canvas) {
+      throw new Error('Gfx3Manager::Gfx3Manager: CANVAS_3D not found');
+    }
+
     this.ctx = this.canvas.getContext('webgpu');
     if (!this.ctx) {
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Canvas does not support WebGPU');
@@ -2424,14 +2431,14 @@ class Gfx3JWM extends Gfx3Drawable {
     }
 
     for (let walker of this.walkers) {
-      // this.defineVertexColor(walker.points[1].x, walker.points[1].y, walker.points[1].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[2].x, walker.points[2].y, walker.points[2].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[2].x, walker.points[2].y, walker.points[2].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[3].x, walker.points[3].y, walker.points[3].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[3].x, walker.points[3].y, walker.points[3].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[4].x, walker.points[4].y, walker.points[4].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[4].x, walker.points[4].y, walker.points[4].z, 1, 1, 1);
-      // this.defineVertexColor(walker.points[1].x, walker.points[1].y, walker.points[1].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[1].x, walker.points[1].y, walker.points[1].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[2].x, walker.points[2].y, walker.points[2].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[2].x, walker.points[2].y, walker.points[2].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[3].x, walker.points[3].y, walker.points[3].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[3].x, walker.points[3].y, walker.points[3].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[4].x, walker.points[4].y, walker.points[4].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[4].x, walker.points[4].y, walker.points[4].z, 1, 1, 1);
+      this.defineVertexColor(walker.points[1].x, walker.points[1].y, walker.points[1].z, 1, 1, 1);
     }
 
     this.commitVertices();
@@ -2449,10 +2456,10 @@ class Gfx3JWM extends Gfx3Drawable {
     let walker = new Walker();
     walker.id = id;
     walker.points[0] = this.utilsCreatePoint(x, z);
-    // walker.points[1] = this.utilsCreatePoint(x + radius, z + radius);
-    // walker.points[2] = this.utilsCreatePoint(x + radius, z - radius);
-    // walker.points[3] = this.utilsCreatePoint(x - radius, z - radius);
-    // walker.points[4] = this.utilsCreatePoint(x - radius, z + radius);
+    walker.points[1] = this.utilsCreatePoint(x + radius, z + radius);
+    walker.points[2] = this.utilsCreatePoint(x + radius, z - radius);
+    walker.points[3] = this.utilsCreatePoint(x - radius, z - radius);
+    walker.points[4] = this.utilsCreatePoint(x - radius, z + radius);
     this.walkers.push(walker);
     return walker;
   }
@@ -2468,16 +2475,16 @@ class Gfx3JWM extends Gfx3Drawable {
     let pointElevations = [];
 
     pointSectors[0] = points[0].sectorIndex;
-    // pointSectors[1] = points[1].sectorIndex;
-    // pointSectors[2] = points[2].sectorIndex;
-    // pointSectors[3] = points[3].sectorIndex;
-    // pointSectors[4] = points[4].sectorIndex;
+    pointSectors[1] = points[1].sectorIndex;
+    pointSectors[2] = points[2].sectorIndex;
+    pointSectors[3] = points[3].sectorIndex;
+    pointSectors[4] = points[4].sectorIndex;
 
     pointElevations[0] = points[0].y;
-    // pointElevations[1] = points[1].y;
-    // pointElevations[2] = points[2].y;
-    // pointElevations[3] = points[3].y;
-    // pointElevations[4] = points[4].y;
+    pointElevations[1] = points[1].y;
+    pointElevations[2] = points[2].y;
+    pointElevations[3] = points[3].y;
+    pointElevations[4] = points[4].y;
 
     // prevent dead end.
     let numDeviations = 0;
@@ -2490,7 +2497,6 @@ class Gfx3JWM extends Gfx3Drawable {
 
       let moveInfo = this.utilsMove(point.sectorIndex, point.x, point.z, mx, mz);
       if (moveInfo.elevation == Infinity) {
-        console.log('infinie');
         moving = false;
         break;
       }
@@ -2521,25 +2527,25 @@ class Gfx3JWM extends Gfx3Drawable {
 
     if (moving) {
       walker.points[0].sectorIndex = pointSectors[0];
-      // walker.points[1].sectorIndex = pointSectors[1];
-      // walker.points[2].sectorIndex = pointSectors[2];
-      // walker.points[3].sectorIndex = pointSectors[3];
-      // walker.points[4].sectorIndex = pointSectors[4];
+      walker.points[1].sectorIndex = pointSectors[1];
+      walker.points[2].sectorIndex = pointSectors[2];
+      walker.points[3].sectorIndex = pointSectors[3];
+      walker.points[4].sectorIndex = pointSectors[4];
       walker.points[0].x += mx;
-      // walker.points[1].x += mx;
-      // walker.points[2].x += mx;
-      // walker.points[3].x += mx;
-      // walker.points[4].x += mx;
+      walker.points[1].x += mx;
+      walker.points[2].x += mx;
+      walker.points[3].x += mx;
+      walker.points[4].x += mx;
       walker.points[0].y = pointElevations[0];
-      // walker.points[1].y = pointElevations[1];
-      // walker.points[2].y = pointElevations[2];
-      // walker.points[3].y = pointElevations[3];
-      // walker.points[4].y = pointElevations[4];
+      walker.points[1].y = pointElevations[1];
+      walker.points[2].y = pointElevations[2];
+      walker.points[3].y = pointElevations[3];
+      walker.points[4].y = pointElevations[4];
       walker.points[0].z += mz;
-      // walker.points[1].z += mz;
-      // walker.points[2].z += mz;      
-      // walker.points[3].z += mz;
-      // walker.points[4].z += mz;
+      walker.points[1].z += mz;
+      walker.points[2].z += mz;      
+      walker.points[3].z += mz;
+      walker.points[4].z += mz;
     }
 
     return walker.points[0];

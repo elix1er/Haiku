@@ -42,11 +42,13 @@ class Gfx3Manager {
 
   async initialize() {
     if (!navigator.gpu) {
+      Utils.FAIL('This browser does not support webgpu');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - navigator.gpu not found');
     }
 
     this.adapter = await navigator.gpu.requestAdapter();
     if (!this.adapter) {
+      Utils.FAIL('This browser appears to support WebGPU but it\'s disabled');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Adapter not found');
     }
 
@@ -56,6 +58,10 @@ class Gfx3Manager {
     });
 
     this.canvas = document.getElementById('CANVAS_3D');
+    if (!this.canvas) {
+      throw new Error('Gfx3Manager::Gfx3Manager: CANVAS_3D not found');
+    }
+
     this.ctx = this.canvas.getContext('webgpu');
     if (!this.ctx) {
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Canvas does not support WebGPU');

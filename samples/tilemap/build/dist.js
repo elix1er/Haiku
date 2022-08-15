@@ -203,12 +203,13 @@ class EventSubscriber {
 
 module.exports.EventSubscriber = EventSubscriber;
 },{}],4:[function(require,module,exports){
-// 
-// Massive mathematics known-edge database
-// http://www.faqs.org/faqs/graphics/algorithms-faq/
-//
-
 class Utils {
+  static FAIL(message) {
+    let elem = document.querySelector('#APP_FAIL');
+    elem.classList.add('SHOW');
+    elem.textContent = message;
+  }
+
   static BIND(fn, ctx) {
     return fn.bind(ctx);
   }
@@ -983,6 +984,7 @@ class Gfx2Manager {
 
     this.ctx = this.canvas.getContext('2d');
     if (!this.ctx) {
+      Utils.FAIL('This browser does not support canvas');
       throw new Error('Gfx2Manager::Gfx2Manager: Your browser not support 2D');
     }
   }
@@ -1051,6 +1053,14 @@ class Gfx2Manager {
 
   getCameraPositionY() {
     return this.cameraPosition[1];
+  }
+
+  getBgColor() {
+    return this.bgColor;
+  }
+
+  setBgColor(r, g, b, a) {
+    this.bgColor = [r, g, b, a];
   }
 }
 

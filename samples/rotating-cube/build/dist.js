@@ -1,10 +1,11 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-// 
-// Massive mathematics known-edge database
-// http://www.faqs.org/faqs/graphics/algorithms-faq/
-//
-
 class Utils {
+  static FAIL(message) {
+    let elem = document.querySelector('#APP_FAIL');
+    elem.classList.add('SHOW');
+    elem.textContent = message;
+  }
+
   static BIND(fn, ctx) {
     return fn.bind(ctx);
   }
@@ -1053,11 +1054,13 @@ class Gfx3Manager {
 
   async initialize() {
     if (!navigator.gpu) {
+      Utils.FAIL('This browser does not support webgpu');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - navigator.gpu not found');
     }
 
     this.adapter = await navigator.gpu.requestAdapter();
     if (!this.adapter) {
+      Utils.FAIL('This browser appears to support WebGPU but it\'s disabled');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Adapter not found');
     }
 
@@ -1067,20 +1070,24 @@ class Gfx3Manager {
     });
 
     this.canvas = document.getElementById('CANVAS_3D');
+    if (!this.canvas) {
+      throw new Error('Gfx3Manager::Gfx3Manager: CANVAS_3D not found');
+    }
+
     this.ctx = this.canvas.getContext('webgpu');
     if (!this.ctx) {
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Canvas does not support WebGPU');
     }
-
-    let devicePixelRatio = window.devicePixelRatio || 1;
-    this.canvas.width = this.canvas.clientWidth * devicePixelRatio;
-    this.canvas.height = this.canvas.clientHeight * devicePixelRatio;
 
     this.ctx.configure({
       device: this.device,
       format: navigator.gpu.getPreferredCanvasFormat(),
       alphaMode: 'opaque'
     });
+
+    let devicePixelRatio = window.devicePixelRatio || 1;
+    this.canvas.width = this.canvas.clientWidth * devicePixelRatio;
+    this.canvas.height = this.canvas.clientHeight * devicePixelRatio;
 
     this.depthTexture = this.device.createTexture({
       size: [this.canvas.width, this.canvas.height],
@@ -1101,6 +1108,8 @@ class Gfx3Manager {
     let res = await fetch('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjkA43/A8AAtcBo43Eu70AAAAASUVORK5CYII=');
     let defaultImg = await res.blob();
     this.defaultTexture = this.createTextureFromBitmap(await createImageBitmap(defaultImg));
+
+    window.addEventListener('resize', this.handleWindowResize.bind(this));
   }
 
   beginDrawing(viewIndex) {
@@ -1110,6 +1119,7 @@ class Gfx3Manager {
     let viewportY = this.canvas.height * viewport.yFactor;
     let viewportWidth = this.canvas.width * viewport.widthFactor;
     let viewportHeight = this.canvas.height * viewport.heightFactor;
+    let viewBgColor = view.getBgColor();
 
     this.vpcMatrix = Utils.MAT4_IDENTITY();
     this.vpcMatrix = Utils.MAT4_MULTIPLY(this.vpcMatrix, view.getClipMatrix());
@@ -1120,7 +1130,7 @@ class Gfx3Manager {
     this.passEncoder = this.commandEncoder.beginRenderPass({
       colorAttachments: [{
         view: this.ctx.getCurrentTexture().createView(),
-        clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
+        clearValue: { r: viewBgColor[0], g: viewBgColor[1], b: viewBgColor[2], a: viewBgColor[3] },
         loadOp: 'clear',
         storeOp: 'store'
       }],
@@ -1257,7 +1267,7 @@ class Gfx3Manager {
     cmd[CMD_MATRIX_BUFFER_OFFSET] = this.meshCommands.length * this.adapter.limits.minUniformBufferOffsetAlignment;
     cmd[CMD_VERTEX_BUFFER_DATA] = vertices;
     cmd[CMD_VERTEX_BUFFER_OFFSET] = this.meshVertexCount * 5 * 4;
-    cmd[CMD_VERTEX_BUFFER_SIZE] = vertexCount  *5 * 4;
+    cmd[CMD_VERTEX_BUFFER_SIZE] = vertexCount * 5 * 4;
     cmd[CMD_VERTEX_COUNT] = vertexCount;
     cmd[CMD_TEXTURE_GROUP] = texture ? texture.group : this.defaultTexture.group;
     this.meshVertexCount += vertexCount;
@@ -1342,6 +1352,21 @@ class Gfx3Manager {
   setShowDebug(showDebug) {
     this.showDebug = showDebug;
   }
+
+  handleWindowResize() {
+    let devicePixelRatio = window.devicePixelRatio || 1;
+    this.canvas.width = this.canvas.clientWidth * devicePixelRatio;
+    this.canvas.height = this.canvas.clientHeight * devicePixelRatio;
+
+    this.depthTexture.destroy();
+    this.depthTexture = this.device.createTexture({
+      size: [this.canvas.width, this.canvas.height],
+      format: 'depth24plus',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
+
+    this.depthView = this.depthTexture.createView();
+  }
 }
 
 module.exports.gfx3Manager = new Gfx3Manager();
@@ -1402,7 +1427,19 @@ module.exports.CREATE_MESH_SHADER_RES = async function (device) {
       }),
       entryPoint: 'main',
       targets: [{
-        format: navigator.gpu.getPreferredCanvasFormat()
+        format: navigator.gpu.getPreferredCanvasFormat(),
+        blend: {
+          color: {
+            srcFactor: 'one',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add'
+          },
+          alpha: {
+            srcFactor: 'one',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add'
+          }
+        },
       }]
     },
     primitive: {
@@ -1568,6 +1605,7 @@ class Gfx3View {
     this.perspectiveFar = 2000;
     this.orthographicSize = 1;
     this.orthographicDepth = 700;
+    this.bgColor = [0.0, 0.0, 0.0, 1.0];
   }
 
   getProjectionMatrix(ar) {
@@ -1761,6 +1799,14 @@ class Gfx3View {
 
   setOrthographicDepth(orthographicDepth) {
     this.orthographicDepth = orthographicDepth;
+  }
+
+  getBgColor() {
+    return this.bgColor;
+  }
+
+  setBgColor(r, g, b, a) {
+    this.bgColor = [r, g, b, a];
   }
 
   handleUpdateCameraMatrix() {

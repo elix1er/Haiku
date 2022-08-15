@@ -54,7 +54,19 @@ module.exports.CREATE_MESH_SHADER_RES = async function (device) {
       }),
       entryPoint: 'main',
       targets: [{
-        format: navigator.gpu.getPreferredCanvasFormat()
+        format: navigator.gpu.getPreferredCanvasFormat(),
+        blend: {
+          color: {
+            srcFactor: 'one',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add'
+          },
+          alpha: {
+            srcFactor: 'one',
+            dstFactor: 'one-minus-src-alpha',
+            operation: 'add'
+          }
+        },
       }]
     },
     primitive: {

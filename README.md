@@ -59,7 +59,7 @@ Once this is done you can use each package as a library of your project, quite s
     - AStar
     - Djikstra
 
-## Example projects
+## Examples
 - [Rotating cube](https://sprightly-beijinho.netlify.app/samples/rotating-cube/)
 - [3D pre-rendered](https://sprightly-beijinho.netlify.app/samples/prerendered/)
 - [3D pre-rendered isometric](https://sprightly-beijinho.netlify.app/samples/prerendered-isometric/)

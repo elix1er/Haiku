@@ -1,0 +1,30 @@
+[
+  {
+    "Id": "ON_INIT",
+    "Description": "ON INIT",
+    "Calls": [
+      {
+        "Name": "MODEL_PLAY_ANIMATION",
+        "Args": [0, "IDLE_LEFT", true]
+      }
+    ]
+  },
+  {
+    "Id": "0000",
+    "Description": "PRINCESS TALK",
+    "Calls": [
+      {
+        "Name": "STOP",
+        "Args": []
+      },
+      {
+        "Name": "UI_CREATE_DIALOG",
+        "Args": ["Princesse Jessica", "Bonjour jeune guerrier.\nJe suis à la recherche d'un anti-chat pour détruire le monde, pouvez-m'aidez dans cette noble quête ?"]
+      },
+      {
+        "Name": "CONTINUE",
+        "Args": []
+      }
+    ]
+  }
+]

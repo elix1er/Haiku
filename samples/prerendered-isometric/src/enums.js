@@ -1,0 +1,27 @@
+let { Utils } = require('./lib/core/utils');
+
+let DIRECTION = {
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT',
+  FORWARD: 'FORWARD',
+  BACKWARD: 'BACKWARD'
+};
+
+let DIRECTION_TO_VEC3 = {
+  LEFT: Utils.VEC3_LEFT,
+  RIGHT: Utils.VEC3_RIGHT,
+  FORWARD: Utils.VEC3_FORWARD,
+  BACKWARD: Utils.VEC3_BACKWARD
+};
+
+let PIXEL_PER_UNIT = 48;
+let ORTHO_SIZE = 8.4;
+let ORTHO_DEPTH = 100;
+let CAMERA_MATRIX = [0.7071, 0.0000,  0.7071, 0.0000, 0.3546, 0.8652, -0.3546, 0.0000, -0.6118, 0.5015,  0.6118, 0.0000, -7.3046, 4.9583,  5.6356, 1.0000];
+
+module.exports.DIRECTION = DIRECTION;
+module.exports.DIRECTION_TO_VEC3 = DIRECTION_TO_VEC3;
+module.exports.PIXEL_PER_UNIT = PIXEL_PER_UNIT;
+module.exports.ORTHO_SIZE = ORTHO_SIZE;
+module.exports.ORTHO_DEPTH = ORTHO_DEPTH;
+module.exports.CAMERA_MATRIX = CAMERA_MATRIX;

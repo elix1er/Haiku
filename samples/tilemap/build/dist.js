@@ -970,10 +970,15 @@ class Gfx2Drawable {
 
 module.exports.Gfx2Drawable = Gfx2Drawable;
 },{"./gfx2_manager":6}],6:[function(require,module,exports){
+let { Utils } = require('../core/utils');
+
 class Gfx2Manager {
   constructor() {
     this.canvas = null;
     this.ctx = null;
+    this.cameraTransform = Utils.MAT3_IDENTITY();
+    this.cameraScale = [1, 1];
+    this.cameraRotation = 0;
     this.cameraPosition = [0, 0];
     this.bgColor = [0, 0, 0, 1];
 
@@ -1000,8 +1005,13 @@ class Gfx2Manager {
     this.ctx.restore();
     this.ctx.save();
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
     this.ctx.fillStyle = `rgba(${this.bgColor[0]}, ${this.bgColor[1]}, ${this.bgColor[2]}, ${this.bgColor[3]})`;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.transform(this.cameraTransform[0], this.cameraTransform[1], this.cameraTransform[3], this.cameraTransform[4], this.cameraTransform[6], this.cameraTransform[7]);
+    this.ctx.scale(this.cameraScale[0], this.cameraScale[1]);
+    this.ctx.rotate(this.cameraRotation);
     this.ctx.translate(-this.cameraPosition[0] + this.canvas.width * 0.5, -this.cameraPosition[1] + this.canvas.height * 0.5);
   }
 
@@ -1038,6 +1048,14 @@ class Gfx2Manager {
     return this.ctx;
   }
 
+  getCameraTransform() {
+    return this.cameraTransform;
+  }
+
+  setCameraTransform(cameraTransform) {
+    this.cameraTransform = cameraTransform;
+  }
+
   setCameraPosition(x, y) {
     this.cameraPosition[0] = x;
     this.cameraPosition[1] = y;
@@ -1055,6 +1073,31 @@ class Gfx2Manager {
     return this.cameraPosition[1];
   }
 
+  setCameraScale(x, y) {
+    this.cameraScale[0] = x;
+    this.cameraScale[1] = y;
+  }
+
+  getCameraScale() {
+    return this.cameraScale;
+  }
+
+  getCameraScaleX() {
+    return this.cameraScale[0];
+  }
+
+  getCameraScaleY() {
+    return this.cameraScale[1];
+  }
+
+  setCameraRotation(angle) {
+    this.cameraRotation = angle;
+  }
+
+  getCameraRotation() {
+    return this.cameraRotation;
+  }
+
   getBgColor() {
     return this.bgColor;
   }
@@ -1065,7 +1108,7 @@ class Gfx2Manager {
 }
 
 module.exports.gfx2Manager = new Gfx2Manager();
-},{}],7:[function(require,module,exports){
+},{"../core/utils":4}],7:[function(require,module,exports){
 class Gfx2TextureManager {
   constructor() {
     this.textures = {};

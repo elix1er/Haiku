@@ -2417,33 +2417,32 @@ class Gfx3JWM extends Gfx3Drawable {
     let i = 0;
 
     while (i < points.length) {
-      let point = points[i];
-      let deviation = false;
-
-      let moveInfo = this.utilsMove(point.sectorIndex, point.x, point.z, mx, mz);
-      if (moveInfo.elevation == Infinity) {
-        moving = false;
-        break;
-      }
-      else {
-        moving = true;
-      }
-
-      if (moveInfo.mx != mx || moveInfo.mz != mz) {
-        numDeviations++;
-        mx = moveInfo.mx;
-        mz = moveInfo.mz;
-        deviation = true;
-        points.splice(i, 1);
-      }
-
-      pointSectors[i] = moveInfo.sectorIndex;
-      pointElevations[i] = moveInfo.elevation;
-
       // if two points are deviated it is a dead-end, no reasons to continue...
       if (numDeviations >= 2) {
         moving = false;
         break;
+      }
+
+      let point = points[i];
+      let deviation = false;
+      if (point) {
+        let moveInfo = this.utilsMove(point.sectorIndex, point.x, point.z, mx, mz);
+        if (moveInfo.mx == 0 && moveInfo.mz == 0) {
+          moving = false;
+          break;
+        }
+
+        if (moveInfo.mx != mx || moveInfo.mz != mz) {
+          numDeviations++;
+          mx = moveInfo.mx;
+          mz = moveInfo.mz;
+          deviation = true;
+          points[i] = null;
+        }
+
+        moving = true;
+        pointSectors[i] = moveInfo.sectorIndex;
+        pointElevations[i] = moveInfo.elevation;
       }
 
       // if deviation, we need to restart from 0 to update other points with new mx,mz.
@@ -2468,7 +2467,7 @@ class Gfx3JWM extends Gfx3Drawable {
       walker.points[4].y = pointElevations[4];
       walker.points[0].z += mz;
       walker.points[1].z += mz;
-      walker.points[2].z += mz;      
+      walker.points[2].z += mz;
       walker.points[3].z += mz;
       walker.points[4].z += mz;
     }
@@ -2504,7 +2503,7 @@ class Gfx3JWM extends Gfx3Drawable {
     }
 
     if (i == MOVE_MAX_RECURSIVE_CALL) {
-      return { sectorIndex, mx, mz, elevation: Infinity };
+      return { sectorIndex, mx: 0, mz: 0, elevation: Infinity };
     }
 
     let sides = Utils.GET_TRIANGLE_SAME_SIDES(a, b, c, [x + mx, z + mz]);

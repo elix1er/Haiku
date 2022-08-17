@@ -72,9 +72,9 @@ class Controller extends Gfx3Drawable {
     }
 
     if (e.key == 'Enter') {
-      let handPositionX = this.position[0] + DIRECTION_TO_VEC3[this.direction][0] * (this.radius + 0.5);
+      let handPositionX = this.position[0] + DIRECTION_TO_VEC3[this.direction][0] * (this.radius + 0.2);
       let handPositionY = this.position[1];
-      let handPositionZ = this.position[2] + DIRECTION_TO_VEC3[this.direction][2] * (this.radius + 0.5);
+      let handPositionZ = this.position[2] + DIRECTION_TO_VEC3[this.direction][2] * (this.radius + 0.2);
       eventManager.emit(this, 'E_ACTION', { handPositionX, handPositionY, handPositionZ });
     }
   }

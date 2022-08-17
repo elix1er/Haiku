@@ -11,7 +11,7 @@
   },
   {
     "Id": "0000",
-    "Description": "PRINCESS TALK",
+    "Description": "UNIT TALK",
     "Calls": [
       {
         "Name": "STOP",
@@ -19,7 +19,10 @@
       },
       {
         "Name": "UI_CREATE_DIALOG",
-        "Args": ["Princesse Jessica", "Bonjour jeune guerrier.\nJe suis à la recherche d'un anti-chat pour détruire le monde, pouvez-m'aidez dans cette noble quête ?"]
+        "Args": ["Unit :", "assets/jas/princess/avatar.jpg", "Bienvenue dans notre scène de démonstration.", "500", "10px", "10px", [
+          "Cet action est un test",
+          "Cet action est aussi un test"
+        ]]
       },
       {
         "Name": "CONTINUE",

@@ -3,6 +3,8 @@ class Gfx2Manager {
     this.canvas = null;
     this.ctx = null;
     this.cameraPosition = [0, 0];
+    this.cameraScale = [1, 1];
+    this.cameraRotation = 0;
     this.bgColor = [0, 0, 0, 1];
 
     this.canvas = document.getElementById('CANVAS_2D');
@@ -28,8 +30,12 @@ class Gfx2Manager {
     this.ctx.restore();
     this.ctx.save();
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
     this.ctx.fillStyle = `rgba(${this.bgColor[0]}, ${this.bgColor[1]}, ${this.bgColor[2]}, ${this.bgColor[3]})`;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.scale(this.cameraScale[0], this.cameraScale[1]);
+    this.ctx.rotate(this.cameraRotation);
     this.ctx.translate(-this.cameraPosition[0] + this.canvas.width * 0.5, -this.cameraPosition[1] + this.canvas.height * 0.5);
   }
 
@@ -81,6 +87,31 @@ class Gfx2Manager {
 
   getCameraPositionY() {
     return this.cameraPosition[1];
+  }
+
+  setCameraScale(x, y) {
+    this.cameraScale[0] = x;
+    this.cameraScale[1] = y;
+  }
+
+  getCameraScale() {
+    return this.cameraScale;
+  }
+
+  getCameraScaleX() {
+    return this.cameraScale[0];
+  }
+
+  getCameraScaleY() {
+    return this.cameraScale[1];
+  }
+
+  setCameraRotation(angle) {
+    this.cameraRotation = angle;
+  }
+
+  getCameraRotation() {
+    return this.cameraRotation;
   }
 
   getBgColor() {

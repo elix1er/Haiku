@@ -57,7 +57,7 @@ module.exports.CREATE_MESH_SHADER_RES = async function (device) {
         format: navigator.gpu.getPreferredCanvasFormat(),
         blend: {
           color: {
-            srcFactor: 'one',
+            srcFactor: 'src-alpha',
             dstFactor: 'one-minus-src-alpha',
             operation: 'add'
           },
@@ -66,7 +66,7 @@ module.exports.CREATE_MESH_SHADER_RES = async function (device) {
             dstFactor: 'one-minus-src-alpha',
             operation: 'add'
           }
-        },
+        }
       }]
     },
     primitive: {

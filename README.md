@@ -1,6 +1,6 @@
 <img src="https://sprightly-beijinho.netlify.app/assets/images/logo-9849da864a27064e12d65e3ceffb5488.jpg" alt="logo" width="300"/>
 
-![Drag Racing](https://img.shields.io/badge/lang-javascript-f39f37) ![Drag Racing](https://img.shields.io/badge/release-v1.1.3-blue)
+![Drag Racing](https://img.shields.io/badge/lang-javascript-f39f37) ![Drag Racing](https://img.shields.io/badge/release-v1.0.0-blue)
 
 Copyright © 2020-2022 [Raijin].
 

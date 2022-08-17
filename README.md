@@ -76,6 +76,7 @@ The Blender extension allows you to export your models in Aliyah compatible form
 
 ## Roadmap
 - Build a community and have fun together !
+- Pass to ES6 import/export
 - Implement Skybox
 - Implement Mipmap
 - Implement BSP (Binary Space Partitionning)

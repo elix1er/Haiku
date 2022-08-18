@@ -8,11 +8,50 @@ Copyright © 2020-2022 [Raijin].
 **Aliyah** support both **2D** (canvas) and **3D** (webgpu).    
 No need to learn a new language, if you master **HTML/JS/CSS** then you can create a professional and very optimized videogames with **Aliyah**.
 
-## Installation
+## Getting started from starter-kit
 First, check that Node.js is installed on your environment.    
-Then go to https://sprightly-beijinho.netlify.app/download to download Aliyah.    
-You have two choices here: download the complete solution or only the modules that interest you.    
-Once this is done you can use each package as a library of your project, quite simply :)
+Then go to [download](https://sprightly-beijinho.netlify.app/download) the complete or minimal solution of Aliyah.    
+
+## Getting started from scratch
+You just need layout page file and a javascript entry point file (aka: main.js).   
+The layout HTML5 snippet, usually named **index.html** :
+```html
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <link rel="stylesheet" type="text/css" href="assets/styles/core.css" />
+  <script rel="preload" type="text/javascript" src="build/dist.js"></script>
+</head>
+
+<body>
+  <center><h1>Boilerplate</h1></center>
+  <div id="APP" style="margin: 0 auto">
+    <div id="APP_FAIL"></div>
+    <canvas id="CANVAS_3D" width="1px" height="1px"></canvas>
+    <canvas id="CANVAS_2D" width="1px" height="1px"></canvas>
+    <div id="UI_ROOT"></div>
+    <div id="UI_FADELAYER"></div>
+    <div id="UI_OVERLAYER"></div>
+  </div>
+</body>
+
+</html>
+```
+The Javascript entry point usually named **main.js** :
+```js
+window.addEventListener('load', async () => {
+  let then = 0;
+
+  (function run(timeStamp) {
+    let ts = timeStamp - then;
+    then = timeStamp;
+    requestAnimationFrame(timeStamp => run(timeStamp));
+  }(0));
+});
+```
+
+Now you can add and used [packages](https://sprightly-beijinho.netlify.app/download) of your choice and enjoy it !
 
 ## General features
 - Screen manager
@@ -58,6 +97,17 @@ Once this is done you can use each package as a library of your project, quite s
 - Algorithm
     - AStar
     - Djikstra
+
+## Contributions
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement". Don't forget to give the project a star! Thanks again!    
+
+1. Fork the Project
+2. Create your Feature Branch (git checkout -b new_feature)
+3. Commit your Changes (git commit -m 'Add new feature')
+4. Push to the Branch (git push origin new_feature)
+5. Open a Pull Request
 
 ## Examples
 - [Rotating cube](https://sprightly-beijinho.netlify.app/samples/rotating-cube/)

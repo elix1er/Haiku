@@ -17,7 +17,7 @@ You just need layout page file and a javascript entry point file (aka: main.js).
 The layout HTML5 snippet, usually named **index.html** :
 ```html
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 
 <head>
   <link rel="stylesheet" type="text/css" href="assets/styles/core.css" />
@@ -52,6 +52,9 @@ window.addEventListener('load', async () => {
 ```
 
 Now you can add and used [packages](https://sprightly-beijinho.netlify.app/download) of your choice and enjoy it !
+
+## How to integrate your 3D models ?
+The Blender extension allows you to export your models in Aliyah compatible formats!
 
 ## General features
 - Screen manager
@@ -98,6 +101,13 @@ Now you can add and used [packages](https://sprightly-beijinho.netlify.app/downl
     - AStar
     - Djikstra
 
+## Examples
+- [Rotating cube](https://sprightly-beijinho.netlify.app/samples/rotating-cube/)
+- [3D pre-rendered](https://sprightly-beijinho.netlify.app/samples/prerendered/)
+- [3D pre-rendered isometric](https://sprightly-beijinho.netlify.app/samples/prerendered-isometric/)
+- [2D tilemap](https://sprightly-beijinho.netlify.app/samples/tilemap/)
+- [2D tilemap with pathfinding](https://sprightly-beijinho.netlify.app/samples/tilemap-pathfinding/)
+
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
 
@@ -109,20 +119,10 @@ If you have a suggestion that would make this better, please fork the repo and c
 4. Push to the Branch (git push origin new_feature)
 5. Open a Pull Request
 
-## Examples
-- [Rotating cube](https://sprightly-beijinho.netlify.app/samples/rotating-cube/)
-- [3D pre-rendered](https://sprightly-beijinho.netlify.app/samples/prerendered/)
-- [3D pre-rendered isometric](https://sprightly-beijinho.netlify.app/samples/prerendered-isometric/)
-- [2D tilemap](https://sprightly-beijinho.netlify.app/samples/tilemap/)
-- [2D tilemap with pathfinding](https://sprightly-beijinho.netlify.app/samples/tilemap-pathfinding/)
-
 ## Some parts taken from this work
 - Use DOM for UI elements
 - Use a 3D format dedicated to the engine (see Blender exporter)
 - Use a 3D format with frame by frame animations
-
-## How to integrate your 3D models ?
-The Blender extension allows you to export your models in Aliyah compatible formats!
 
 ## Roadmap
 - Build a community and have fun together !

@@ -4,7 +4,7 @@
 
 Copyright © 2020-2022 [Raijin].
 
-**Aliyah** is a simple and modular web library to build videogames.    
+**Aliyah** is a bunch of light packages to build web videogames.    
 **Aliyah** support both **2D** (canvas) and **3D** (webgpu).    
 No need to learn a new language, if you master **HTML/JS/CSS** then you can create a professional and very optimized videogames with **Aliyah**.
 

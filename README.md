@@ -7,7 +7,7 @@ Copyright © 2020-2022 [Raijin].
 **Aliyah** is a bunch of light and simple packages to build web videogames.    
 **Aliyah** support both **2D** (canvas) and **3D** (webgpu).    
 No need to learn a new language, if you master **HTML/JS/CSS** then you can already create a professional and very optimized videogames.
-Documentation is coming-soon [here](https://anubancorp.itch.io/aliyah-engine).
+Documentation is coming-soon [here](https://aliyah-engine.com/).
 
 ## General features
 - Screen manager

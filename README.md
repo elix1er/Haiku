@@ -8,54 +8,6 @@ Copyright © 2020-2022 [Raijin].
 **Aliyah** support both **2D** (canvas) and **3D** (webgpu).    
 No need to learn a new language, if you master **HTML/JS/CSS** then you can already create a professional and very optimized videogames.
 
-## Getting started from starter-kit
-First, check that Node.js is installed on your environment.    
-Then go to [download](https://sprightly-beijinho.netlify.app/download) the complete or minimal solution of Aliyah.    
-
-## Getting started from scratch
-You just need layout page file and a javascript entry point file (aka: main.js).   
-The layout HTML5 snippet, usually named **index.html** :
-```html
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <link rel="stylesheet" type="text/css" href="assets/styles/core.css" />
-  <script rel="preload" type="text/javascript" src="build/dist.js"></script>
-</head>
-
-<body>
-  <center><h1>Boilerplate</h1></center>
-  <div id="APP" style="margin: 0 auto">
-    <div id="APP_FAIL"></div>
-    <canvas id="CANVAS_3D" width="1px" height="1px"></canvas>
-    <canvas id="CANVAS_2D" width="1px" height="1px"></canvas>
-    <div id="UI_ROOT"></div>
-    <div id="UI_FADELAYER"></div>
-    <div id="UI_OVERLAYER"></div>
-  </div>
-</body>
-
-</html>
-```
-The Javascript entry point usually named **main.js** :
-```js
-window.addEventListener('load', async () => {
-  let then = 0;
-
-  (function run(timeStamp) {
-    let ts = timeStamp - then;
-    then = timeStamp;
-    requestAnimationFrame(timeStamp => run(timeStamp));
-  }(0));
-});
-```
-
-Now you can add and used [packages](https://sprightly-beijinho.netlify.app/download) of your choice and enjoy it !
-
-## How to integrate your 3D models ?
-The Blender extension allows you to export your models in Aliyah compatible formats!
-
 ## General features
 - Screen manager
 - Sound manager
@@ -101,12 +53,28 @@ The Blender extension allows you to export your models in Aliyah compatible form
     - AStar
     - Djikstra
 
+## Getting started
+You need to install [nodejs](https://nodejs.org/en/download/) and [browserify](https://browserify.org/).    
+Once installation is done, let's build our first project.     
+
+Download either the [complete solution](https://aliyah-engine.com/pub/1.0.0/starters/aliyah-starter.zip) with all packages included or the [minimal solution](https://aliyah-engine.com/pub/1.0.0/starters/aliyah-minimal-starter.zip) with only core package.     
+Go to the root of project and launch the build with the following command:
+```
+// you need to build from the project root
+# browserify src/main.js -o build/dist.js
+```
+
+Now, run your prefered web server (nginx, live-server, apache, nodejs, etc...), visit your localhost and you will see the project running. Let's go to write some code and add some [packages](https://aliyah-engine.com/download) to build your own web videogames.
+
+## How to integrate your 3D models ?
+The [Blender extension](https://aliyah-engine.com/pub/1.0.0/aliyah-blender-exporter.zip) allows you to export your models in Aliyah compatible formats!
+
 ## Examples
-- [Rotating cube](https://sprightly-beijinho.netlify.app/samples/rotating-cube/)
-- [3D pre-rendered](https://sprightly-beijinho.netlify.app/samples/prerendered/)
-- [3D pre-rendered isometric](https://sprightly-beijinho.netlify.app/samples/prerendered-isometric/)
-- [2D tilemap](https://sprightly-beijinho.netlify.app/samples/tilemap/)
-- [2D tilemap with pathfinding](https://sprightly-beijinho.netlify.app/samples/tilemap-pathfinding/)
+- [Rotating cube](https://aliyah-engine.com/samples/rotating-cube/)
+- [3D pre-rendered](https://aliyah-engine.com/samples/prerendered/)
+- [3D pre-rendered isometric](https://aliyah-engine.com/samples/prerendered-isometric/)
+- [2D tilemap](https://aliyah-engine.com/samples/tilemap/)
+- [2D tilemap with pathfinding](https://aliyah-engine.com/samples/tilemap-pathfinding/)
 
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.

@@ -7,6 +7,7 @@ Copyright © 2020-2022 [Raijin].
 **Aliyah** is a bunch of light and simple packages to build web videogames.    
 **Aliyah** support both **2D** (canvas) and **3D** (webgpu).    
 No need to learn a new language, if you master **HTML/JS/CSS** then you can already create a professional and very optimized videogames.
+Documentation is coming-soon [here](https://anubancorp.itch.io/aliyah-engine).
 
 ## General features
 - Screen manager
@@ -57,17 +58,18 @@ No need to learn a new language, if you master **HTML/JS/CSS** then you can alre
 You need to install [nodejs](https://nodejs.org/en/download/) and [browserify](https://browserify.org/).    
 Once installation is done, let's build our first project.     
 
-Download either the [complete solution](https://aliyah-engine.com/pub/1.0.0/starters/aliyah-starter.zip) with all packages included or the [minimal solution](https://aliyah-engine.com/pub/1.0.0/starters/aliyah-minimal-starter.zip) with only core package.     
+Download [aliyah-engine.zip](https://anubancorp.itch.io/aliyah-engine).
 Go to the root of project and launch the build with the following command:
 ```
 // you need to build from the project root
 # browserify src/main.js -o build/dist.js
 ```
 
-Now, run your prefered web server (nginx, live-server, apache, nodejs, etc...), visit your localhost and you will see the project running. Let's go to write some code and add some [packages](https://aliyah-engine.com/download) to build your own web videogames.
+Now, run your prefered web server (nginx, live-server, apache, nodejs, etc...), visit your localhost and you will see the project running.
+Let's go to write some js-vanilla code to build your own web videogames.
 
 ## How to integrate your 3D models ?
-The [Blender extension](https://aliyah-engine.com/pub/1.0.0/aliyah-blender-exporter.zip) allows you to export your models in Aliyah compatible formats!
+The [aliyah-blender-exporter](https://anubancorp.itch.io/aliyah-engine) allows you to export your models in Aliyah compatible formats!
 
 ## Examples
 - [Rotating cube](https://aliyah-engine.com/samples/rotating-cube/)

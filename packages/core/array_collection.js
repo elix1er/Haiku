@@ -1,7 +1,7 @@
 let { eventManager } = require('./event_manager');
 
 /**
- * Class representing an observable collection of items.
+ * The ArrayCollection class is an observable collection of items.
  */
 class ArrayCollection {
   /**

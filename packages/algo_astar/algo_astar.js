@@ -1,4 +1,15 @@
+/**
+ * The AlgoASTAR class is an implementation of the a* algorithm.
+ */
 class AlgoASTAR {
+  /**
+   * Return the shortest path between two point in a grid.
+   * @param {array<number>} grid - The grid.
+   * @param {number} columns - Number of grid columns to transform 1D array to 2D.
+   * @param {array<number>(2)} startCoord - Position at starting point.
+   * @param {array<number>(2)} endCoord - Position at ending point.
+   * @return {array<array<number>(2)>} The shortest path.
+   */
   static solve(grid, columns, startCoord, endCoord) {
     let visitedMap = {/* x;y: {x, y, originX, originY} */};
     let frontierCoordList = [];

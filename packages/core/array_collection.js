@@ -1,30 +1,31 @@
 let { eventManager } = require('./event_manager');
 
 /**
- * Classe représentant une collection d'éléments.
+ * Class representing an observable collection of items.
  */
 class ArrayCollection {
   /**
-   * Créer une collection.
-   * @param {array} items - Le tableau lié à la collection.
+   * Constructor
+   * @param {array} items - Array of data source.
    */
   constructor(items = []) {
     this.items = items;
   }
 
   /**
-   * Récupère le talbleau lié.
-   * @return {array} La tableau lié.
+   * Get array of data source.
+   * @return {array} The array of data source.
    */
   getItems() {
     return this.items;
   }
 
   /**
-   * Ajoute un élément à la fin du tableau.
-   * @param {*} item - L'élément à ajouter.
-   * @param {boolean} emit - Si vrai, l'évènement "E_ITEM_ADDED" est emit.
-   * @return {number} La nouvelle taille du tableau.
+   * Push element at the end of the collection.
+   * Emit the E_ITEM_ADDED event.
+   * @param {*} item - Element to add.
+   * @param {boolean} emit - If true, E_ITEM_ADDED event is emitted.
+   * @return {number} The new length of collection.
    */
   push(item, emit = false) {
     let length = this.items.push(item);
@@ -36,9 +37,9 @@ class ArrayCollection {
   }
 
   /**
-   * Retire un élément à la fin du tableau.
-   * @param {boolean} emit - Si vrai, l'évènement "E_ITEM_REMOVED" est emit.
-   * @return {*} L'élèment supprimé.
+   * Pop element at the end of the collection.
+   * @param {boolean} emit - If true, E_ITEM_REMOVED event is emitted.
+   * @return {*} The popped element.
    */
   pop(emit = false) {
     let item = this.items.pop();
@@ -50,10 +51,10 @@ class ArrayCollection {
   }
 
   /**
-   * Supprime un élément.
-   * @param {*} item - L'élément à supprimer.
-   * @param {boolean} emit - Si vrai, l'évènement "E_ITEM_REMOVED" est emit.
-   * @return {number} L'index de l'élèment supprimé.
+   * Remove element by reference.
+   * @param {*} item - The element to delete.
+   * @param {boolean} emit - If true, E_ITEM_REMOVED event is emitted.
+   * @return {number} Index of deleted element.
    */
   remove(item, emit = false) {
     let index = this.items.indexOf(item);
@@ -66,10 +67,10 @@ class ArrayCollection {
   }
 
   /**
-   * Supprime l'élèment à l'index donné.
-   * @param {number} index - Index de l'élèment.
-   * @param {boolean} emit - Si vrai, l'évènement "E_ITEM_REMOVED" est emit.
-   * @return {*} L'élèment supprimé.
+   * Remove element by index.
+   * @param {number} index - Index of element to delete.
+   * @param {boolean} emit - If true, E_ITEM_REMOVED event is emitted.
+   * @return {*} Deleted element.
    */
   removeAt(index, emit = false) {
     let item = this.items.splice(index, 1);
@@ -81,17 +82,17 @@ class ArrayCollection {
   }
 
   /**
-   * Vérifie si l'élèment est dans le tableau.
-   * @param {*} item - L'élèment à vérifier.
-   * @return {boolean} Retourne vrai si l'élèment est dans la tableau.
+   * Check if collection has the element (tested by reference).
+   * @param {*} item - The element to check.
+   * @return {boolean} Return true if collection has element.
    */
   has(item) {
     return this.items.indexOf(item) != -1;
   }
 
   /**
-   * Vide le tableau.
-   * @param {boolean} emit - Si vrai, l'évènement "E_ITEM_REMOVED" est emit.
+   * Clear the collection.
+   * @param {boolean} emit - If true, E_ITEM_REMOVED event is emitted foreach element in collection.
    */
   clear(emit = false) {
     while (this.items.length) {

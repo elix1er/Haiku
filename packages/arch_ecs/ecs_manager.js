@@ -1,3 +1,6 @@
+/**
+ * The ECSManager class make the join between entities and systems.
+ */
 class ECSManager {
   constructor() {
     this.entities = [];
@@ -5,6 +8,12 @@ class ECSManager {
     this.entitiesChanged = [];
   }
 
+  /**
+   * Get entity by id. Nota bene: throw if manager has not entity.
+   * Nota bene: throw if manager has not entity.
+   * @param {string} id - The entity id.
+   * @return {ECSEntity} The matching entity.
+   */
   getEntityFromId(id) {
     let found = this.entities.find(e => e.id == id);
     if (!found) {
@@ -14,6 +23,11 @@ class ECSManager {
     return found;
   }
 
+  /**
+   * Add entity.
+   * Push the entity and update all entity system list.
+   * @param {ECSEntity} entity - The entity to add.
+   */
   addEntity(entity) {
     this.entities.push(entity);
     entity.onChanged = () => this.entitiesChanged.push(entity);
@@ -25,6 +39,12 @@ class ECSManager {
     }
   }
 
+  /**
+   * Remove entity.
+   * Remove entity and update all system entity list.
+   * Nota bene: throw if manager has not entity.
+   * @param {ECSEntity} entity - The entity to remove.
+   */
   removeEntity(entity) {
     let found = this.entities.find(e => e == entity);
     if (!found) {
@@ -41,14 +61,27 @@ class ECSManager {
     }
   }
 
+  /**
+   * Check if manager has the entity (tested by reference).
+   * @param {ECSEntity} entity - The entity to check.
+   * @return {boolean} Return true if manager has entity.
+   */
   hasEntity(entity) {
     return this.entities.find(e => e == entity);
   }
 
+  /**
+   * Add system.
+   * @param {ECSSystem} system - The system to add.
+   */
   addSystem(system) {
     this.systems.push(system);
   }
 
+  /**
+   * The update loop.
+   * Update all systems.
+   */
   update() {
     for (let system of this.systems) {
       for (let entity of this.entitiesChanged) {

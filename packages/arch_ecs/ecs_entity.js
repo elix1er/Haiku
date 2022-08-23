@@ -1,3 +1,6 @@
+/**
+ * The ECSEntity class represent a game entity with a set of components.
+ */
 class ECSEntity {
   constructor() {
     this.id = GENERATE_UUID();
@@ -5,6 +8,11 @@ class ECSEntity {
     this.onChanged = () => { };
   }
 
+  /**
+   * Get a component by the type name.
+   * @param {string} typename - The component typename.
+   * @return {ECSComponent} The matching component.
+   */
   getComponent(typename) {
     let found = this.components.find(c => c.typename == typename);
     if (!found) {
@@ -14,11 +22,21 @@ class ECSEntity {
     return found;
   }
 
+  /**
+   * Check if entity has the component.
+   * @param {string} typename - The component typename.
+   * @return {boolean} Return true if entity has component.
+   */
   hasComponent(typename) {
     let found = this.components.find(c => c.typename == typename);
     return found ? true : false;
   }
 
+  /**
+   * Add component.
+   * Nota bene: throw if entity has already the component.
+   * @param {ECSComponent} component - The component.
+   */
   addComponent(component) {
     let found = this.components.find(c => c.typename == component.typename);
     if (found) {
@@ -29,6 +47,10 @@ class ECSEntity {
     this.onChanged();
   }
 
+  /**
+   * Remove component by the type name.
+   * Nota bene: throw if entity has not the component.
+   */
   removeComponent(typename) {
     let found = this.components.find(c => c.typename == typename);
     if (!found) {
@@ -39,6 +61,9 @@ class ECSEntity {
     this.onChanged();
   }
 
+  /**
+   * Remove all components.
+   */
   clear() {
     this.components = [];
     this.onChanged();

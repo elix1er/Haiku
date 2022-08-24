@@ -6,14 +6,14 @@ let { eventManager } = require('./event_manager');
 class ArrayCollection {
   /**
    * Constructor
-   * @param {array} items - Array of data source.
+   * @param {array} items - The data source.
    */
   constructor(items = []) {
     this.items = items;
   }
 
   /**
-   * Get array of data source.
+   * Get the data source.
    * @return {array} The array of data source.
    */
   getItems() {

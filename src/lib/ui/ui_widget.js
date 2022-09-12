@@ -1,12 +1,7 @@
 let { eventManager } = require('../core/event_manager');
+let { inputManager } = require('../input/input_manager');
 
-/**
- * Classe représentant un élément d'interface utilisateur.
- */
 class UIWidget {
-  /**
-   * Créer un élément d'interface utilisateur.
-   */
   constructor(options = {}) {
     this.id = options.id ?? '';
     this.className = options.className ?? '';
@@ -14,106 +9,61 @@ class UIWidget {
     this.node = document.createElement('div');
     this.node.className = this.className;
     this.node.innerHTML = this.template;
-    this.handleKeyDownCb = (e) => this.onKeyDown(e);
 
     this.node.addEventListener('animationend', () => eventManager.emit(this, 'E_ANIMATION_FINISHED'));
   }
 
-  /**
-   * Fonction de mise à jour.
-   * @param {number} ts - Temps passé depuis la dernière mise à jour.
-   */
   update(ts) {
     // virtual method called during update phase !
   }
 
-  /**
-   * Destructeur.
-   * Nota bene: Entraine la désinscription des évènements utilisateur et détache le noeud HTML de son parent.
-   */
   delete() {
-    document.removeEventListener('keydown', this.handleKeyDownCb);
     this.node.remove();
     this.node = null;
+    eventManager.unsubscribe(inputManager, 'E_ACTION', this);
   }
 
-  /**
-   * Retourne l'identifiant.
-   * @return {string} L'Identifiant.
-   */
   getId() {
     return this.id;
   }
 
-  /**
-   * Définit l'identifiant.
-   * @param {string} id - L'Identifiant.
-   */
   setId(id) {
     this.id = id;
   }
 
-  /**
-   * Retourne le noeud HTML parent.
-   * @param {HTMLElement} node - Le noeud HTML.
-   */
   getNode() {
     return this.node;
   }
 
-  /**
-   * Ajoute du css dans le style-inline du noeud parent.
-   * @param {string} styles - Le css.
-   */
   appendStyles(styles) {
     this.node.style.cssText += styles;
   }
 
-  /**
-   * Donne le focus.
-   * Nota bene: Souscription aux évènements utilisateur et ajout de la classe 'u-focused'.
-   */
   focus() {
     this.node.classList.add('u-focused');
     eventManager.emit(this, 'E_FOCUSED');
-    document.addEventListener('keydown', this.handleKeyDownCb);
+    eventManager.subscribe(inputManager, 'E_ACTION', this, (data) => this.onAction(data.actionId));
   }
 
-  /**
-   * Enlève le focus.
-   * Nota bene: Désinscription aux évènements utilisateur et suppréssion de la classe 'u-focused'.
-   */
   unfocus() {
     this.node.classList.remove('u-focused');
     eventManager.emit(this, 'E_UNFOCUSED');
-    document.removeEventListener('keydown', this.handleKeyDownCb);
+    eventManager.unsubscribe(inputManager, 'E_ACTION', this);
   }
 
-  /**
-   * Vérifie si le widget est focus.
-   * @return {boolean} Vrai si le widget est focus.
-   */
   isFocused() {
     return this.node.classList.contains('u-focused') == true;
   }
 
-  /**
-   * Rends le widget visible.
-   */
   setVisible(visible) {
     if (visible) {
       this.node.classList.remove('u-hidden');
-      
     }
     else {
       this.node.classList.add('u-hidden');
     }
   }
 
-  /**
-   * Vérifie si le widget est visible.
-   * @return {boolean} Vrai si le widget est visible.
-   */
   isVisible() {
     return this.node.classList.contains('u-hidden') == false;
   }
@@ -148,8 +98,8 @@ class UIWidget {
     this.node.style.animation = animation;
   }
 
-  onKeyDown(e) {
-    // virtual method !
+  onAction(actionId) {
+    // virtual method.
   }
 }
 

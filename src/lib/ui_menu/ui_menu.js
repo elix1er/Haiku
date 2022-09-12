@@ -238,27 +238,31 @@ class UIMenu extends UIWidget {
     return { top, bottom };
   }
 
-  onKeyDown(e) {
-    let focusedIndex = this.getFocusedWidgetIndex();
-    if (e.key == 'Escape') {
+  onAction(actionId) {
+    if (actionId == 'BACK') {
       eventManager.emit(this, 'E_CLOSED');
     }
-    else if (e.key == 'Enter' && this.selectable && focusedIndex != -1) {
+    else if (actionId == 'OK') {
+      let focusedIndex = this.getFocusedWidgetIndex();
       this.selectWidget(focusedIndex);
     }
-    else if (e.key == 'ArrowLeft') {
+    else if (actionId == 'LEFT') {
+      let focusedIndex = this.getFocusedWidgetIndex();
       let prevIndex = (focusedIndex - 1 < 0) ? this.widgets.length - 1 : focusedIndex - 1;
       this.focusWidget(prevIndex);
     }
-    else if (e.key == 'ArrowRight') {
+    else if (actionId == 'RIGHT') {
+      let focusedIndex = this.getFocusedWidgetIndex();
       let nextIndex = (focusedIndex + 1 > this.widgets.length - 1) ? 0 : focusedIndex + 1;
       this.focusWidget(nextIndex);
     }
-    else if (e.key == 'ArrowUp') {
+    else if (actionId == 'UP') {
+      let focusedIndex = this.getFocusedWidgetIndex();
       let prevIndex = (focusedIndex - this.columns < 0) ? this.widgets.length - 1 : focusedIndex - this.columns;
       this.focusWidget(prevIndex);
     }
-    else if (e.key == 'ArrowDown') {
+    else if (actionId == 'DOWN') {
+      let focusedIndex = this.getFocusedWidgetIndex();
       let nextIndex = (focusedIndex + this.columns > this.widgets.length - 1) ? 0 : focusedIndex + this.columns;
       this.focusWidget(nextIndex);
     }

@@ -94,7 +94,7 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Use a 3D format with frame by frame animations
 
 ## Roadmap
-- Build a community and have fun together !
+- Integrate GLTF
 - Pass to ES6 import/export
 - Implement Skybox
 - Implement Mipmap

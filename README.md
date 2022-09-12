@@ -10,10 +10,10 @@ No need to learn a new language, if you master **HTML/JS/CSS** then you can alre
 Documentation is coming-soon [here](https://aliyah-engine.com/).
 
 ## General features
-- Screen manager
-- Sound manager
+- Screen Manager
+- Sound Manager
 - Event Manager
-- Real-time keyboard input manager
+- RT Input Manager (keyboard & gamepad)
 - UI Manager
     - Description list (ui_description_list)
     - Dialog author + text (ui_dialog)
@@ -29,8 +29,8 @@ Documentation is coming-soon [here](https://aliyah-engine.com/).
     - Support focus/unfocus
     - Support fadeIn/fadeOut
     - And as well you can add our own !
-- Script manager
-- 3D graphics manager
+- Script Manager
+- 3D Graphics Manager
     - Batching
     - Texture manager
     - Multiple viewports
@@ -42,7 +42,7 @@ Documentation is coming-soon [here](https://aliyah-engine.com/).
     - Animated textured mesh (gfx3_jam)
     - Different debug geometric shapes (gfx3_debug)
     - Railroad (gfx3_mover)
-- 2D graphics manager
+- 2D Graphics Manager
     - Texture manager
     - Animated sprite (gfx2_sprite)
     - Animated tilemap (gfx2_map)
@@ -58,8 +58,7 @@ Documentation is coming-soon [here](https://aliyah-engine.com/).
 You need to install [nodejs](https://nodejs.org/en/download/) and [browserify](https://browserify.org/).    
 Once installation is done, let's build our first project.     
 
-Download [aliyah-engine.zip](https://anubancorp.itch.io/aliyah-engine).
-Go to the root of project and launch the build with the following command:
+Clone this repo, go to the root of project and launch the build with the following command:
 ```
 // you need to build from the project root
 # browserify src/main.js -o build/dist.js

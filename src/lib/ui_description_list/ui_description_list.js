@@ -1,4 +1,4 @@
-let { UIWidget } = require('../ui/ui_widget');
+import { UIWidget } from '../ui/ui_widget.js';
 
 class UIDescriptionList extends UIWidget {
   constructor() {
@@ -68,4 +68,4 @@ class UIDescriptionList extends UIWidget {
   }
 }
 
-module.exports.UIDescriptionList = UIDescriptionList;
+export { UIDescriptionList };

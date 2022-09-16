@@ -54,7 +54,7 @@ class AlgoASTAR {
   }
 }
 
-module.exports.AlgoASTAR = AlgoASTAR;
+export { AlgoASTAR };
 
 // -------------------------------------------------------------------------------------------
 // HELPFUL

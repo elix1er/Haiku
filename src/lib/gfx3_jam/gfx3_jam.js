@@ -1,7 +1,7 @@
-let { eventManager } = require('../core/event_manager');
-let { gfx3Manager } = require('../gfx3/gfx3_manager');
-let { gfx3TextureManager } = require('../gfx3/gfx3_texture_manager');
-let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
+import { eventManager } from '../core/event_manager.js';
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
+import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
+import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
 
 class JAMFrame {
   constructor() {
@@ -147,4 +147,4 @@ class Gfx3JAM extends Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3JAM = Gfx3JAM;
+export { Gfx3JAM };

@@ -68,4 +68,4 @@ class ScreenManager {
   }
 }
 
-module.exports.screenManager = new ScreenManager();
+export const screenManager = new ScreenManager();

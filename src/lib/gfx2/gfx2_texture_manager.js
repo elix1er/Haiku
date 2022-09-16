@@ -46,4 +46,4 @@ class Gfx2TextureManager {
   }
 }
 
-module.exports.gfx2TextureManager = new Gfx2TextureManager();
+export const gfx2TextureManager = new Gfx2TextureManager();

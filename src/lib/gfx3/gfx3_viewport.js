@@ -7,4 +7,4 @@ class Gfx3Viewport {
   }
 }
 
-module.exports.Gfx3Viewport = Gfx3Viewport;
+export { Gfx3Viewport };

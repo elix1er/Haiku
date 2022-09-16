@@ -19,4 +19,4 @@ class EventSubscriber {
   }
 }
 
-module.exports.EventSubscriber = EventSubscriber;
+export { EventSubscriber };

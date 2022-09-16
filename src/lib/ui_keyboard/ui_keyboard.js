@@ -1,5 +1,5 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('./ui_widget');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from './ui_widget.js';
 
 let GRID_WIDTH = 10;
 let GRID_HEIGHT = 8;
@@ -188,4 +188,4 @@ class UIKeyboard extends UIWidget {
   }
 }
 
-module.exports.UIKeyboard = UIKeyboard;
+export { UIKeyboard };

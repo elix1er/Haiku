@@ -1,4 +1,4 @@
-let { gfx2TextureManager } = require('../gfx2/gfx2_texture_manager');
+import { gfx2TextureManager } from '../gfx2/gfx2_texture_manager.js';
 
 class Gfx2Map {
   constructor() {
@@ -184,4 +184,4 @@ class Gfx2Tileset {
   }
 }
 
-module.exports.Gfx2Map = Gfx2Map;
+export { Gfx2Map };

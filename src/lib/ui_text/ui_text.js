@@ -1,4 +1,4 @@
-let { UIWidget } = require('../ui/ui_widget');
+import { UIWidget } from '../ui/ui_widget.js';
 
 class UIText extends UIWidget {
   constructor() {
@@ -13,4 +13,4 @@ class UIText extends UIWidget {
   }
 }
 
-module.exports.UIText = UIText;
+export { UIText };

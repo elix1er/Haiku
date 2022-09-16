@@ -1,6 +1,6 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('../ui/ui_widget');
-let { UIMenuText } = require('../ui_menu_text/ui_menu_text');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from '../ui/ui_widget.js';
+import { UIMenuText } from '../ui_menu_text/ui_menu_text.js';
 
 class UIBubble extends UIWidget {
   constructor() {
@@ -121,4 +121,4 @@ class UIBubble extends UIWidget {
   }
 }
 
-module.exports.UIBubble = UIBubble;
+export { UIBubble };

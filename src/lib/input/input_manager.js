@@ -1,4 +1,4 @@
-let { eventManager } = require('../core/event_manager');
+import { eventManager } from '../core/event_manager.js';
 
 class Pad {
   constructor() {
@@ -174,4 +174,4 @@ class InputManager {
   }
 }
 
-module.exports.inputManager = new InputManager();
+export const inputManager = new InputManager();

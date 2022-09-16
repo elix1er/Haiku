@@ -1,5 +1,5 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('../ui/ui_widget');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from '../ui/ui_widget.js';
 
 let MenuFocusEnum = {
   AUTO: 0,
@@ -285,6 +285,6 @@ class UIMenu extends UIWidget {
   }
 }
 
-module.exports.MenuFocusEnum = MenuFocusEnum;
-module.exports.MenuAxisEnum = MenuAxisEnum;
-module.exports.UIMenu = UIMenu;
+export { MenuFocusEnum };
+export { MenuAxisEnum };
+export { UIMenu };

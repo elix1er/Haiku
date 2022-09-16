@@ -1,5 +1,5 @@
-let { eventManager } = require('../core/event_manager');
-let { inputManager } = require('../input/input_manager');
+import { eventManager } from '../core/event_manager.js';
+import { inputManager } from '../input/input_manager.js';
 
 class UIWidget {
   constructor(options = {}) {
@@ -103,4 +103,4 @@ class UIWidget {
   }
 }
 
-module.exports.UIWidget = UIWidget;
+export { UIWidget };

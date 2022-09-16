@@ -1,6 +1,6 @@
-let { gfx3Manager } = require('../gfx3/gfx3_manager');
-let { Utils } = require('../core/utils');
-let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
+import { Utils } from '../core/utils.js';
+import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
 
 let MOVE_MAX_RECURSIVE_CALL = 5;
 
@@ -290,4 +290,4 @@ class Gfx3JWM extends Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3JWM = Gfx3JWM;
+export { Gfx3JWM };

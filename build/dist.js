@@ -1,5 +1,38 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-let { EventSubscriber } = require('./event_subscriber');
+import { gfx3Manager } from './lib/gfx3/gfx3_manager.js';
+import { screenManager } from './lib/screen/screen_manager.js';
+// ---------------------------------------------------------------------------------------
+import { MainScreen } from './main_screen.js';
+// ---------------------------------------------------------------------------------------
+
+class GameManager {
+  constructor() {
+    this.then = 0;
+  }
+
+  async startup() {
+    await gfx3Manager.initialize();
+    this.run(0);
+  }
+
+  run(timeStamp) {
+    let ts = timeStamp - this.then;
+    this.then = timeStamp;
+
+    screenManager.update(ts);
+
+    gfx3Manager.beginDrawing(0);
+    screenManager.draw();
+    gfx3Manager.endDrawing();
+
+    requestAnimationFrame(timeStamp => this.run(timeStamp));
+  }
+}
+
+export { gameManager };
+
+},{"./lib/gfx3/gfx3_manager":7,"./lib/screen/screen_manager":16,"./main_screen":18}],2:[function(require,module,exports){
+import { EventSubscriber } from './event_subscriber.js';
 
 /**
  * Manager to handle events.
@@ -114,9 +147,9 @@ class EventManager {
   }
 }
 
-module.exports.eventManager = new EventManager();
+export { eventManager };
 
-},{"./event_subscriber":2}],2:[function(require,module,exports){
+},{"./event_subscriber":3}],3:[function(require,module,exports){
 /**
  * Describe an event subscriber.
  */
@@ -138,9 +171,9 @@ class EventSubscriber {
   }
 }
 
-module.exports.EventSubscriber = EventSubscriber;
+export { EventSubscriber };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 class Utils {
   static FAIL(message) {
     let elem = document.querySelector('#APP_FAIL');
@@ -822,9 +855,9 @@ class Utils {
   }
 }
 
-module.exports.Utils = Utils;
-},{}],4:[function(require,module,exports){
-let { gfx3Manager } = require('./gfx3_manager');
+export { Utils };
+},{}],5:[function(require,module,exports){
+import { gfx3Manager } from './gfx3_manager.js';
 
 class Gfx3Debug {
   static drawGrid(modelMatrix, extend = 3, spacing = 1) {
@@ -1016,9 +1049,9 @@ class Gfx3Debug {
   }
 }
 
-module.exports.Gfx3Debug = Gfx3Debug;
-},{"./gfx3_manager":6}],5:[function(require,module,exports){
-let { Utils } = require('../core/utils');
+export { Gfx3Debug };
+},{"./gfx3_manager":7}],6:[function(require,module,exports){
+import { Utils } from '../core/utils.js';
 
 class Gfx3Drawable {
   constructor() {
@@ -1150,12 +1183,12 @@ class Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3Drawable = Gfx3Drawable;
-},{"../core/utils":3}],6:[function(require,module,exports){
-let { Utils } = require('../core/utils');
-let { Gfx3View } = require('./gfx3_view');
-let { Gfx3Texture } = require('./gfx3_texture');
-let { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } = require('./gfx3_shaders');
+export { Gfx3Drawable };
+},{"../core/utils":4}],7:[function(require,module,exports){
+import { Utils } from '../core/utils.js';
+import { Gfx3View } from './gfx3_view.js';
+import { Gfx3Texture } from './gfx3_texture.js';
+import { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } from './gfx3_shaders.js';
 
 let CMD_MATRIX_BUFFER_DATA = 0;
 let CMD_MATRIX_BUFFER_OFFSET = 1;
@@ -1511,8 +1544,8 @@ class Gfx3Manager {
   }
 }
 
-module.exports.gfx3Manager = new Gfx3Manager();
-},{"../core/utils":3,"./gfx3_shaders":7,"./gfx3_texture":8,"./gfx3_view":10}],7:[function(require,module,exports){
+export { gfx3Manager };
+},{"../core/utils":4,"./gfx3_shaders":8,"./gfx3_texture":9,"./gfx3_view":11}],8:[function(require,module,exports){
 module.exports.CREATE_MESH_SHADER_RES = async function (device) {
   let pipeline = await device.createRenderPipelineAsync({
     label: 'Basic Pipline',
@@ -1674,7 +1707,7 @@ module.exports.CREATE_DEBUG_SHADER_RES = async function (device) {
 
   return pipeline;
 }
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 class Gfx3Texture {
   constructor() {
     this.gpu = null;
@@ -1683,9 +1716,9 @@ class Gfx3Texture {
   }
 }
 
-module.exports.Gfx3Texture = Gfx3Texture;
-},{}],9:[function(require,module,exports){
-let { gfx3Manager } = require('./gfx3_manager');
+export { Gfx3Texture };
+},{}],10:[function(require,module,exports){
+import { gfx3Manager } from './gfx3_manager.js';
 
 class Gfx3TextureManager {
   constructor() {
@@ -1728,10 +1761,10 @@ class Gfx3TextureManager {
   }
 }
 
-module.exports.gfx3TextureManager = new Gfx3TextureManager();
-},{"./gfx3_manager":6}],10:[function(require,module,exports){
-let { Utils } = require('../core/utils');
-let { Gfx3Viewport } = require('./gfx3_viewport');
+export { gfx3TextureManager };
+},{"./gfx3_manager":7}],11:[function(require,module,exports){
+import { Utils } from '../core/utils.js';
+import { Gfx3Viewport } from './gfx3_viewport.js';
 
 let ProjectionModeEnum = {
   PERSPECTIVE: 'PERSPECTIVE',
@@ -1966,9 +1999,9 @@ class Gfx3View {
   }
 }
 
-module.exports.ProjectionModeEnum = ProjectionModeEnum;
-module.exports.Gfx3View = Gfx3View;
-},{"../core/utils":3,"./gfx3_viewport":11}],11:[function(require,module,exports){
+export { ProjectionModeEnum };
+export { Gfx3View };
+},{"../core/utils":4,"./gfx3_viewport":12}],12:[function(require,module,exports){
 class Gfx3Viewport {
   constructor() {
     this.xFactor = 0;
@@ -1978,11 +2011,11 @@ class Gfx3Viewport {
   }
 }
 
-module.exports.Gfx3Viewport = Gfx3Viewport;
-},{}],12:[function(require,module,exports){
-let { gfx3Manager } = require('../gfx3/gfx3_manager');
-let { gfx3TextureManager } = require('../gfx3/gfx3_texture_manager');
-let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
+export { Gfx3Viewport };
+},{}],13:[function(require,module,exports){
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
+import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
+import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
 
 class Gfx3JSM extends Gfx3Drawable {
   constructor() {
@@ -2025,9 +2058,9 @@ class Gfx3JSM extends Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3JSM = Gfx3JSM;
-},{"../gfx3/gfx3_drawable":5,"../gfx3/gfx3_manager":6,"../gfx3/gfx3_texture_manager":9}],13:[function(require,module,exports){
-let { eventManager } = require('../core/event_manager');
+export { Gfx3JSM };
+},{"../gfx3/gfx3_drawable":6,"../gfx3/gfx3_manager":7,"../gfx3/gfx3_texture_manager":10}],14:[function(require,module,exports){
+import { eventManager } from '../core/event_manager.js';
 
 class Pad {
   constructor() {
@@ -2203,8 +2236,8 @@ class InputManager {
   }
 }
 
-module.exports.inputManager = new InputManager();
-},{"../core/event_manager":1}],14:[function(require,module,exports){
+export { inputManager };
+},{"../core/event_manager":2}],15:[function(require,module,exports){
 class Screen {
   constructor(app) {
     this.app = app;
@@ -2240,8 +2273,8 @@ class Screen {
   }
 }
 
-module.exports.Screen = Screen;
-},{}],15:[function(require,module,exports){
+export { Screen };
+},{}],16:[function(require,module,exports){
 class ScreenManager {
   constructor() {
     this.requests = [];
@@ -2312,44 +2345,36 @@ class ScreenManager {
   }
 }
 
-module.exports.screenManager = new ScreenManager();
-},{}],16:[function(require,module,exports){
+export { screenManager };
+},{}],17:[function(require,module,exports){
+import { gameManager } from './game_manager.js';
+import { screenManager } from './lib/screen/screen_manager.js';
+import { MainScreen } from './main_screen.js';
+
 window.addEventListener('load', async () => {
-  let { gfx3Manager } = require('./lib/gfx3/gfx3_manager');
-  let { screenManager } = require('./lib/screen/screen_manager');
-  let { MainScreen } = require('./main_screen');
-
-  let then = 0;
-  await gfx3Manager.initialize();
+  
+  await gameManager.startup();
+  console.log('change screen');
   screenManager.requestSetScreen(new MainScreen());
-
-  (function run(timeStamp) {
-    let ts = timeStamp - then;
-    then = timeStamp;
-
-    screenManager.update(ts);
-
-    gfx3Manager.beginDrawing(0);
-    screenManager.draw();
-    gfx3Manager.endDrawing();
-
-    requestAnimationFrame(timeStamp => run(timeStamp));
-  }(0));
 });
-},{"./lib/gfx3/gfx3_manager":6,"./lib/screen/screen_manager":15,"./main_screen":17}],17:[function(require,module,exports){
-let { gfx3Manager } = require('./lib/gfx3/gfx3_manager');
-let { gfx3TextureManager } = require('./lib/gfx3/gfx3_texture_manager');
-let { inputManager } = require('./lib/input/input_manager');
-let { Utils } = require('./lib/core/utils');
-let { Screen } = require('./lib/screen/screen');
-let { Gfx3JSM } = require('./lib/gfx3_jsm/gfx3_jsm');
-let { Gfx3Debug } = require('./lib/gfx3/gfx3_debug');
+},{"./game_manager":1,"./lib/screen/screen_manager":16,"./main_screen":18}],18:[function(require,module,exports){
+import { gfx3Manager } from './lib/gfx3/gfx3_manager.js';
+import { gfx3TextureManager } from './lib/gfx3/gfx3_texture_manager.js';
+import { inputManager } from './lib/input/input_manager.js';
+import { Utils } from './lib/core/utils.js';
+import { Screen } from './lib/screen/screen.js';
+import { Gfx3JSM } from './lib/gfx3_jsm/gfx3_jsm.js';
+import { Gfx3Debug } from './lib/gfx3/gfx3_debug.js';
+// ---------------------------------------------------------------------------------------
+
+const { gameManager } = require('./game_manager');
 
 let CAMERA_SPEED = 0.1;
 
 class MainScreen extends Screen {
   constructor() {
     super();
+    console.log(gameManager);
     this.isDragging = false;
     this.dragStartPosition = [0, 0];
     this.dragStartRotation = [0, 0];
@@ -2449,5 +2474,5 @@ class MainScreen extends Screen {
   }
 }
 
-module.exports.MainScreen = MainScreen;
-},{"./lib/core/utils":3,"./lib/gfx3/gfx3_debug":4,"./lib/gfx3/gfx3_manager":6,"./lib/gfx3/gfx3_texture_manager":9,"./lib/gfx3_jsm/gfx3_jsm":12,"./lib/input/input_manager":13,"./lib/screen/screen":14}]},{},[16]);
+export { MainScreen };
+},{"./game_manager":1,"./lib/core/utils":4,"./lib/gfx3/gfx3_debug":5,"./lib/gfx3/gfx3_manager":7,"./lib/gfx3/gfx3_texture_manager":10,"./lib/gfx3_jsm/gfx3_jsm":13,"./lib/input/input_manager":14,"./lib/screen/screen":15}]},{},[17]);

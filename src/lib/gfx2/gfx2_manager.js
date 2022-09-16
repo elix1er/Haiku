@@ -1,4 +1,4 @@
-let { Utils } = require('../core/utils');
+import { Utils } from '../core/utils.js';
 
 class Gfx2Manager {
   constructor() {
@@ -135,4 +135,4 @@ class Gfx2Manager {
   }
 }
 
-module.exports.gfx2Manager = new Gfx2Manager();
+export const gfx2Manager = new Gfx2Manager();

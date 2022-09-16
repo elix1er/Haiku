@@ -1,4 +1,4 @@
-module.exports.CREATE_MESH_SHADER_RES = async function (device) {
+export const CREATE_MESH_SHADER_RES = async function (device) {
   let pipeline = await device.createRenderPipelineAsync({
     label: 'Basic Pipline',
     layout: 'auto',
@@ -89,7 +89,7 @@ module.exports.CREATE_MESH_SHADER_RES = async function (device) {
   return pipeline;
 }
 
-module.exports.CREATE_DEBUG_SHADER_RES = async function (device) {
+export const CREATE_DEBUG_SHADER_RES = async function (device) {
   let pipeline = await device.createRenderPipelineAsync({
     label: 'Line List Debug Pipline',
     layout: 'auto',

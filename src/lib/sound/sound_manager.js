@@ -71,4 +71,4 @@ class SoundManager {
   }
 }
 
-module.exports.soundManager = new SoundManager();
+export const soundManager = new SoundManager();

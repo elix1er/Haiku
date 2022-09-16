@@ -1,5 +1,5 @@
-let { eventManager} = require('../core/event_manager');
-const { UIWidget } = require('./ui_widget');
+import { eventManager} from '../core/event_manager.js';
+import { UIWidget } from './ui_widget.js';
 
 /**
  * Singleton représentant un gestionnaire d'interface utilisateur.
@@ -180,4 +180,4 @@ class UIManager {
   }
 }
 
-module.exports.uiManager = new UIManager();
+export const uiManager = new UIManager();

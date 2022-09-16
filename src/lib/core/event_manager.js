@@ -1,4 +1,4 @@
-let { EventSubscriber } = require('./event_subscriber');
+import { EventSubscriber } from './event_subscriber.js';
 
 /**
  * Manager to handle events.
@@ -113,4 +113,4 @@ class EventManager {
   }
 }
 
-module.exports.eventManager = new EventManager();
+export const eventManager = new EventManager();

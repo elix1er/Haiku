@@ -1,5 +1,5 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('./ui_widget');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from './ui_widget.js';
 
 class UIInputSlider extends UIWidget {
   constructor() {
@@ -56,4 +56,4 @@ class UIInputSlider extends UIWidget {
   }
 }
 
-module.exports.UIInputSlider = UIInputSlider;
+export { UIInputSlider };

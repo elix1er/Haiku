@@ -1,7 +1,7 @@
-let { Utils } = require('../core/utils');
-let { Gfx3View } = require('./gfx3_view');
-let { Gfx3Texture } = require('./gfx3_texture');
-let { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } = require('./gfx3_shaders');
+import { Utils } from '../core/utils.js';
+import { Gfx3View } from './gfx3_view.js';
+import { Gfx3Texture } from './gfx3_texture.js';
+import { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } from './gfx3_shaders.js';
 
 let CMD_MATRIX_BUFFER_DATA = 0;
 let CMD_MATRIX_BUFFER_OFFSET = 1;
@@ -357,4 +357,4 @@ class Gfx3Manager {
   }
 }
 
-module.exports.gfx3Manager = new Gfx3Manager();
+export const gfx3Manager = new Gfx3Manager();

@@ -1,6 +1,6 @@
-let { eventManager } = require('../core/event_manager');
-let { ArrayCollection } = require('../core/array_collection');
-let { UIMenu } = require('../ui_menu/ui_menu');
+import { eventManager } from '../core/event_manager.js';
+import { ArrayCollection } from '../core/array_collection.js';
+import { UIMenu } from '../ui_menu/ui_menu.js';
 
 class UIMenuListView extends UIMenu {
   constructor(options = {}) {
@@ -107,4 +107,4 @@ class UIMenuListView extends UIMenu {
   }
 }
 
-module.exports.UIMenuListView = UIMenuListView;
+export { UIMenuListView };

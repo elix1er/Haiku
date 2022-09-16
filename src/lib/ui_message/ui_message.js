@@ -1,5 +1,5 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('../ui/ui_widget');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from '../ui/ui_widget.js';
 
 class UIMessage extends UIWidget {
   constructor() {
@@ -82,4 +82,4 @@ class UIMessage extends UIWidget {
   }
 }
 
-module.exports.UIMessage = UIMessage;
+export { UIMessage };

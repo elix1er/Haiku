@@ -1,4 +1,4 @@
-let { Utils } = require('../core/utils');
+import { Utils } from '../core/utils.js';
 
 /**
  * Classe représentant un rectangle englobante en deux-dimensions.
@@ -138,4 +138,4 @@ class BoundingRect {
   }
 }
 
-module.exports.BoundingRect = BoundingRect;
+export { BoundingRect };

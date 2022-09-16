@@ -57,7 +57,7 @@ class AlgoDIJKSTRA {
   }
 }
 
-module.exports.AlgoDIJKSTRA = AlgoDIJKSTRA;
+export { AlgoDIJKSTRA };
 
 // -------------------------------------------------------------------------------------------
 // HELPFUL

@@ -1,5 +1,5 @@
-let { Gfx2Drawable } = require('../gfx2/gfx2_drawable');
-let { gfx2Manager } = require('../gfx2/gfx2_manager');
+import { Gfx2Drawable } from '../gfx2/gfx2_drawable.js';
+import { gfx2Manager } from '../gfx2/gfx2_manager.js';
 
 class Gfx2MapLayer extends Gfx2Drawable {
   constructor(map, layerIndex) {
@@ -60,4 +60,4 @@ class Gfx2MapLayer extends Gfx2Drawable {
   }
 }
 
-module.exports.Gfx2MapLayer = Gfx2MapLayer;
+export { Gfx2MapLayer };

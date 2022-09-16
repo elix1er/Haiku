@@ -1,5 +1,5 @@
-let { UIMenu } = require('../ui_menu/ui_menu');
-let { UIMenuTextItem } = require('./ui_menu_text_item');
+import { UIMenu } from '../ui_menu/ui_menu.js';
+import { UIMenuTextItem } from './ui_menu_text_item.js';
 
 class UIMenuText extends UIMenu {
   constructor(options = {}) {
@@ -38,4 +38,4 @@ class UIMenuText extends UIMenu {
   }
 }
 
-module.exports.UIMenuText = UIMenuText;
+export { UIMenuText };

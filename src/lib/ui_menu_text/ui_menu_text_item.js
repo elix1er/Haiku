@@ -1,4 +1,4 @@
-let { UIWidget } = require('../ui/ui_widget');
+import { UIWidget } from '../ui/ui_widget.js';
 
 class UIMenuTextItem extends UIWidget {
   constructor(options = {}) {
@@ -14,4 +14,4 @@ class UIMenuTextItem extends UIWidget {
   }
 }
 
-module.exports.UIMenuTextItem = UIMenuTextItem;
+export { UIMenuTextItem };

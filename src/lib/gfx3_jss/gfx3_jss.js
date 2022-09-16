@@ -1,7 +1,7 @@
-let { gfx3Manager } = require('../gfx3/gfx3_manager');
-let { gfx3TextureManager } = require('../gfx3/gfx3_texture_manager');
-let { Utils } = require('../core/utils');
-let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
+import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
+import { Utils } from '../core/utils.js';
+import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
 
 class Gfx3JSS extends Gfx3Drawable {
   constructor() {
@@ -94,4 +94,4 @@ class Gfx3JSS extends Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3JSS = Gfx3JSS;
+export { Gfx3JSS };

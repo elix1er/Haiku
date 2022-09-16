@@ -1,11 +1,11 @@
-let { gfx3Manager } = require('./lib/gfx3/gfx3_manager');
-let { gfx3TextureManager } = require('./lib/gfx3/gfx3_texture_manager');
-let { inputManager } = require('./lib/input/input_manager');
-let { Utils } = require('./lib/core/utils');
-let { Screen } = require('./lib/screen/screen');
-let { Gfx3JSM } = require('./lib/gfx3_jsm/gfx3_jsm');
-let { Gfx3Debug } = require('./lib/gfx3/gfx3_debug');
-
+import { gfx3Manager } from './lib/gfx3/gfx3_manager.js';
+import { gfx3TextureManager } from './lib/gfx3/gfx3_texture_manager.js';
+import { inputManager } from './lib/input/input_manager.js';
+import { Utils } from './lib/core/utils.js';
+import { Screen } from './lib/screen/screen.js';
+import { Gfx3JSM } from './lib/gfx3_jsm/gfx3_jsm.js';
+import { Gfx3Debug } from './lib/gfx3/gfx3_debug.js';
+// ---------------------------------------------------------------------------------------
 let CAMERA_SPEED = 0.1;
 
 class MainScreen extends Screen {
@@ -110,4 +110,4 @@ class MainScreen extends Screen {
   }
 }
 
-module.exports.MainScreen = MainScreen;
+export { MainScreen };

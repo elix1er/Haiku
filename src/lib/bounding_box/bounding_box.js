@@ -1,4 +1,4 @@
-let { Utils } = require('../core/utils');
+import { Utils } from '../core/utils.js';
 
 /**
  * Classe représentant une boite englobante en trois-dimensions.
@@ -147,4 +147,4 @@ class BoundingBox {
   }
 }
 
-module.exports.BoundingBox = BoundingBox;
+export { BoundingBox };

@@ -1,5 +1,5 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('../ui/ui_widget');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from '../ui/ui_widget.js';
 
 class UIPrint extends UIWidget {
   constructor() {
@@ -70,4 +70,4 @@ class UIPrint extends UIWidget {
   }
 }
 
-module.exports.UIPrint = UIPrint;
+export { UIPrint };

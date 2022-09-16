@@ -1,6 +1,6 @@
-let { eventManager } = require('../core/event_manager');
-let { UIWidget } = require('../ui/ui_widget');
-let { UIMenuText, MenuAxisEnum } = require('../ui_menu_text/ui_menu_text');
+import { eventManager } from '../core/event_manager.js';
+import { UIWidget } from '../ui/ui_widget.js';
+import { UIMenuText, MenuAxisEnum } from '../ui_menu_text/ui_menu_text.js';
 
 class UIPrompt extends UIWidget {
   constructor() {
@@ -51,4 +51,4 @@ class UIPrompt extends UIWidget {
   }
 }
 
-module.exports.UIPrompt = UIPrompt;
+export { UIPrompt };

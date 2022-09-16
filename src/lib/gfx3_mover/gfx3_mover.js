@@ -1,7 +1,7 @@
-let { eventManager } = require('../core/event_manager');
-let { gfx3Manager } = require('../gfx3/gfx3_manager');
-let { Utils } = require('../core/utils');
-let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
+import { eventManager } from '../core/event_manager.js';
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
+import { Utils } from '../core/utils.js';
+import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
 
 class Gfx3Mover extends Gfx3Drawable {
   constructor() {
@@ -93,4 +93,4 @@ class Gfx3Mover extends Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3Mover = Gfx3Mover;
+export { Gfx3Mover };

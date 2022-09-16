@@ -1,7 +1,7 @@
-let { eventManager } = require('../core/event_manager');
-let { Gfx2Drawable } = require('../gfx2/gfx2_drawable');
-let { gfx2Manager } = require('../gfx2/gfx2_manager');
-let { gfx2TextureManager } = require('../gfx2/gfx2_texture_manager');
+import { eventManager } from '../core/event_manager.js';
+import { Gfx2Drawable } from '../gfx2/gfx2_drawable.js';
+import { gfx2Manager } from '../gfx2/gfx2_manager.js';
+import { gfx2TextureManager } from '../gfx2/gfx2_texture_manager.js';
 
 class JASFrame {
   constructor() {
@@ -125,4 +125,4 @@ class Gfx2JAS extends Gfx2Drawable {
   }
 }
 
-module.exports.Gfx2JAS = Gfx2JAS;
+export { Gfx2JAS };

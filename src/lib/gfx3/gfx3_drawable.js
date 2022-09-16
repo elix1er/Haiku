@@ -1,4 +1,4 @@
-let { Utils } = require('../core/utils');
+import { Utils } from '../core/utils.js';
 
 class Gfx3Drawable {
   constructor() {
@@ -130,4 +130,4 @@ class Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3Drawable = Gfx3Drawable;
+export { Gfx3Drawable };

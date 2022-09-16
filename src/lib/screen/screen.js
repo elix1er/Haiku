@@ -33,4 +33,4 @@ class Screen {
   }
 }
 
-module.exports.Screen = Screen;
+export { Screen };

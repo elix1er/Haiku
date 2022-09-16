@@ -1,4 +1,4 @@
-let { gfx2Manager } = require('./gfx2_manager');
+import { gfx2Manager } from './gfx2_manager.js';
 
 class Gfx2Drawable {
   constructor() {
@@ -80,4 +80,4 @@ class Gfx2Drawable {
   }
 }
 
-module.exports.Gfx2Drawable = Gfx2Drawable;
+export { Gfx2Drawable };

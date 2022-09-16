@@ -162,4 +162,4 @@ class ScriptMachine {
   }
 }
 
-module.exports.ScriptMachine = ScriptMachine;
+export { ScriptMachine };

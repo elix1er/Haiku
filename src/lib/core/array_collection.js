@@ -1,4 +1,4 @@
-let { eventManager } = require('./event_manager');
+import { eventManager } from './event_manager.js';
 
 /**
  * The ArrayCollection class is an observable collection of items.
@@ -101,4 +101,4 @@ class ArrayCollection {
   }
 }
 
-module.exports.ArrayCollection = ArrayCollection;
+export { ArrayCollection };

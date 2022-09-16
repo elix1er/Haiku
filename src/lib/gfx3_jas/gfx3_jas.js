@@ -1,8 +1,8 @@
-import { eventManager } from '../core/event_manager.js';
-import { gfx3Manager } from '../gfx3/gfx3_manager.js';
-import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
-import { Utils } from '../core/utils.js';
-import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
+let { eventManager } = require('../core/event_manager');
+let { gfx3Manager } = require('../gfx3/gfx3_manager');
+let { gfx3TextureManager } = require('../gfx3/gfx3_texture_manager');
+let { Utils } = require('../core/utils');
+let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
 
 class JASFrame {
   constructor() {
@@ -28,11 +28,11 @@ class Gfx3JAS extends Gfx3Drawable {
     this.offset = [0, 0];
     this.pixelsPerUnit = 100;
     this.billboardMode = false;
-    this.texture = gfx3TextureManager.getTexture('');
     this.currentAnimation = null;
     this.currentAnimationFrameIndex = 0;
     this.isLooped = false;
     this.frameProgress = 0;
+    this.materialID = gfx3Manager.newMaterial([1.0,1.0,1.0,1.0] , null, null);
   }
 
   async loadFromFile(path) {
@@ -71,15 +71,17 @@ class Gfx3JAS extends Gfx3Drawable {
       return;
     }
 
+    let tex =this.getTexture();
+
     let currentFrame = this.currentAnimation.frames[this.currentAnimationFrameIndex];
     let minX = 0;
     let minY = 0;
     let maxX = currentFrame.width;
     let maxY = currentFrame.height;
-    let ux = (currentFrame.x / this.texture.gpu.width);
-    let uy = (currentFrame.y / this.texture.gpu.height);
-    let vx = (currentFrame.x + currentFrame.width) / this.texture.gpu.width;
-    let vy = (currentFrame.y + currentFrame.height) / this.texture.gpu.height;
+    let ux = (currentFrame.x / tex.gpu.width);
+    let uy = (currentFrame.y / tex.gpu.height);
+    let vx = (currentFrame.x + currentFrame.width) / tex.gpu.width;
+    let vy = (currentFrame.y + currentFrame.height) / tex.gpu.height;
 
     this.clearVertices();
     this.defineVertex(minX, maxY, 0, ux, uy);
@@ -89,6 +91,11 @@ class Gfx3JAS extends Gfx3Drawable {
     this.defineVertex(maxX, maxY, 0, vx, uy);
     this.defineVertex(minX, maxY, 0, ux, uy);
     this.commitVertices();
+
+    if(this.bufferOffsetId === 0)
+      this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
+
+      gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
 
     if (this.frameProgress >= this.currentAnimation.frameDuration) {
       if (this.currentAnimationFrameIndex == this.currentAnimation.frames.length - 1) {
@@ -107,7 +114,7 @@ class Gfx3JAS extends Gfx3Drawable {
   }
 
   draw() {
-    gfx3Manager.drawMesh(this.getModelMatrix(), this.vertexCount, this.vertices, this.texture);
+    gfx3Manager.drawMesh(this);
   }
 
   getModelMatrix() {
@@ -174,13 +181,6 @@ class Gfx3JAS extends Gfx3Drawable {
     this.billboardMode = billboardMode;
   }
 
-  getTexture() {
-    return this.texture;
-  }
-
-  setTexture(texture) {
-    this.texture = texture;
-  }
 }
 
-export { Gfx3JAS };
+module.exports.Gfx3JAS = Gfx3JAS;

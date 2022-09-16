@@ -1,4 +1,4 @@
-import { Utils } from '../core/utils.js';
+let { Utils } = require('../core/utils');
 
 /**
  * Classe représentant une boite englobante en trois-dimensions.
@@ -55,7 +55,7 @@ class BoundingBox {
     let w = this.max[0] - this.min[0];
     let h = this.max[1] - this.min[1];
     let d = this.max[2] - this.min[2];
-    return { w, h, d };
+    return [ w, h, d ];
   }
 
   /**
@@ -147,4 +147,4 @@ class BoundingBox {
   }
 }
 
-export { BoundingBox };
+module.exports.BoundingBox = BoundingBox;

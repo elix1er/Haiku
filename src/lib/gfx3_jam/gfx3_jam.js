@@ -1,7 +1,7 @@
-import { eventManager } from '../core/event_manager.js';
-import { gfx3Manager } from '../gfx3/gfx3_manager.js';
-import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
-import { Gfx3Drawable } from '../gfx3/gfx3_drawable.js';
+let { eventManager } = require('../core/event_manager');
+let { gfx3Manager } = require('../gfx3/gfx3_manager');
+let { gfx3TextureManager } = require('../gfx3/gfx3_texture_manager');
+let { Gfx3Drawable } = require('../gfx3/gfx3_drawable');
 
 class JAMFrame {
   constructor() {
@@ -26,11 +26,13 @@ class Gfx3JAM extends Gfx3Drawable {
     this.frames = [];
     this.animations = [];
     this.textureCoords = [];    
-    this.texture = gfx3TextureManager.getTexture('');
     this.isLooped = true;
     this.currentAnimation = null;
     this.currentFrameIndex = 0;
     this.frameProgress = 0;
+    this.hasNormals = false;
+
+    this.materialID = gfx3Manager.newMaterial([1.0,1.0,1.0,1.0] , null, null);
   }
 
   async loadFromFile(path) {
@@ -47,9 +49,23 @@ class Gfx3JAM extends Gfx3Drawable {
     for (let obj of json['Frames']) {
       let frame = new JAMFrame();
       frame.vertices = obj['Vertices'];
-      frame.normals = obj['Normals'];
+
+      if(obj['Normals']){
+        this.hasNormals = true;
+        frame.normals = obj['Normals'];
+      }
+      else{
+        this.hasNormals = false;
+        frame.normals = null;
+      }
+      
       this.frames.push(frame);
     }
+
+    if(this.hasNormals)
+      gfx3Manager.enableLightning(this.materialID, true);
+    else
+      gfx3Manager.enableLightning(this.materialID, false);
 
     this.animations = [];
     for (let obj of json['Animations']) {
@@ -104,10 +120,34 @@ class Gfx3JAM extends Gfx3Drawable {
       let vz = vaz + ((vbz - vaz) * interpolateFactor);
       let tx = this.textureCoords[i * 2 + 0];
       let ty = this.textureCoords[i * 2 + 1];
-      this.defineVertex(vx, vy, vz, tx, ty);
+
+      if(this.hasNormals)
+      {
+        let nax = currentFrame.normals[i * 3 + 0];
+        let nay = currentFrame.normals[i * 3 + 1];
+        let naz = currentFrame.normals[i * 3 + 2];
+        let nbx = nextFrame.normals[i * 3 + 0];
+        let nby = nextFrame.normals[i * 3 + 1];
+        let nbz = nextFrame.normals[i * 3 + 2];
+
+        let nx = nax + ((nbx - nax) * interpolateFactor);
+        let ny = nay + ((nby - nay) * interpolateFactor);
+        let nz = naz + ((nbz - naz) * interpolateFactor);
+
+
+        this.defineVertexNormal(vx, vy, vz, tx, ty, nx, ny, nz);
+      }
+      else{
+        this.defineVertex(vx, vy, vz, tx, ty);
+      }
     }
 
     this.commitVertices();
+
+    if(this.bufferOffsetId === 0)
+      this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
+
+    gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
 
     if (interpolateFactor >= 1) {
       this.currentFrameIndex = nextFrameIndex;
@@ -119,7 +159,8 @@ class Gfx3JAM extends Gfx3Drawable {
   }
 
   draw() {
-    gfx3Manager.drawMesh(this.getModelMatrix(), this.vertexCount, this.vertices, this.texture);
+
+    gfx3Manager.drawMesh(this);
   }
 
   play(animationName, isLooped = false, preventSameAnimation = false) {
@@ -138,13 +179,6 @@ class Gfx3JAM extends Gfx3Drawable {
     this.frameProgress = 0;
   }
 
-  getTexture() {
-    return this.texture;
-  }
-
-  setTexture(texture) {
-    this.texture = texture;
-  }
 }
 
-export { Gfx3JAM };
+module.exports.Gfx3JAM = Gfx3JAM;

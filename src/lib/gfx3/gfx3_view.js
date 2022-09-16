@@ -1,5 +1,5 @@
-let { Utils } = require('../core/utils');
-let { Gfx3Viewport } = require('./gfx3_viewport');
+import { Utils } from '../core/utils.js';
+import { Gfx3Viewport } from './gfx3_viewport.js';
 
 let ProjectionModeEnum = {
   PERSPECTIVE: 'PERSPECTIVE',
@@ -246,5 +246,5 @@ class Gfx3View {
   }
 }
 
-module.exports.ProjectionModeEnum = ProjectionModeEnum;
-module.exports.Gfx3View = Gfx3View;
+export {ProjectionModeEnum};
+export {Gfx3View};

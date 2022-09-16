@@ -1,10 +1,10 @@
-let { Utils } = require('../core/utils');
-let { BoundingBox } = require('../bounding_box/bounding_box');
-let { Gfx3View } = require('./gfx3_view');
-let { Gfx3Texture } = require('./gfx3_texture');
-let { Gfx3Node } = require('./gfx3_node');
+import { Utils } from '../core/utils.js';
+import { BoundingBox } from '../bounding_box/bounding_box.js';
+import { Gfx3View } from './gfx3_view.js';
+import { Gfx3Texture } from './gfx3_texture.js';
+import { Gfx3Node } from './gfx3_node.js';
 
-let { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } = require('./gfx3_shaders');
+import { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } from './gfx3_shaders.js';
 
 let CMD_MATRIX_BUFFER_DATA = 0;
 let CMD_MATRIX_BUFFER_OFFSET = 1;
@@ -1116,4 +1116,4 @@ class Gfx3Manager {
   }
 }
 
-module.exports.gfx3Manager = new Gfx3Manager();
+export const gfx3Manager = new Gfx3Manager();

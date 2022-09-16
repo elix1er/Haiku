@@ -1,6 +1,6 @@
-const { gfx3Manager } = require('./gfx3_manager');
-let { Utils } = require('../core/utils');
-let { BoundingBox } = require('../bounding_box/bounding_box');
+import { gfx3Manager } from './gfx3_manager.js';
+import { Utils } from '../core/utils.js';
+import { BoundingBox } from '../bounding_box/bounding_box.js';
 class Gfx3Drawable {
   constructor() {
     this.position = [0.0, 0.0, 0.0];
@@ -269,4 +269,4 @@ class Gfx3Drawable {
   }
 }
 
-module.exports.Gfx3Drawable = Gfx3Drawable;
+export {Gfx3Drawable};

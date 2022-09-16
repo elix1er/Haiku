@@ -1,11 +1,10 @@
-const { gfx3Manager } = require('../gfx3/gfx3_manager');
-const { gfx3TextureManager } = require('../gfx3/gfx3_texture_manager');
-const { Gfx3GLTFPrimitive } = require('./gfx3_gltf_prim');
-const { Utils } = require('../core/utils');
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
+import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
+import { Gfx3GLTFPrimitive } from './gfx3_gltf_prim.js';
+import { Utils } from '../core/utils.js';
 
-const path = require('path');
-const { Gfx3Node } = require('../gfx3/gfx3_node');
-let { BoundingBox } = require('../bounding_box/bounding_box.js');
+import { Gfx3Node } from '../gfx3/gfx3_node.js';
+import { BoundingBox } from '../bounding_box/bounding_box.js';
 
 function normalize_vec(v) {
     var mag = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -16,7 +15,14 @@ function normalize_vec(v) {
     }
 }
 
+function dirname(path)
+{
+    let arr= path.split('/');
+    arr.pop();
 
+    return arr.join('/');
+
+}
 class Gfx3GLTF {
 
     constructor()
@@ -78,7 +84,7 @@ class Gfx3GLTF {
             }
         };
 
-        let mypath = path.dirname(this.globalURL);
+        let mypath = dirname(this.globalURL);
 
         req.open('GET', mypath +'/'+ buffer.uri, true);
         req.overrideMimeType('text\/plain; charset=x-user-defined');
@@ -108,7 +114,7 @@ class Gfx3GLTF {
             let tex = null;
             let ntex = null;
 
-            let mypath = path.dirname(this.globalURL);
+            let mypath = dirname(this.globalURL);
     
             if ((gltfMaterial.pbrMetallicRoughness.baseColorTexture)&&(gltfMaterial.pbrMetallicRoughness.baseColorTexture.index < this.scene.textures.length))
             {
@@ -355,4 +361,4 @@ class Gfx3GLTF {
     }
  }
 
-module.exports.Gfx3GLTF = Gfx3GLTF;
+export {Gfx3GLTF};

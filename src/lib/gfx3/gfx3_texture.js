@@ -6,4 +6,4 @@ class Gfx3Texture {
   }
 }
 
-module.exports.Gfx3Texture = Gfx3Texture;
+export {Gfx3Texture};

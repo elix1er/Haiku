@@ -1,4 +1,4 @@
-let { gfx3Manager } = require('./gfx3_manager');
+import { gfx3Manager } from './gfx3_manager.js';
 
 class Gfx3TextureManager {
   constructor() {
@@ -56,4 +56,4 @@ class Gfx3TextureManager {
   }
 }
 
-module.exports.gfx3TextureManager = new Gfx3TextureManager();
+export const gfx3TextureManager = new Gfx3TextureManager();

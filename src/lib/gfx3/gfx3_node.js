@@ -1,5 +1,4 @@
-const { gfx3Manager } = require('../gfx3/gfx3_manager');
-let { Utils } = require('../core/utils');
+import { Utils } from '../core/utils.js';
 
 class Gfx3Node {
   constructor(id) {
@@ -195,4 +194,4 @@ class Gfx3Node {
 
 }
 
-module.exports.Gfx3Node = Gfx3Node;
+export {Gfx3Node};

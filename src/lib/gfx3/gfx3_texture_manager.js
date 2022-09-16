@@ -1,4 +1,4 @@
-import { gfx3Manager } from './gfx3_manager.js';
+let { gfx3Manager } = require('./gfx3_manager');
 
 class Gfx3TextureManager {
   constructor() {
@@ -17,6 +17,21 @@ class Gfx3TextureManager {
     this.textures[path] = texture;
     return texture;
   }
+
+  async loadNormalMap(path) {
+    if (this.getTexture(path) != gfx3Manager.getDefaultTexture()) {
+      return this.getTexture(path);
+    }
+
+    let res = await fetch(path);
+    let img = await res.blob();
+    let texture = gfx3Manager.createNormalMapFromBitmap(await createImageBitmap(img));
+
+    this.textures[path] = texture;
+    return texture;
+  }
+
+  
 
   deleteTexture(path) {
     if (!this.textures[path]) {
@@ -41,4 +56,4 @@ class Gfx3TextureManager {
   }
 }
 
-export const gfx3TextureManager = new Gfx3TextureManager();
+module.exports.gfx3TextureManager = new Gfx3TextureManager();

@@ -312,8 +312,10 @@ class Gfx3GLTF {
                 obj.primitives[n].nodeid = newNode.id;
             }else{
 
-                let drawable = this.rootNode.find(obj.primitives[n].nodeid).getDrawable();
+                let node = this.rootNode.find(obj.primitives[n].nodeid);
+                let drawable = node.getDrawable();
                 let newNode = gfx3Manager.newDrawable(drawable);
+                newNode.bufferOffsetId = node.bufferOffsetId;
                 newObj.addChild(newNode);
             }
         }

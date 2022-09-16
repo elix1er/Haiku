@@ -1,4 +1,4 @@
-import { gfx3Manager } from './gfx3_manager.js';
+let { gfx3Manager } = require('./gfx3_manager');
 
 class Gfx3Debug {
   static drawGrid(modelMatrix, extend = 3, spacing = 1) {
@@ -190,4 +190,4 @@ class Gfx3Debug {
   }
 }
 
-export { Gfx3Debug };
+module.exports.Gfx3Debug = Gfx3Debug;

@@ -1031,6 +1031,7 @@ class Gfx3Manager {
     this.debugCommands.push(cmd);
   }
 
+
   getScreenPosition(viewIndex, x, y, z) {
     let view = this.views[viewIndex];
     let viewport = view.getViewport();
@@ -1041,11 +1042,16 @@ class Gfx3Manager {
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getClipMatrix());
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getProjectionMatrix(viewportWidth / viewportHeight));
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getCameraViewMatrix());
-
     let pos = Utils.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
-    return [pos[0] / pos[3], pos[1] / pos[3]];
-  }
 
+    pos[0] = pos[0]/pos[3];
+    pos[1] = pos[1]/pos[3];
+
+    pos[0] = ((pos[0] + 1.0) * viewportWidth) /  ( 2.0);
+    pos[1] = viewportHeight - ((pos[1] + 1.0) * viewportHeight) / ( 2.0);
+
+    return [pos[0], pos[1]];
+  }
   getWidth() {
     return this.canvas.width;
   }

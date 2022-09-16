@@ -1,5 +1,5 @@
-import { Utils } from '../core/utils.js';
-import { Gfx3Viewport } from './gfx3_viewport.js';
+let { Utils } = require('../core/utils');
+let { Gfx3Viewport } = require('./gfx3_viewport');
 
 let ProjectionModeEnum = {
   PERSPECTIVE: 'PERSPECTIVE',
@@ -34,14 +34,26 @@ class Gfx3View {
     throw new Error('Gfx3Manager::setView(): ProjectionMode not valid !');
   }
 
+
   getScreenPosition(viewIndex, x, y, z) {
     let view = this.views[viewIndex];
+    let viewport = view.getViewport();
+    let viewportWidth = this.canvas.width * viewport.widthFactor;
+    let viewportHeight = this.canvas.height * viewport.heightFactor;
+
     let matrix = Utils.MAT4_IDENTITY();
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getClipMatrix());
-    matrix = Utils.MAT4_MULTIPLY(matrix, this.getProjectionMatrix(viewIndex));
+    matrix = Utils.MAT4_MULTIPLY(matrix, view.getProjectionMatrix(viewportWidth / viewportHeight));
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getCameraViewMatrix());
     let pos = Utils.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
-    return [pos[0] / pos[3], pos[1] / pos[3]];
+
+    pos[0] = pos[0]/pos[3];
+    pos[1] = pos[1]/pos[3];
+
+    pos[0] = ((pos[0] + 1.0) * viewportWidth) /  ( 2.0);
+    pos[1] = viewportHeight - ((pos[1] + 1.0) * viewportHeight) / ( 2.0);
+
+    return [pos[0], pos[1]];
   }
 
   getPosition() {
@@ -234,5 +246,5 @@ class Gfx3View {
   }
 }
 
-export { ProjectionModeEnum };
-export { Gfx3View };
+module.exports.ProjectionModeEnum = ProjectionModeEnum;
+module.exports.Gfx3View = Gfx3View;

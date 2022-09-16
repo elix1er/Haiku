@@ -158,10 +158,8 @@ class Gfx3GLTF {
 
         if(node.rotation)
         {
-            var quat = new THREE.Quaternion(node.rotation.x,node.rotation.y,node.rotation.z,node.rotation.w);
-            var Angles = new THREE.Euler();
-            Angles.setFromQuaternion(quat, 'YXZ');
-            newObj.setRotation(Angles.x, Angles.y, Angles.z);    
+            let Angles = Utils.QUAT_TO_EULER([node.rotation.x,node.rotation.y,node.rotation.z,node.rotation.w], "YXZ");
+            newObj.setRotation(Angles[0], Angles[1], Angles[2]);    
         }
         else
             newObj.setRotation(0, 0, 0);

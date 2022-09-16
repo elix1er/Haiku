@@ -208,6 +208,19 @@ class Utils {
     return [x, y, z];
   }
 
+  static VEC3_MIN(a, b)
+  {
+    if(a == null)
+      return b;
+    return[Math.min(a[0],b[0]), Math.min(a[1],b[1]), Math.min(a[2],b[2])];
+  }
+  static VEC3_MAX(a, b)
+  {
+    if(a == null)
+      return b;
+    return[Math.max(a[0],b[0]), Math.max(a[1],b[1]), Math.max(a[2],b[2])];
+  }
+
   static VEC3_DISTANCE(a, b) {
     let x = b[0] - a[0];
     let y = b[1] - a[1];
@@ -310,6 +323,7 @@ class Utils {
     let a20 = a[6];
     let a21 = a[7];
     let a22 = a[8];
+    
     let b00 = b[0];
     let b01 = b[1];
     let b02 = b[2];
@@ -400,6 +414,36 @@ class Utils {
     ];
   }
 
+  static MAT3_ROTATE_X(r) {
+    let c = Math.cos(r);
+    let s = Math.sin(r);
+    return [
+      1, 0, 0,
+      0, c, -s,
+      0, s, c
+    ];
+  }
+
+  static MAT3_ROTATE_Y(r) {
+    let c = Math.cos(r);
+    let s = Math.sin(r);
+    return [
+      c, 0, s,
+      0, 1, 0,
+      -s, 0, c
+    ];
+  }
+
+  static MAT3_ROTATE_Z(r) {
+    let c = Math.cos(r);
+    let s = Math.sin(r);
+    return [
+      c, s, 0,
+      -s, c, 0,
+      0, 0, 1
+    ];
+  }
+
   static MAT3_TRANSLATE(x, y) {
     return [
       1, 0, 0,
@@ -414,6 +458,14 @@ class Utils {
       0, 2 / h, 0,
       -1, -1, 1
     ];
+  }
+  static MAT3_TRANSPOSE(a) {
+    return [
+      a[0], a[3], a[6],
+      a[1], a[4], a[7],
+      a[2], a[5], a[8]
+      
+    ]
   }
 
   /**************************************************************************/
@@ -457,6 +509,7 @@ class Utils {
 
     return matrices[matrices.length - 1];
   }
+
 
   static MAT4_MULTIPLY(a, b) {
     let a00 = a[0];
@@ -638,6 +691,27 @@ class Utils {
     ]
   }
 
+  static MAT4_TRANSPOSE(a) {
+    return [
+      a[0], a[4], a[8], a[12],
+      a[1], a[5], a[9], a[13],
+      a[2], a[6], a[10], a[14],
+      a[3], a[7], a[11], a[15]
+    ]
+  }
+
+  static MAT4_GETNORMAL(a) {
+    let imat = this.MAT4_INVERT(a);
+
+    return [
+      imat[0], imat[4], imat[8],
+      imat[1], imat[5], imat[9],
+      imat[2], imat[6], imat[10]
+    ]
+
+
+  }
+
   static MAT4_TRANSFORM(position, rotation, scale) {
     let matrix = Utils.MAT4_IDENTITY();
     matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_TRANSLATE(position[0], position[1], position[2]));
@@ -679,4 +753,4 @@ class Utils {
   }
 }
 
-export { Utils };
+module.exports.Utils = Utils;

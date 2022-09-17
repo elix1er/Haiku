@@ -51,7 +51,8 @@ class Gfx3DrawableNode extends Gfx3Node {
 
   delete()
   {
-    gfx3Manager.deleteVertexBufferRange(this.bufferOffsetId);
+    this.drawable.delete();
+    super.delete();
   }
 
   getDrawable()
@@ -491,7 +492,15 @@ class Gfx3Manager {
   }
   newDrawable(drawable)
   {
-    return new Gfx3DrawableNode(drawable, this.nodesIds++);
+    let newNode =  new Gfx3DrawableNode(drawable, this.nodesIds++)
+    if(drawable.bufferOffsetId == 0)
+    {
+      drawable.bufferOffsetId = this.getBufferRangeId( drawable.vertexCount * drawable.vertSize);
+      this.commitBuffer(drawable.bufferOffsetId, drawable.vertices);
+    }
+    
+
+    return newNode;
   }
 
   getGraphMatrixSize(node, start)
@@ -658,7 +667,7 @@ class Gfx3Manager {
           
   
         this.passEncoder.setBindGroup(0, meshMatrixBinding);
-        this.passEncoder.setVertexBuffer(0, this.meshVertexBuffer, this.findBufferRange(node.bufferOffsetId).vertex, drawable.vertexCount * drawable.vertSize );
+        this.passEncoder.setVertexBuffer(0, this.meshVertexBuffer, this.findBufferRange(drawable.bufferOffsetId).vertex, drawable.vertexCount * drawable.vertSize );
         this.passEncoder.draw(drawable.vertexCount);
       }
 

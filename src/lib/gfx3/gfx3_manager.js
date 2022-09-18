@@ -2,7 +2,7 @@ import { Utils } from '../core/utils.js';
 import { BoundingBox } from '../bounding_box/bounding_box.js';
 import { Gfx3View } from './gfx3_view.js';
 import { Gfx3Texture } from './gfx3_texture.js';
-import { Gfx3Node } from './gfx3_node.js';
+
 
 import { CREATE_MESH_SHADER_RES, CREATE_DEBUG_SHADER_RES } from './gfx3_shaders.js';
 
@@ -14,14 +14,6 @@ let CMD_VERTEX_COUNT = 4;
 let CMD_VERTEX_BUFFER_OFFSET = 5;
 let CMD_NORMAL_MATRIX_BUFFER_DATA = 6;
 let CMD_MATERIAL_ID = 7;
-
-let CMD_TEXTURE_GROUP = 6;
-let CMD_NORMAL_MATRIX_BUFFER_OFFSET = 7
-let CMD_NORMALMAP_GROUP = 8;
-let CMD_MATERIAL_AMBIANT_OFFSET = 9;
-let CMD_MATERIAL_COLOR_OFFSET = 10;
-let CMD_MATERIAL_SPECULAR_OFFSET = 11;
-let CMD_PARAMS_OFFSET = 12;
 
 
 
@@ -39,92 +31,6 @@ class Gfx3Material{
   }
 }
 
-
-class Gfx3DrawableNode extends Gfx3Node {
-  constructor(drawable, id)
-  {
-    super(id);
-    this.drawable = drawable;
-  }
-
-  draw()
-  {
-    this.drawable.draw();
-  }
-
-  delete()
-  {
-    this.drawable.delete();
-    super.delete();
-  }
-
-  getDrawable()
-  {
-    return this.drawable;
-  }
-
-  getTotalBoundingBox(bounds, mat)
-  {
-      let m = this.getModelMatrix();
-      var newmat;
-      
-      if(mat !== null)
-        newmat = Utils.MAT4_MULTIPLY(m, mat);
-      else
-        newmat =  m;
-
-       let pts= this.drawable.getBoxPts();
-       for(let pt of pts)
-       {
-          let tp = Utils.MAT4_MULTIPLY_BY_VEC4(newmat, pt);
-          bounds.min = Utils.VEC3_MIN(bounds.min, tp);
-          bounds.max = Utils.VEC3_MAX(bounds.max, tp);
-       }        
-          
-      for(let child of this.children)
-      {
-        child.getTotalBoundingBox(bounds, newmat);
-      }
-  }
-
-
-  getNodeBoundingBox(id, mat)
-  {
-    let m = this.getModelMatrix();
-    var newmat;
-    
-    if(mat !== null)
-      newmat = Utils.MAT4_MULTIPLY(m, mat);
-    else
-      newmat =  m;
-
-      if(this.id === id)
-      {
-          let pts= this.drawable.getBoxPts();
-          let minV = null;
-          let maxV = null;
-
-          for(pt of pts)
-          {
-              let tp = Utils.MAT4_MULTIPLY_BY_VEC4(newmat, pt);
-
-              minV = Utils.VEC3_MIN(minV, tp);
-              maxV = Utils.VEC3_MAX(maxV, tp);
-        }
-        return new BoundingBox(minV, maxV);
-      }
-
-      for(let child of this.children)
-      {
-        let found = child.getNodeBOundingBox(id, newmat);
-        if(found !== null)
-          return found;
-      }
-      return null;
-  }
-
-
-}
 
 class Gfx3Manager {
   constructor() {
@@ -335,7 +241,6 @@ class Gfx3Manager {
 
     this.meshPipeline = await CREATE_MESH_SHADER_RES(this.device);
     this.meshVertexBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
-    this.meshMatrixBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
 
     this.debugPipeline = await CREATE_DEBUG_SHADER_RES(this.device);
     this.debugVertexBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
@@ -442,11 +347,7 @@ class Gfx3Manager {
     this.device.queue.writeBuffer(this.meshVertexBuffer, bufferOffset.vertex, new Float32Array(vertices));    
   }
 
-  newDrawable(drawable)
-  {
-    let newNode =  new Gfx3DrawableNode(drawable, this.nodesIds++)
-    return newNode;
-  }
+
 
 
   beginDrawing(viewIndex) {
@@ -495,8 +396,8 @@ class Gfx3Manager {
     this.passEncoder.setScissorRect(viewportX, viewportY, viewportWidth, viewportHeight);
     this.currentView = view;
 
-    this.nodesIds = 1;
-    this.sceneRoot = new Gfx3Node(this.nodesIds++);
+   x
+    
 
     //this.graphMatrixBuffer.destroy();
     
@@ -514,7 +415,9 @@ class Gfx3Manager {
     // ------------------------------------------------------------------------------------
     this.passEncoder.setPipeline(this.meshPipeline);
 
-    this.meshMatrixBuffer.destroy();
+    if(this.meshMatrixBuffer !== null)
+      this.meshMatrixBuffer.destroy();
+      
     this.meshMatrixBuffer = this.device.createBuffer({
     size: this.meshCommands.length * this.adapter.limits.minUniformBufferOffsetAlignment * 6,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST| GPUBufferUsage.COPY_SRC

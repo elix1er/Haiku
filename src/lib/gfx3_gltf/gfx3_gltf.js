@@ -3,17 +3,11 @@ import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager.js';
 import { Gfx3GLTFPrimitive } from './gfx3_gltf_prim.js';
 import { Utils } from '../core/utils.js';
 
-import { Gfx3Node } from '../gfx3/gfx3_node.js';
 import { BoundingBox } from '../bounding_box/bounding_box.js';
 
-function normalize_vec(v) {
-    var mag = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    if (mag !== 0.0) {
-        v[0] = v[0] / mag;
-        v[1] = v[1] / mag;
-        v[2] = v[2] / mag;
-    }
-}
+import { Gfx3Node } from './gfx3_node.js';
+import { Gfx3DrawableNode } from './gfx3_drawable_node.js';
+
 
 function dirname(path)
 {
@@ -27,7 +21,8 @@ class Gfx3GLTF {
 
     constructor()
     {
-        this.rootNode = new Gfx3Node(gfx3Manager.nodesIds++);
+        this.nodesIds = 1;
+        this.rootNode = new Gfx3Node(this.nodesIds++);
         this.scene = null;
         this.globalURL = null;
     }
@@ -190,7 +185,7 @@ class Gfx3GLTF {
     
     buildobjarray(node) {
 
-        let newObj = new Gfx3Node(gfx3Manager.nodesIds++);
+        let newObj = new Gfx3Node(this.nodesIds++);
         newObj.name = "mesh "+node.mesh;
 
         if(node.rotation)
@@ -341,7 +336,7 @@ class Gfx3GLTF {
 
                 myDrawable.commitVertices();   
 
-                let newNode = gfx3Manager.newDrawable(myDrawable);
+                let newNode = new Gfx3DrawableNode(myDrawable, this.nodesIds++);
               
                 newObj.addChild(newNode);
 
@@ -350,7 +345,7 @@ class Gfx3GLTF {
 
                 let node = this.rootNode.find(obj.primitives[n].nodeid);
                 let drawable = node.getDrawable();
-                let newNode = gfx3Manager.newDrawable(drawable);
+                let newNode = new Gfx3DrawableNode(drawable, this.nodesIds++);
 
                 newObj.addChild(newNode);
             }

@@ -91,10 +91,8 @@ class Gfx3JAS extends Gfx3Drawable {
     this.defineVertex(minX, maxY, 0, ux, uy);
     this.commitVertices();
 
-    if(this.bufferOffsetId === 0)
-      this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
 
-      gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
+    
 
     if (this.frameProgress >= this.currentAnimation.frameDuration) {
       if (this.currentAnimationFrameIndex == this.currentAnimation.frames.length - 1) {
@@ -113,7 +111,9 @@ class Gfx3JAS extends Gfx3Drawable {
   }
 
   draw() {
-    gfx3Manager.drawMesh(this);
+ 
+    gfx3Manager.drawMesh(this.getModelMatrix(),this.getNormalMatrix(), this.materialID, this.bufferOffsetId, this.vertexCount, this.vertSize);
+
   }
 
   getModelMatrix() {

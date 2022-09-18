@@ -36,15 +36,11 @@ class Gfx3LifeBar extends Gfx3Drawable {
     this.defineVertex(halfSz, height, 0, 1.0, 1.0);    
 
     this.commitVertices();
-
-    if(this.bufferOffsetId == 0)
-      this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
-
-    gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
-  }
+}
 
   draw() {
-    gfx3Manager.drawMesh(this);
+    gfx3Manager.drawMesh(this.getModelMatrix(),this.getNormalMatrix(), this.materialID,  this.bufferOffsetId, this.vertexCount, this.vertSize);
+
   }
   getColor() {
     let mat = gfx3Manager.findMaterial(this.materialID);

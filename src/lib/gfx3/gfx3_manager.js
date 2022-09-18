@@ -12,6 +12,9 @@ let CMD_VERTEX_BUFFER_DATA = 2;
 let CMD_VERTEX_BUFFER_SIZE = 3;
 let CMD_VERTEX_COUNT = 4;
 let CMD_VERTEX_BUFFER_OFFSET = 5;
+let CMD_NORMAL_MATRIX_BUFFER_DATA = 6;
+let CMD_MATERIAL_ID = 7;
+
 let CMD_TEXTURE_GROUP = 6;
 let CMD_NORMAL_MATRIX_BUFFER_OFFSET = 7
 let CMD_NORMALMAP_GROUP = 8;
@@ -338,7 +341,7 @@ class Gfx3Manager {
     this.debugVertexBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
     this.debugMatrixBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
 
-    this.graphMatrixBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    //this.graphMatrixBuffer = this.device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
 
     let res = await fetch('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjkA43/A8AAtcBo43Eu70AAAAASUVORK5CYII=');
     let defaultImg = await res.blob();
@@ -402,7 +405,7 @@ class Gfx3Manager {
   {
     console.log("new buffer "+size);
 
-    let newOffset={vertex : 0, matrix: 0};
+    let newOffset={vertex : 0};
 
     let newMeshVertexBuffer = this.device.createBuffer({
       size: this.meshVertexSize + size,
@@ -430,51 +433,6 @@ class Gfx3Manager {
 
     this.meshVertexSize += size;
     this.meshVertexBuffer = newMeshVertexBuffer;
-   
-    
-
-    let newMeshMatrixBuffer = this.device.createBuffer({
-      size: this.nextMatrixPos + this.adapter.limits.minUniformBufferOffsetAlignment * 6,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST| GPUBufferUsage.COPY_SRC
-    });
-    
-    if(this.nextMatrixPos > 0)
-    {
-      let commandEncoder = this.device.createCommandEncoder();
-      commandEncoder.copyBufferToBuffer(
-        this.meshMatrixBuffer /* source buffer */,
-        0 /* source offset */,
-        newMeshMatrixBuffer /* destination buffer */,
-        0 /* destination offset */,
-        this.nextMatrixPos /* size */
-      );
-      
-      // Submit GPU commands.
-      const gpuCommands = commandEncoder.finish();
-      this.device.queue.submit([gpuCommands]);
-      this.meshMatrixBuffer.destroy();
-    }
-
-    newOffset.matrix = this.nextMatrixPos;
-    this.nextMatrixPos += this.adapter.limits.minUniformBufferOffsetAlignment;
-
-    newOffset.normal_matrix = this.nextMatrixPos ;
-    this.nextMatrixPos += this.adapter.limits.minUniformBufferOffsetAlignment;
-
-    newOffset.ambiant = this.nextMatrixPos ;
-    this.nextMatrixPos += this.adapter.limits.minUniformBufferOffsetAlignment;
-
-    newOffset.color = this.nextMatrixPos ;
-    this.nextMatrixPos += this.adapter.limits.minUniformBufferOffsetAlignment;
-    
-    newOffset.specular = this.nextMatrixPos ;
-    this.nextMatrixPos += this.adapter.limits.minUniformBufferOffsetAlignment;
-
-    newOffset.params = this.nextMatrixPos ;
-    this.nextMatrixPos += this.adapter.limits.minUniformBufferOffsetAlignment;
-
-    this.meshMatrixBuffer = newMeshMatrixBuffer;
-
     return newOffset;
   }
 
@@ -483,202 +441,13 @@ class Gfx3Manager {
     let bufferOffset = this.findBufferRange(rangeId);
     this.device.queue.writeBuffer(this.meshVertexBuffer, bufferOffset.vertex, new Float32Array(vertices));    
   }
-  commitMatrixBuffer(bufferOffset, matrix){
 
-    //console.log('commitMatrixBuffer '+ bufferOffset);
-    //console.log(matrix);
-
-    this.device.queue.writeBuffer(this.meshMatrixBuffer, bufferOffset, new Float32Array(matrix)); 
-  }
   newDrawable(drawable)
   {
     let newNode =  new Gfx3DrawableNode(drawable, this.nodesIds++)
-    if(drawable.bufferOffsetId == 0)
-    {
-      drawable.bufferOffsetId = this.getBufferRangeId( drawable.vertexCount * drawable.vertSize);
-      this.commitBuffer(drawable.bufferOffsetId, drawable.vertices);
-    }
-    
-
     return newNode;
   }
 
-  getGraphMatrixSize(node, start)
-  { 
-    const d = node.getDrawable();
-    let newPos = start;
-    if(d)
-    {
-      newPos += this.adapter.limits.minUniformBufferOffsetAlignment*6;
-    }
-    
-    for(let child of node.children)
-    {
-      newPos = this.getGraphMatrixSize(child, newPos);
-    }
-    return newPos;
-  }
-  renderNode(node, parentMat, parentNMat)
-  { 
-    var mat,nmat;
-    if(parentMat == null)
-    {
-      mat = node.getModelMatrix();
-      nmat = node.getNormalMatrix();
-    }
-    else{
-      mat = Utils.MAT4_MULTIPLY(parentMat, node.getModelMatrix());
-      nmat =  Utils.MAT4_MULTIPLY(parentNMat, node.getNormalMatrix());
-    }
-
-    const drawable = node.getDrawable();
-
-    if(drawable !== null)
-    {
-      let material  = this.findMaterial(drawable.materialID);
-   
-      if(material !== null)
-      {
-        let MatrixbufferOffsets={};
-
-        MatrixbufferOffsets.matrix= this.MatrixbufferOffset;
-        this.MatrixbufferOffset+=this.adapter.limits.minUniformBufferOffsetAlignment;
-        MatrixbufferOffsets.normal_matrix= this.MatrixbufferOffset;
-        this.MatrixbufferOffset+=this.adapter.limits.minUniformBufferOffsetAlignment;    
-        MatrixbufferOffsets.color= this.MatrixbufferOffset;
-        this.MatrixbufferOffset+=this.adapter.limits.minUniformBufferOffsetAlignment;    
-        MatrixbufferOffsets.ambiant= this.MatrixbufferOffset;
-        this.MatrixbufferOffset+=this.adapter.limits.minUniformBufferOffsetAlignment;    
-        MatrixbufferOffsets.specular= this.MatrixbufferOffset;
-        this.MatrixbufferOffset+=this.adapter.limits.minUniformBufferOffsetAlignment;    
-        MatrixbufferOffsets.params= this.MatrixbufferOffset;
-        this.MatrixbufferOffset+=this.adapter.limits.minUniformBufferOffsetAlignment;  
-  
-    
-        
-        this.device.queue.writeBuffer(this.graphMatrixBuffer,MatrixbufferOffsets.matrix, new Float32Array(mat)); 
-        this.device.queue.writeBuffer(this.graphMatrixBuffer,MatrixbufferOffsets.normal_matrix, new Float32Array(nmat)); 
-        this.device.queue.writeBuffer(this.graphMatrixBuffer,MatrixbufferOffsets.color, new Float32Array(drawable.getColor())); 
-        this.device.queue.writeBuffer(this.graphMatrixBuffer,MatrixbufferOffsets.ambiant, new Float32Array(drawable.getAmbiant())); 
-        this.device.queue.writeBuffer(this.graphMatrixBuffer,MatrixbufferOffsets.specular, new Float32Array(drawable.getSpecular())); 
-      
-        
-        let meshMatrixBinding = this.device.createBindGroup({
-          layout: this.meshPipeline.getBindGroupLayout(0),
-          entries: [
-            {
-              binding: 0,
-              resource: {
-                buffer: this.camMatrixBuffer,
-                offset: 0,
-                size: 16 * 4
-              }
-            },{
-              binding: 1,
-              resource: {
-                buffer: this.lightPosBuffer,
-                offset: 0,
-                size: 16 * 4
-              }
-            },{
-            binding: 2,
-            resource: {
-              buffer: this.graphMatrixBuffer,
-              offset: MatrixbufferOffsets.matrix,
-              size: 16 * 4
-            }
-          },{
-            binding: 3,
-            resource: {
-              buffer: this.graphMatrixBuffer,
-              offset: MatrixbufferOffsets.normal_matrix,
-              size: 16 * 4
-            }
-          },{
-            binding: 4,
-            resource: {
-              buffer: this.graphMatrixBuffer,
-              offset: MatrixbufferOffsets.ambiant,
-              size: 16 * 4
-            }
-          },{
-            binding: 5,
-            resource: {
-              buffer: this.graphMatrixBuffer,
-              offset: MatrixbufferOffsets.color,
-              size: 16 * 4
-            }
-          },{
-            binding: 6,
-            resource: {
-              buffer: this.graphMatrixBuffer,
-              offset: MatrixbufferOffsets.specular,
-              size: 16 * 4
-            }
-          },{
-            binding: 7,
-            resource: {
-              buffer: this.graphMatrixBuffer,
-              offset: MatrixbufferOffsets.params,
-              size: 16 * 4
-            }
-          }
-          ,{
-            binding: 8,
-            resource: {
-              buffer: this.camPosBuffer,
-              offset: 0,
-              size: 16 * 4
-            }
-          }
-        ]
-        });
-        let params =[];
-  
-        var tex =drawable.getTexture();
-        var ntex =drawable.getNormalMap();
-  
-      
-  
-        if(tex !== null ){
-          params[0]=1;
-          this.passEncoder.setBindGroup(1, tex.group);
-        }else{
-          params[0]=0;
-          this.passEncoder.setBindGroup(1, this.defaultTexture.group);
-        }
-  
-        if(material.lightning)
-          params[1] = 1;
-        else
-          params[1] = 0;
-  
-        if(ntex !== null )
-        {
-          params[2]=1;
-          this.passEncoder.setBindGroup(2, ntex.group);
-        }
-        else{
-          params[2]=0;
-          this.passEncoder.setBindGroup(2, this.defaultNormalMap.group);
-        }
-  
-        this.device.queue.writeBuffer(this.graphMatrixBuffer,MatrixbufferOffsets.params, new Float32Array(params)); 
-          
-  
-        this.passEncoder.setBindGroup(0, meshMatrixBinding);
-        this.passEncoder.setVertexBuffer(0, this.meshVertexBuffer, this.findBufferRange(drawable.bufferOffsetId).vertex, drawable.vertexCount * drawable.vertSize );
-        this.passEncoder.draw(drawable.vertexCount);
-      }
-
-     
-    }
-
-    for(let cnode of node.children)
-    {
-      this.renderNode(cnode, mat, nmat);
-    }
-  }
 
   beginDrawing(viewIndex) {
     let view = this.views[viewIndex];
@@ -729,7 +498,7 @@ class Gfx3Manager {
     this.nodesIds = 1;
     this.sceneRoot = new Gfx3Node(this.nodesIds++);
 
-    this.graphMatrixBuffer.destroy();
+    //this.graphMatrixBuffer.destroy();
     
     this.MatrixbufferOffset=0;
 
@@ -745,98 +514,110 @@ class Gfx3Manager {
     // ------------------------------------------------------------------------------------
     this.passEncoder.setPipeline(this.meshPipeline);
 
+    this.meshMatrixBuffer.destroy();
+    this.meshMatrixBuffer = this.device.createBuffer({
+    size: this.meshCommands.length * this.adapter.limits.minUniformBufferOffsetAlignment * 6,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST| GPUBufferUsage.COPY_SRC
+  });
+  
+ 
+    this.meshMatrixBufferSize = 0;
+
     if( this.meshVertexBuffer != null)
     {
-
-      this.graphMatrixBuffer = this.device.createBuffer({ size: this.getGraphMatrixSize(this.sceneRoot, 0), usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-
-      //console.log(this.sceneRoot);
-      this.renderNode(this.sceneRoot, null);
 
       for (let cmd of this.meshCommands) {
 
        
-        let meshMatrixBinding = this.device.createBindGroup({
-          layout: this.meshPipeline.getBindGroupLayout(0),
-          entries: [
-            {
-              binding: 0,
-              resource: {
-                buffer: this.camMatrixBuffer,
-                offset: 0,
-                size: 16 * 4
-              }
-            },{
-              binding: 1,
-              resource: {
-                buffer: this.lightPosBuffer,
-                offset: 0,
-                size: 16 * 4
-              }
-            },{
-            binding: 2,
+        let material = this.findMaterial( cmd[CMD_MATERIAL_ID]);
+
+        if(material === null)
+          continue;
+
+        let params =[];
+
+        if (material.texture  !== null) {
+          params[0]=1;
+          this.passEncoder.setBindGroup(1,   material.texture.group);
+        }else{
+          params[0]=0;
+          this.passEncoder.setBindGroup(1, this.defaultTexture.group);
+        }
+
+        if(material.lightning)
+          params[1] = 1;
+        else
+          params[1] = 0;
+
+        if (material.normalmap!== null){
+          params[2]=1;
+          this.passEncoder.setBindGroup(2, material.normalmap.group);;
+        }
+        else{
+          params[2]=0;
+          this.passEncoder.setBindGroup(2, this.defaultNormalMap.group);
+        }
+
+        params[3]=0;
+
+        let bentries =  [
+          {
+            binding: 0,
             resource: {
-              buffer: this.meshMatrixBuffer,
-              offset: cmd[CMD_MATRIX_BUFFER_OFFSET],
+              buffer: this.camMatrixBuffer,
+              offset: 0,
               size: 16 * 4
             }
           },{
-            binding: 3,
+            binding: 1,
             resource: {
-              buffer: this.meshMatrixBuffer,
-              offset: cmd[CMD_NORMAL_MATRIX_BUFFER_OFFSET],
-              size: 16 * 4
-            }
-          },{
-            binding: 4,
-            resource: {
-              buffer: this.meshMatrixBuffer,
-              offset: cmd[CMD_MATERIAL_AMBIANT_OFFSET],
-              size: 16 * 4
-            }
-          },{
-            binding: 5,
-            resource: {
-              buffer: this.meshMatrixBuffer,
-              offset: cmd[CMD_MATERIAL_COLOR_OFFSET],
-              size: 16 * 4
-            }
-          },{
-            binding: 6,
-            resource: {
-              buffer: this.meshMatrixBuffer,
-              offset: cmd[CMD_MATERIAL_SPECULAR_OFFSET],
-              size: 16 * 4
-            }
-          },{
-            binding: 7,
-            resource: {
-              buffer: this.meshMatrixBuffer,
-              offset: cmd[CMD_PARAMS_OFFSET],
-              size: 16 * 4
-            }
-          }
-          ,{
-            binding: 8,
-            resource: {
-              buffer: this.camPosBuffer,
+              buffer: this.lightPosBuffer,
               offset: 0,
               size: 16 * 4
             }
           }
-          
         ]
+
+            
+        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(cmd[CMD_MATRIX_BUFFER_DATA])); 
+        bentries.push({binding: 2,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+    
+        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(cmd[CMD_NORMAL_MATRIX_BUFFER_DATA]));
+        bentries.push({binding: 3,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+    
+        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(material.ambiant));
+        bentries.push({binding: 4,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+    
+        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(material.color));
+        bentries.push({binding: 5,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+        
+        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(material.specular));
+        bentries.push({binding: 6,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+    
+        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(params));
+        bentries.push({binding: 7,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+
+        bentries.push({
+          binding: 8,
+          resource: {
+            buffer: this.camPosBuffer,
+            offset: 0,
+            size: 16 * 4
+          }
         });
-
-        if(cmd[CMD_TEXTURE_GROUP] !== null )
-          this.passEncoder.setBindGroup(1, cmd[CMD_TEXTURE_GROUP]);
-        else
-          this.passEncoder.setBindGroup(1, this.defaultTexture.group);
-
-        if(cmd[CMD_NORMALMAP_GROUP] !== null )
-          this.passEncoder.setBindGroup(2, cmd[CMD_NORMALMAP_GROUP]);
-        else
-          this.passEncoder.setBindGroup(2, this.defaultNormalMap.group);
+    
+      
+        let meshMatrixBinding = this.device.createBindGroup({
+          layout: this.meshPipeline.getBindGroupLayout(0),
+          entries:bentries
+        });
+         
 
         this.passEncoder.setBindGroup(0, meshMatrixBinding);
         this.passEncoder.setVertexBuffer(0, this.meshVertexBuffer, cmd[CMD_VERTEX_BUFFER_OFFSET], cmd[CMD_VERTEX_BUFFER_SIZE]);
@@ -960,66 +741,20 @@ class Gfx3Manager {
 
   }
   
-  drawMesh(drawable) {
+  drawMesh(matrix, normal_matrix, materialID, rangeId, vertexCount, vertexSize) {
 
-    let material = this.findMaterial(drawable.materialID);
+    let offsets = this.findBufferRange(rangeId);
 
-    if(material === null)
-      return false;
+    if(offsets == null)
+      return;
 
-    if(drawable.bufferOffsetId === 0)
-      return false;
-
-    let params =[];
-    let cmd = [];
-
-    let tex = drawable.getTexture();
-
-    if (tex  !== null) {
-      params[0]=1;
-      cmd[CMD_TEXTURE_GROUP] = tex.group;
-    }else{
-      params[0]=0;
-      cmd[CMD_TEXTURE_GROUP] = null ;
-    }
-
-    if(material.lightning)
-      params[1] = 1;
-     else
-      params[1] = 0;
-
-    let ntex = drawable.getNormalMap();
-    
-    if (ntex!== null){
-      params[2]=1;
-      cmd[CMD_NORMALMAP_GROUP] = ntex.group;
-    }
-    else{
-      params[2]=0;
-      cmd[CMD_NORMALMAP_GROUP] = null;
-    }
-    
-    let offsets= this.findBufferRange( drawable.bufferOffsetId);
-
-    cmd[CMD_MATERIAL_AMBIANT_OFFSET] = offsets.ambiant;
-    cmd[CMD_MATERIAL_COLOR_OFFSET] = offsets.color;
-    cmd[CMD_MATERIAL_SPECULAR_OFFSET] = offsets.specular;
-
-    cmd[CMD_PARAMS_OFFSET] = offsets.params;
-    
-    cmd[CMD_MATRIX_BUFFER_OFFSET] = offsets.matrix;
-    cmd[CMD_NORMAL_MATRIX_BUFFER_OFFSET] = offsets.normal_matrix;
-    
+    let cmd=[];
+    cmd[CMD_MATERIAL_ID] = materialID;
+    cmd[CMD_MATRIX_BUFFER_DATA] = matrix;
+    cmd[CMD_NORMAL_MATRIX_BUFFER_DATA] = normal_matrix;
     cmd[CMD_VERTEX_BUFFER_OFFSET] =  offsets.vertex;
-    cmd[CMD_VERTEX_BUFFER_SIZE] = drawable.vertexCount * drawable.vertSize;
-    cmd[CMD_VERTEX_COUNT] = drawable.vertexCount;
-
-    this.commitMatrixBuffer(offsets.matrix, drawable.getModelMatrix());
-    this.commitMatrixBuffer(offsets.normal_matrix, drawable.getNormalMatrix());
-    this.commitMatrixBuffer(offsets.color, drawable.getColor());
-    this.commitMatrixBuffer(offsets.ambiant, drawable.getAmbiant());
-    this.commitMatrixBuffer(offsets.specular, drawable.getSpecular());
-    this.commitMatrixBuffer(offsets.params, params);
+    cmd[CMD_VERTEX_BUFFER_SIZE] = vertexCount * vertexSize;
+    cmd[CMD_VERTEX_COUNT] = vertexCount;
 
     this.meshCommands.push(cmd);
   }

@@ -8,7 +8,7 @@ class Gfx3GLTFPrimitive extends Gfx3Drawable {
     }
 
     draw() {
-      gfx3Manager.drawMesh(this);
+      gfx3Manager.drawMesh(this.getModelMatrix(),this.getNormalMatrix(), this.materialID, this.bufferOffsetId, this.vertexCount, this.vertSize);
     }
     
 

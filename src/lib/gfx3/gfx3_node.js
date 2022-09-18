@@ -5,7 +5,6 @@ class Gfx3Node {
     this.position = [0.0, 0.0, 0.0];
     this.rotation = [0.0, 0.0, 0.0];
     this.scale = [1.0, 1.0, 1.0];
-    this.bufferOffsetId = null;
     this.children = [];
     this.id = id;
     this.components = [];

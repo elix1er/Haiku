@@ -33,7 +33,7 @@ class Gfx3JSM extends Gfx3Drawable {
     
     this.commitVertices();
 
-    gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
+
 
   }
 
@@ -57,13 +57,11 @@ class Gfx3JSM extends Gfx3Drawable {
     }
 
     this.commitVertices();
-
-    this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
-    gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
   }
 
   draw() {
-    gfx3Manager.drawMesh(this);
+    gfx3Manager.drawMesh(this.getModelMatrix(),this.getNormalMatrix(), this.materialID,  this.bufferOffsetId, this.vertexCount, this.vertSize);
+
   }
 }
 

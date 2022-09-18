@@ -161,6 +161,11 @@ class Gfx3Drawable {
         }          
     }
 
+    if(this.bufferOffsetId === 0)
+      this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
+      
+    gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
+
     this.previousVertexCount = this.vertexCount;
   }
 

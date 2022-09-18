@@ -32,6 +32,43 @@ class Gfx3GLTF {
         this.globalURL = null;
     }
 
+    getGraphMatrixSize(node, start)
+    { 
+      const d = node.getDrawable();
+      let newPos = start;
+      if(d)
+      {
+        newPos += this.adapter.limits.minUniformBufferOffsetAlignment*6;
+      }
+      
+      for(let child of node.children)
+      {
+        newPos = this.getGraphMatrixSize(child, newPos);
+      }
+      return newPos;
+    }
+    drawNode(node, parentMat, parentNMat)
+    { 
+      var mat,nmat;
+      if(parentMat == null)
+      {
+        mat = node.getModelMatrix();
+        nmat = node.getNormalMatrix();
+      }
+      else{
+        mat = Utils.MAT4_MULTIPLY(parentMat, node.getModelMatrix());
+        nmat =  Utils.MAT4_MULTIPLY(parentNMat, node.getNormalMatrix());
+      }
+      const drawable = node.getDrawable();
+      if(drawable !== null)
+      {
+         gfx3Manager.drawMesh(mat, nmat, drawable.materialID, drawable.bufferOffsetId, drawable.vertexCount, drawable.vertSize)
+      }
+      for(let cnode of node.children)
+      {
+        this.drawNode(cnode, mat, nmat); 
+      }
+    }
     async loadFromFile(url)
     {
         this.globalURL = url;
@@ -305,8 +342,7 @@ class Gfx3GLTF {
                 myDrawable.commitVertices();   
 
                 let newNode = gfx3Manager.newDrawable(myDrawable);
-                newNode.bufferOffsetId = gfx3Manager.getBufferRangeId( myDrawable.vertexCount * myDrawable.vertSize);
-                gfx3Manager.commitBuffer(newNode.bufferOffsetId, myDrawable.vertices);
+              
                 newObj.addChild(newNode);
 
                 obj.primitives[n].nodeid = newNode.id;
@@ -315,7 +351,7 @@ class Gfx3GLTF {
                 let node = this.rootNode.find(obj.primitives[n].nodeid);
                 let drawable = node.getDrawable();
                 let newNode = gfx3Manager.newDrawable(drawable);
-                newNode.bufferOffsetId = node.bufferOffsetId;
+
                 newObj.addChild(newNode);
             }
         }
@@ -357,7 +393,7 @@ class Gfx3GLTF {
     }
 
     draw() {
-        gfx3Manager.drawNode(this.rootNode);
+        this.drawNode(this.rootNode, null, null);
     }
  }
 

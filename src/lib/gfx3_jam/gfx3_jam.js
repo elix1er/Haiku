@@ -85,6 +85,7 @@ class Gfx3JAM extends Gfx3Drawable {
     this.isLooped = true;
     this.currentFrameIndex = 0;
     this.frameProgress = 0;
+    this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.numVertices * this.vertSize);
   }
 
   update(ts) {
@@ -141,12 +142,9 @@ class Gfx3JAM extends Gfx3Drawable {
       }
     }
 
+    
     this.commitVertices();
-
-    if(this.bufferOffsetId === 0)
-      this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
-
-    gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
+    
 
     if (interpolateFactor >= 1) {
       this.currentFrameIndex = nextFrameIndex;
@@ -159,7 +157,7 @@ class Gfx3JAM extends Gfx3Drawable {
 
   draw() {
 
-    gfx3Manager.drawMesh(this);
+    gfx3Manager.drawMesh(this.getModelMatrix(),this.getNormalMatrix(), this.materialID, this.bufferOffsetId, this.vertexCount, this.vertSize);
   }
 
   play(animationName, isLooped = false, preventSameAnimation = false) {

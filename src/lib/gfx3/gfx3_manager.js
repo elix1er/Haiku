@@ -68,73 +68,6 @@ class Gfx3Manager {
   }
 
 
-  deleteVertexBufferRange(id)
-  {
-    let deletedRange = this.findBufferRange(id);
-    let rangeSize = this.findBufferRangeSize(id);
-
-    console.log("delete vertex buffer ( experimental ! )");
-
-    this.meshVertexSize -= rangeSize;
-
-    let newMeshVertexBuffer = this.device.createBuffer({
-      size: this.meshVertexSize,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
-    });
-
-    if(this.meshVertexSize > 0 )
-    {
-      /* copy everything up to deleted range */
-
-      let commandEncoder = this.device.createCommandEncoder();
-      commandEncoder.copyBufferToBuffer(
-        gfx3Manager.meshVertexBuffer /* source buffer */,
-        0 /* source offset */,
-        newMeshVertexBuffer /* destination buffer */,
-        0 /* destination offset */,
-        deletedRange.vertex /* size */
-      );
-      
-      // Submit GPU commands.
-      const gpuCommands = commandEncoder.finish();
-      this.device.queue.submit([gpuCommands]);
-
-      /* copy after deleted range to deleted offset */
-      commandEncoder = this.device.createCommandEncoder();
-      commandEncoder.copyBufferToBuffer(
-        gfx3Manager.meshVertexBuffer /* source buffer */,
-        deletedRange.vertex + rangeSize /* source offset */,
-        newMeshVertexBuffer /* destination buffer */,
-        deletedRange.vertex /* destination offset */,
-        this.meshVertexSize - deletedRange.vertex /* size */
-      );
-      
-      // Submit GPU commands.
-      const gpuCommands2 = commandEncoder.finish();
-      this.device.queue.submit([gpuCommands2]);
-
-      this.meshVertexBuffer.destroy();
-      this.meshVertexBuffer = newMeshVertexBuffer;
-    }
-
-    /* update vertex offset of moved drawables */
-    for(let range in this.Ranges)
-    {
-      if(range.vertex > deletedRange.vertex)
-      {
-        range.vertex -= rangeSize;
-      }
-    }
-
-    let n=0;
-    while(n<this.Ranges)
-    {
-      if(this.Ranges[n].id == id)
-        this.Ranges.slice(n, 1);
-      else
-        n++;
-    }
-  }
 
   newMaterial(color, texture, normalmap)
   {
@@ -272,41 +205,13 @@ class Gfx3Manager {
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     
-  
     this.meshVertexSize = 0;
-    this.nextMatrixPos = 0;
+
     console.log('init');
 
   }
 
   getBufferRangeId(size)
-  {
-    let newOffset = this.getBufferRange(size);
-    let myId = this.RangesIds++;
-    this.Ranges.push({'offsets' : newOffset, infos: {size : size, id :myId }});
-    return myId;
-  }
-  findBufferRangeSize(id)
-  {
-    for(let range of this.Ranges)
-    {
-      if(range.infos.id == id)
-        return range.infos.size;
-    }
-    return null;
-
-  }
-  findBufferRange(id)
-  {
-    for(let range of this.Ranges)
-    {
-      if(range.infos.id == id)
-        return range.offsets;
-    }
-    return null;
-  }
-
-  getBufferRange(size)
   {
     console.log("new buffer "+size);
 
@@ -338,8 +243,22 @@ class Gfx3Manager {
 
     this.meshVertexSize += size;
     this.meshVertexBuffer = newMeshVertexBuffer;
-    return newOffset;
+    
+    let myId = this.RangesIds++;
+    this.Ranges.push({'offsets' : newOffset, infos: {size : size, id :myId }});
+    return myId;
   }
+
+  findBufferRange(id)
+  {
+    for(let range of this.Ranges)
+    {
+      if(range.infos.id == id)
+        return range.offsets;
+    }
+    return null;
+  }
+
 
   commitBuffer(rangeId, vertices){
 
@@ -349,6 +268,87 @@ class Gfx3Manager {
 
 
 
+  deleteVertexBufferRange(id)
+  {
+    let deletedRange = this.findBufferRange(id);
+    let rangeSize = 0;
+    for(let range of this.Ranges)
+    {
+      if(range.infos.id == id){
+        rangeSize = range.infos.size;
+        break;
+      }
+    }
+
+    if(rangeSize === 0)
+    {
+      console.log('cannot delete empty buffer '+id);
+      return;
+    }
+
+
+     console.log("delete vertex buffer ( experimental ! )");
+
+    this.meshVertexSize -= rangeSize;
+
+    let newMeshVertexBuffer = this.device.createBuffer({
+      size: this.meshVertexSize,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+    });
+
+    if(this.meshVertexSize > 0 )
+    {
+      /* copy everything up to deleted range */
+
+      let commandEncoder = this.device.createCommandEncoder();
+      commandEncoder.copyBufferToBuffer(
+        gfx3Manager.meshVertexBuffer /* source buffer */,
+        0 /* source offset */,
+        newMeshVertexBuffer /* destination buffer */,
+        0 /* destination offset */,
+        deletedRange.vertex /* size */
+      );
+      
+      // Submit GPU commands.
+      const gpuCommands = commandEncoder.finish();
+      this.device.queue.submit([gpuCommands]);
+
+      /* copy after deleted range to deleted offset */
+      commandEncoder = this.device.createCommandEncoder();
+      commandEncoder.copyBufferToBuffer(
+        gfx3Manager.meshVertexBuffer /* source buffer */,
+        deletedRange.vertex + rangeSize /* source offset */,
+        newMeshVertexBuffer /* destination buffer */,
+        deletedRange.vertex /* destination offset */,
+        this.meshVertexSize - deletedRange.vertex /* size */
+      );
+      
+      // Submit GPU commands.
+      const gpuCommands2 = commandEncoder.finish();
+      this.device.queue.submit([gpuCommands2]);
+
+      this.meshVertexBuffer.destroy();
+      this.meshVertexBuffer = newMeshVertexBuffer;
+    }
+
+    /* update vertex offset of moved drawables */
+    for(let range in this.Ranges)
+    {
+      if(range.vertex > deletedRange.vertex)
+      {
+        range.vertex -= rangeSize;
+      }
+    }
+
+    let n=0;
+    while(n<this.Ranges)
+    {
+      if(this.Ranges[n].id == id)
+        this.Ranges.slice(n, 1);
+      else
+        n++;
+    }
+  }
 
   beginDrawing(viewIndex) {
     let view = this.views[viewIndex];
@@ -407,6 +407,13 @@ class Gfx3Manager {
 
   }
 
+  addUniform(UniformEnties, id, data)
+  {
+    this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, data); 
+    UniformEnties.push({binding: id,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
+    this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+  }
+
   endDrawing() {
     // mesh shader
     // ------------------------------------------------------------------------------------
@@ -425,9 +432,7 @@ class Gfx3Manager {
 
     if( this.meshVertexBuffer != null)
     {
-
       for (let cmd of this.meshCommands) {
-
        
         let material = this.findMaterial( cmd[CMD_MATERIAL_ID]);
 
@@ -460,7 +465,7 @@ class Gfx3Manager {
 
         params[3]=0;
 
-        let bentries =  [
+        let UniformEnties  = [
           {
             binding: 0,
             resource: {
@@ -478,32 +483,14 @@ class Gfx3Manager {
           }
         ]
 
+        this.addUniform(UniformEnties, 2, new Float32Array(cmd[CMD_MATRIX_BUFFER_DATA]));
+        this.addUniform(UniformEnties, 3, new Float32Array(cmd[CMD_NORMAL_MATRIX_BUFFER_DATA]));
+        this.addUniform(UniformEnties, 4, new Float32Array(material.ambiant));
+        this.addUniform(UniformEnties, 5, new Float32Array(material.color));
+        this.addUniform(UniformEnties, 6, new Float32Array(material.specular));
+        this.addUniform(UniformEnties, 7, new Float32Array(params));
             
-        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(cmd[CMD_MATRIX_BUFFER_DATA])); 
-        bentries.push({binding: 2,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
-    
-        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(cmd[CMD_NORMAL_MATRIX_BUFFER_DATA]));
-        bentries.push({binding: 3,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
-    
-        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(material.ambiant));
-        bentries.push({binding: 4,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
-    
-        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(material.color));
-        bentries.push({binding: 5,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
-        
-        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(material.specular));
-        bentries.push({binding: 6,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
-    
-        this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, new Float32Array(params));
-        bentries.push({binding: 7,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-        this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
-
-        bentries.push({
+        UniformEnties.push({
           binding: 8,
           resource: {
             buffer: this.camPosBuffer,
@@ -511,14 +498,8 @@ class Gfx3Manager {
             size: 16 * 4
           }
         });
-    
-      
-        let meshMatrixBinding = this.device.createBindGroup({
-          layout: this.meshPipeline.getBindGroupLayout(0),
-          entries:bentries
-        });
-         
-
+          
+        let meshMatrixBinding = this.device.createBindGroup({ layout: this.meshPipeline.getBindGroupLayout(0), entries: UniformEnties });
         this.passEncoder.setBindGroup(0, meshMatrixBinding);
         this.passEncoder.setVertexBuffer(0, this.meshVertexBuffer, cmd[CMD_VERTEX_BUFFER_OFFSET], cmd[CMD_VERTEX_BUFFER_SIZE]);
         this.passEncoder.draw(cmd[CMD_VERTEX_COUNT]);

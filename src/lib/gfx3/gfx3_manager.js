@@ -396,9 +396,6 @@ class Gfx3Manager {
     this.passEncoder.setScissorRect(viewportX, viewportY, viewportWidth, viewportHeight);
     this.currentView = view;
 
-   x
-    
-
     //this.graphMatrixBuffer.destroy();
     
     this.MatrixbufferOffset=0;
@@ -637,13 +634,7 @@ class Gfx3Manager {
     return texture;
   }
 
-
-  drawNode(node) {
-
-    this.sceneRoot.addChild(node);
-
-  }
-  
+ 
   drawMesh(matrix, normal_matrix, materialID, rangeId, vertexCount, vertexSize) {
 
     let offsets = this.findBufferRange(rangeId);

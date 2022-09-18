@@ -396,8 +396,6 @@ class Gfx3Manager {
     this.passEncoder.setScissorRect(viewportX, viewportY, viewportWidth, viewportHeight);
     this.currentView = view;
 
-    //this.graphMatrixBuffer.destroy();
-    
     this.MatrixbufferOffset=0;
 
     this.meshCommands = [];
@@ -409,9 +407,9 @@ class Gfx3Manager {
 
   addUniform(UniformEnties, id, data)
   {
-    this.device.queue.writeBuffer(this.meshMatrixBuffer, this.meshMatrixBufferSize, data); 
-    UniformEnties.push({binding: id,resource: { buffer: this.meshMatrixBuffer, offset: this.meshMatrixBufferSize, size: 16 * 4}});
-    this.meshMatrixBufferSize += this.adapter.limits.minUniformBufferOffsetAlignment;
+    this.device.queue.writeBuffer(this.meshMatrixBuffer, this.MatrixbufferOffset, data); 
+    UniformEnties.push({binding: id,resource: { buffer: this.meshMatrixBuffer, offset: this.MatrixbufferOffset, size: 16 * 4}});
+    this.MatrixbufferOffset += this.adapter.limits.minUniformBufferOffsetAlignment;
   }
 
   endDrawing() {
@@ -428,8 +426,6 @@ class Gfx3Manager {
   });
   
  
-    this.meshMatrixBufferSize = 0;
-
     if( this.meshVertexBuffer != null)
     {
       for (let cmd of this.meshCommands) {

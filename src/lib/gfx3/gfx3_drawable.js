@@ -140,30 +140,14 @@ class Gfx3Drawable {
 
     for(let n=this.previousVertexCount;n<this.vertexCount;n++)
     {
-        if(this.minV==null){
-          this.minV=[this.vertices[n* this.vertSizeF + 0],this.vertices[n* this.vertSizeF + 1],this.vertices[n* this.vertSizeF + 2], 1.0]
-        }
-        else
-        {
-          this.minV[0]=Math.min(this.minV[0], this.vertices[n* this.vertSizeF + 0]);
-          this.minV[1]=Math.min(this.minV[1], this.vertices[n* this.vertSizeF + 1]);
-          this.minV[2]=Math.min(this.minV[2], this.vertices[n* this.vertSizeF + 2]);
-        }
-
-        if(this.maxV==null){
-          this.maxV=[this.vertices[n* this.vertSizeF + 0],this.vertices[n* this.vertSizeF + 1],this.vertices[n* this.vertSizeF + 2], 1.0];
-        }
-        else
-        {
-          this.maxV[0]=Math.max(this.maxV[0], this.vertices[n* this.vertSizeF + 0]);
-          this.maxV[1]=Math.max(this.maxV[1], this.vertices[n* this.vertSizeF + 1]);
-          this.maxV[2]=Math.max(this.maxV[2], this.vertices[n* this.vertSizeF + 2]);
-        }          
+        let v = [this.vertices[n* this.vertSizeF + 0],this.vertices[n* this.vertSizeF + 1],this.vertices[n* this.vertSizeF + 2]];
+        this.minV = Utils.VEC3_MIN(this.minV, v);
+        this.maxV = Utils.VEC3_MAX(this.maxV, v);
     }
 
     if(this.bufferOffsetId === 0)
       this.bufferOffsetId = gfx3Manager.getBufferRangeId( this.vertexCount * this.vertSize);
-      
+
     gfx3Manager.commitBuffer(this.bufferOffsetId, this.vertices);
 
     this.previousVertexCount = this.vertexCount;

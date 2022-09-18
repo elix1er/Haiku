@@ -27,8 +27,13 @@ class Gfx3Material{
     this.texture = texture;
     this.normalmap = normalmap;
     this.lightning = false;
-    
   }
+  
+  delete()
+  {
+
+  }
+
 }
 
 
@@ -74,6 +79,21 @@ class Gfx3Manager {
     let newMat = new Gfx3Material(this.materials.length + 1, color, texture, normalmap);
     this.materials.push(newMat);
     return newMat.id;
+  }
+
+  deleteMaterial(id)
+  {
+    let n=0;
+    while(n<this.materials.length)
+    {
+      if(this.materials[n].id==id)
+      {
+        this.materials[n].delete();
+        this.materials.slice(n,1);
+      }
+      else 
+        n++;
+    }
   }
 
   setMaterialTexture(id, texture)

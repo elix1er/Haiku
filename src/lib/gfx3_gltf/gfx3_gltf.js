@@ -122,6 +122,7 @@ class Gfx3GLTF {
         req.overrideMimeType('text\/plain; charset=x-user-defined');
         req.send(null);
     }
+
     
     async buildObjMaterial(node){
 
@@ -166,7 +167,7 @@ class Gfx3GLTF {
 
             let matColor;
 
-            if(gltfMaterial.pbrMetallicRoughness.baseColor)
+            if(gltfMaterial.pbrMetallicRoughness.baseColorFactor)
                 matColor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
             else
                 matColor = [1.0, 1.0, 1.0, 1.0];
@@ -390,6 +391,18 @@ class Gfx3GLTF {
     draw() {
         this.drawNode(this.rootNode, null, null);
     }
+
+    delete()
+    {
+        let mypath = dirname(this.globalURL);
+
+        this.rootNode.delete();
+
+        for (let texture of this.scene.textures) {
+            gfx3TextureManager.deleteTexture(mypath + '/'+ this.scene.images[texture.source].uri);
+        }
+    }
+
  }
 
 export {Gfx3GLTF};

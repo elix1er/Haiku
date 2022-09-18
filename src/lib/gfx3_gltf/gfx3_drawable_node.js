@@ -1,4 +1,5 @@
 import { Utils } from '../core/utils.js';
+import { gfx3Manager } from '../gfx3/gfx3_manager.js';
 
 import {Gfx3Node} from './gfx3_node.js'
 
@@ -11,13 +12,16 @@ class Gfx3DrawableNode extends Gfx3Node {
   
     draw()
     {
-      this.drawable.draw();
+      gfx3Manager.drawMesh(this.getModelMatrix(), this.getNormalMatrix(), this.drawable.materialID, this.drawable.bufferOffsetId, this.drawable.vertexCount, this.drawable.vertSize);
+      super.draw();
     }
   
     delete()
     {
-      this.drawable.delete();
       super.delete();
+      gfx3Manager.deleteMaterial(this.drawable.materialID);
+      this.drawable.delete();
+      
     }
   
     getDrawable()

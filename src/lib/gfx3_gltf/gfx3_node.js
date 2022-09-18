@@ -187,8 +187,20 @@ class Gfx3Node {
       return null;
   }
 
+  delete()
+  {
+    for(let child of this.children)
+    {
+        child.delete();
+    }
+    this.children=[];
+  }
   draw()
   {
+    for(let child of this.children)
+    {
+        child.draw();
+    }
   }
 
 }

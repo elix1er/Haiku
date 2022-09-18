@@ -195,11 +195,21 @@ class Gfx3Node {
     }
     this.children=[];
   }
-  draw()
-  {
+  draw(parentMat, parentNMat )
+  { 
+    var mat,nmat;
+    if(parentMat == null)
+    {
+      mat = this.getModelMatrix();
+      nmat = this.getNormalMatrix();
+    }
+    else{
+      mat = Utils.MAT4_MULTIPLY(parentMat, this.getModelMatrix());
+      nmat =  Utils.MAT4_MULTIPLY(parentNMat, this.getNormalMatrix());
+    }
     for(let child of this.children)
     {
-        child.draw();
+        child.draw(mat, nmat);
     }
   }
 

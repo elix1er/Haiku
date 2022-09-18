@@ -10,10 +10,26 @@ class Gfx3DrawableNode extends Gfx3Node {
       this.drawable = drawable;
     }
   
-    draw()
+    draw(parentMat, parentNMat)
     {
-      gfx3Manager.drawMesh(this.getModelMatrix(), this.getNormalMatrix(), this.drawable.materialID, this.drawable.bufferOffsetId, this.drawable.vertexCount, this.drawable.vertSize);
-      super.draw();
+        var mat,nmat;
+        if(parentMat == null)
+        {
+          mat = this.getModelMatrix();
+          nmat = this.getNormalMatrix();
+        }
+        else{
+          mat = Utils.MAT4_MULTIPLY(parentMat, this.getModelMatrix());
+          nmat =  Utils.MAT4_MULTIPLY(parentNMat, this.getNormalMatrix());
+        }
+        if(this.drawable !== null)
+        {
+           gfx3Manager.drawMesh(mat, nmat, this.drawable.materialID, this.drawable.vertices, this.drawable.bufferOffsetId, this.drawable.vertexCount, this.drawable.vertSize)
+        }
+        for(let cnode of this.children)
+        {
+            cnode.draw(mat, nmat); 
+        }
     }
   
     delete()

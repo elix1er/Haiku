@@ -42,28 +42,6 @@ class Gfx3GLTF {
       }
       return newPos;
     }
-    drawNode(node, parentMat, parentNMat)
-    { 
-      var mat,nmat;
-      if(parentMat == null)
-      {
-        mat = node.getModelMatrix();
-        nmat = node.getNormalMatrix();
-      }
-      else{
-        mat = Utils.MAT4_MULTIPLY(parentMat, node.getModelMatrix());
-        nmat =  Utils.MAT4_MULTIPLY(parentNMat, node.getNormalMatrix());
-      }
-      const drawable = node.getDrawable();
-      if(drawable !== null)
-      {
-         gfx3Manager.drawMesh(mat, nmat, drawable.materialID, drawable.bufferOffsetId, drawable.vertexCount, drawable.vertSize)
-      }
-      for(let cnode of node.children)
-      {
-        this.drawNode(cnode, mat, nmat); 
-      }
-    }
     async loadFromFile(url)
     {
         this.globalURL = url;
@@ -389,7 +367,7 @@ class Gfx3GLTF {
     }
 
     draw() {
-        this.drawNode(this.rootNode, null, null);
+        this.rootNode.draw(null, null);
     }
 
     delete()

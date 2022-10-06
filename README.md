@@ -7,7 +7,6 @@ Copyright © 2020-2022 [Raijin].
 **Aliyah** is a bunch of light and simple packages to build web videogames.    
 **Aliyah** support both **2D** (canvas) and **3D** (webgpu).    
 No need to learn a new language, if you master **HTML/JS/CSS** then you can already create a professional and very optimized videogames.
-Documentation is coming-soon [here](https://aliyah-engine.com/).
 
 ## General features
 - Screen Manager
@@ -36,46 +35,32 @@ Documentation is coming-soon [here](https://aliyah-engine.com/).
     - Multiple viewports
     - Orthographic and projection views
     - Walkmesh (gfx3_jwm)
-    - Static sprite (gfx3_jss)
-    - Animated sprite (gfx3_jas)
-    - Static textured mesh (gfx3_jsm)
-    - Animated textured mesh (gfx3_jam)
-    - Different debug geometric shapes (gfx3_debug)
+    - Static & Animated sprite (gfx3_sprite)
+    - Static & Animated mesh with material support (gfx3_mesh)
+    - Gltf (gfx3_mesh_gltf)
+    - Skybox (gfx3_skybox)
+    - Debug geometries (gfx3_debug_renderer)
     - Railroad (gfx3_mover)
 - 2D Graphics Manager
     - Texture manager
     - Animated sprite (gfx2_sprite)
     - Animated tilemap (gfx2_map)
-- Architectures (your choice)
-    - None (default)
-    - Pure ECS (data-driven)
-    - Scene
-- Algorithm
-    - AStar
-    - Djikstra
 
 ## Getting started
-You need to install [nodejs](https://nodejs.org/en/download/) and [browserify](https://browserify.org/).    
+You need to install [nodejs](https://nodejs.org/en/download/). 
 Once installation is done, let's build our first project.     
 
 Clone this repo, go to the root of project and launch the build with the following command:
 ```
-// you need to build from the project root
-# browserify src/main.js -o build/dist.js
+// you need to install dependencies
+# npm install
+
+// now, you can start with
+# npm run dev
 ```
 
-Now, run your prefered web server (nginx, live-server, apache, nodejs, etc...), visit your localhost and you will see the project running.
-Let's go to write some js-vanilla code to build your own web videogames.
-
 ## How to integrate your 3D models ?
-The [aliyah-blender-exporter](https://anubancorp.itch.io/aliyah-engine) allows you to export your models in Aliyah compatible formats!
-
-## Examples
-- [Rotating cube](https://aliyah-engine.com/samples/rotating-cube/)
-- [3D pre-rendered](https://aliyah-engine.com/samples/prerendered/)
-- [3D pre-rendered isometric](https://aliyah-engine.com/samples/prerendered-isometric/)
-- [2D tilemap](https://aliyah-engine.com/samples/tilemap/)
-- [2D tilemap with pathfinding](https://aliyah-engine.com/samples/tilemap-pathfinding/)
+The [aliyah-blender-exporter](https://github.com/Anuban-corp/aliyah-blender-exporter) allows you to export your models in Aliyah compatible formats!
 
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
@@ -94,8 +79,5 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Use a 3D format with frame by frame animations
 
 ## Roadmap
-- Integrate GLTF
-- Pass to ES6 import/export
-- Implement Skybox
-- Implement Mipmap
+- Implement Texture Scrolling
 - Implement BSP (Binary Space Partitionning)

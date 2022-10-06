@@ -1,0 +1,44 @@
+{
+  "Ident": "ROOM",
+  "Id": "Room0000",
+  "Name": "Sample 00",
+  "Description": "The room",
+  "ScriptFile": "samples/prerendered-isometric/scene.jsc",
+  "MusicFile": "samples/prerendered-isometric/scene.mp3",
+  "MapFile": "samples/prerendered-isometric/scene.jsm",
+  "MapTextureFile": "samples/prerendered-isometric/scene.png",
+  "WalkmeshFile": "samples/prerendered-isometric/scene.jwm",
+  "Camera": {
+    "MinClipOffsetX": 0,
+    "MinClipOffsetY": 0,
+    "MaxClipOffsetX": 0,
+    "MaxClipOffsetY": 0
+  },
+  "Controller": {
+    "JASFile": "samples/prerendered-isometric/kid.jas",
+    "TextureFile": "samples/prerendered-isometric/kid.png",
+    "Radius": 0.1,
+    "OffsetX": 8,
+    "OffsetY": 16
+  },
+  "Spawns": [{
+    "Name": "Spawn0000",
+    "PositionX": -0.12,
+    "PositionY":-3.56,
+    "PositionZ":-1.72,
+    "Direction": "LEFT"
+  }],
+  "Models": [{
+    "JASFile": "samples/prerendered-isometric/princess.jas",
+    "TextureFile": "samples/prerendered-isometric/princess.png",
+    "PositionX": -0.12,
+    "PositionY":-3.56,
+    "PositionZ":-4.00,
+    "Radius": 0.2,
+    "OffsetX": 12,
+    "OffsetY": 17.5,
+    "OnActionBlockId": "0000"
+  }],
+  "Movers": [],
+  "Triggers": []
+}

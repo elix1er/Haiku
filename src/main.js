@@ -1,6 +1,6 @@
-import { gameManager } from './game_manager.js';
-import { screenManager } from './lib/screen/screen_manager.js';
-import { MainScreen } from './main_screen.js';
+import { gameManager } from './game_manager';
+import { screenManager } from './lib/screen/screen_manager';
+import { MainScreen } from './samples/real-time/main_screen';
 
-await gameManager.startup();
+gameManager.startup();
 screenManager.requestSetScreen(new MainScreen());

@@ -1,0 +1,8 @@
+{
+  "entryPointStrategy": "expand",
+  "entryPoints": [
+    "./src/lib/core",
+    "./src/lib/gfx3"
+  ],
+  "out": "docs"
+}

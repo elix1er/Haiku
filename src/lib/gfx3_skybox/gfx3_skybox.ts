@@ -10,7 +10,7 @@ class Gfx3Skybox extends Gfx3Drawable {
   constructor() {
     super(8);
     this.cubemap = gfx3Manager.createCubeMapFromBitmap();
-    this.size = 10;
+    this.size = 2;
 
     this.beginVertices(12 * 3);
 

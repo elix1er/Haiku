@@ -60,6 +60,11 @@ class Gfx3TextureManager {
     return this.textures.get(path)!;
   }
 
+  hasTexture(path:string):boolean{
+
+    return this.textures.has(path);
+
+  }
   releaseTextures(): void {
     for (const path of this.textures.keys()) {
       const texture = this.textures.get(path)!;

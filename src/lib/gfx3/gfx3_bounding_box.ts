@@ -38,6 +38,17 @@ class Gfx3BoundingBox {
     return new Gfx3BoundingBox(min, max);
   }
 
+  mergeOne(aabb: Gfx3BoundingBox) {
+    var min = this.min;
+    var max = this.max;
+
+   for (let i = 0; i < 3; i++) {
+    min[i] = Math.min(aabb.min[i], min[i]);
+    max[i] = Math.max(aabb.max[i], max[i]);
+   }
+
+   return new Gfx3BoundingBox(min, max);
+  }
   getCenter(): vec3 {
     const w = this.max[0] - this.min[0];
     const h = this.max[1] - this.min[1];

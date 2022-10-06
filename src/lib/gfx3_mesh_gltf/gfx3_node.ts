@@ -1,13 +1,16 @@
 import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
 import { Utils } from '../core/utils.js';
 import { Gfx3Transformable } from '../gfx3/gfx3_transformable';
-import { Gfx3Material} from '../gfx3/gfx3_material';
+import { Gfx3Material} from '../gfx3_mesh/gfx3_mesh_material';
+import { Gfx3Mesh } from '../gfx3_mesh/gfx3_mesh';
+import { gfx3MeshRenderer } from '../gfx3_mesh/gfx3_mesh_renderer';
 
 class Gfx3Node extends Gfx3Transformable {
 
   id : Number;
   children : Array<Gfx3Node>;
   name : String;
+  drawable : Gfx3Mesh | null;
 
   constructor(id : Number) {
     super();
@@ -17,6 +20,7 @@ class Gfx3Node extends Gfx3Transformable {
     this.children = [];
     this.id = id;
     this.name = "default";
+    this.drawable = null;
   }
   
 
@@ -62,40 +66,46 @@ class Gfx3Node extends Gfx3Transformable {
     }
   }
 
-  getTotalBoundingBox(mat : mat4| null): Gfx3BoundingBox
+  getTotalBoundingBox(mat : mat4 | null):Gfx3BoundingBox | null
   {
       let m = this.getTransformMatrix();
       var newmat;
+      
+      newmat = mat ? Utils.MAT4_MULTIPLY(m, mat) : m;
 
-      if(mat !== null)
-        newmat = Utils.MAT4_MULTIPLY(mat, m);
-      else
-        newmat =  m;
-
-      let totalBox = new Gfx3BoundingBox([0,0,0], [0,0,0]);
+      let totalBox = this.drawable?this.drawable.boundingBox.transform(newmat) : null;
 
       for(let child of this.children)
       {
-        let childbox = child.getTotalBoundingBox(newmat);
+          let childbox = child.getTotalBoundingBox(newmat);
 
-        if(totalBox == null)
-          totalBox = childbox;
-        else
-          totalBox = totalBox.mergeOne(childbox);
+          if(totalBox == null)
+            totalBox = childbox;
+          else if(childbox != null)
+            totalBox = totalBox.mergeOne(childbox!);
       }
 
       return totalBox;
+
   }
 
-  getNodeBoundingBox(id : Number, mat: mat4 | null) : Gfx3BoundingBox | null
-  {
-      let m = this.getTransformMatrix();
-      var newmat;
 
-      if(mat !== null)
-        newmat = Utils.MAT4_MULTIPLY(mat, m);
-      else
-        newmat =  m;
+  getNodeBoundingBox(id : Number, mat: mat4):Gfx3BoundingBox | null
+  {
+    let m = this.getTransformMatrix();
+    var newmat;
+    
+    if(mat !== null)
+      newmat = Utils.MAT4_MULTIPLY(m, mat);
+    else
+      newmat =  m;
+
+      if(this.id === id)
+      {
+          if((this.drawable)&&(this.drawable.boundingBox)){
+            return this.drawable.boundingBox.transform(newmat);
+          }
+      }
 
       for(let child of this.children)
       {
@@ -105,6 +115,7 @@ class Gfx3Node extends Gfx3Transformable {
       }
       return null;
   }
+
 
   delete()
   {
@@ -123,16 +134,19 @@ class Gfx3Node extends Gfx3Transformable {
 
   draw(parentMat : mat4 | null)
   { 
-
-   
     const mat = (parentMat == null) ? this.getTransformMatrix() : Utils.MAT4_MULTIPLY(parentMat, this.getTransformMatrix());
+
+    if(this.drawable !== null)
+    {
+
+      gfx3MeshRenderer.drawMesh(this.drawable, mat);
+    }
   
     for(let child of this.children)
     {
       child.draw(mat);
     }
   }
-
   getMaterial(): Gfx3Material | null
   {
     return null;

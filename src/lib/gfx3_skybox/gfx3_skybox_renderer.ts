@@ -25,25 +25,13 @@ class Gfx3SkyboxRenderer {
     gfx3Manager.destroyUniformGroup(this.uniformGroup);
     this.uniformGroup = gfx3Manager.createUniformGroup(SHADER_UNIFORM_ATTR_COUNT * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
 
-    const pcMatrix = gfx3Manager.getCurrentProjectionMatrix();
     const viewMatrix = gfx3Manager.getCurrentViewMatrix();
     viewMatrix[12] = 0;
     viewMatrix[13] = 0;
     viewMatrix[14] = 0;
+    const vpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), viewMatrix);
 
-  
-
-    const vpcMatrix = Utils.MAT4_MULTIPLY(pcMatrix, viewMatrix);
-
-    const normMatrix = Utils.MAT4_INVERT(gfx3Manager.getCurrentViewMatrix());
-    normMatrix[12] = 0;
-    normMatrix[13] = 0;
-    normMatrix[14] = 0;
-
-    gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(vpcMatrix));
-    gfx3Manager.writeUniformGroup(this.uniformGroup, 1, new Float32Array(normMatrix));
-
-    
+    gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(Utils.MAT4_INVERT(vpcMatrix)));
 
     const cubemap = this.skybox.getCubemap();
     const cubemapBinding = gfx3Manager.createTextureBinding(this.pipeline, cubemap.gpuSampler, cubemap.gpuTexture, 1, { dimension: 'cube' });

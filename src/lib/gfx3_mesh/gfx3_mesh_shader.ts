@@ -106,14 +106,14 @@ fn main(
     output.fragUV = uv;
   }
 
+  output.normal = normalize(normMatrix * vec4<f32>(normal.x, normal.y, normal.z, 0.0)).xyz;  
+  output.eyeDir = normalize(mvPosition.xyz);
+
   /* lighting */
   if(params[1] != 0.0)
   {
-    output.eyeDir = normalize(mvPosition.xyz);
-    var nn = normalize(normMatrix * vec4<f32>(normal.x, normal.y, normal.z, 0.0));  
-    output.normal = nn.xyz;
+    
     output.lightDir = normalize(lightPos.xyz - mvPosition.xyz);
-
     // normal map 
     if(params[2] != 0.0)
     {
@@ -204,7 +204,8 @@ fn main(
   /* env map */
   if(params[3] != 0.0)
   {
-    var envMapColor:vec4<f32> = (textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(normal.x, normal.y, normal.z)));
+    var rvec = normalize(reflect(-eyeDir, normal));
+    var envMapColor:vec4<f32> = (textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z)));
     finalColor *= envMapColor;
   }
 

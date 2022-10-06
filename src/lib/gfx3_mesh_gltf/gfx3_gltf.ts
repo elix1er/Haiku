@@ -1,11 +1,8 @@
 import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager';
-import { Gfx3GLTFPrimitive } from './gfx3_gltf_prim';
 import { Utils } from '../core/utils';
-import { Gfx3Drawable } from '../gfx3/gfx3_drawable';
-import { Gfx3Material, createMaterial } from '../gfx3/gfx3_material';
-
+import { Gfx3Mesh } from '../gfx3_mesh/gfx3_mesh';
+import { Gfx3Material } from '../gfx3_mesh/gfx3_mesh_material';
 import { Gfx3Node } from './gfx3_node';
-import { Gfx3DrawableNode } from './gfx3_drawable_node';
 
 
 
@@ -109,7 +106,7 @@ class GLTFattributes {
 
 class GLTFPrimitive {
     material : number;
-    drawable: Gfx3Drawable | null;
+    drawable: Gfx3Mesh | null;
     attributes : GLTFattributes;
     indices : number | undefined;
 
@@ -290,7 +287,7 @@ class Gfx3GLTF {
                     let imageID = this.scene.textures[gltfMaterial.normalTexture.index].source;
                     let image = this.scene.images[imageID];
         
-                    ntex = await gfx3TextureManager.loadTexture(mypath + '/' +image.uri, 2);
+                    ntex = await gfx3TextureManager.loadTexture(mypath + '/' +image.uri);
                 }
     
                 let matColor : vec4;
@@ -300,7 +297,17 @@ class Gfx3GLTF {
                 else
                     matColor = [1.0, 1.0, 1.0, 1.0];
     
-                gltfMaterial.material = createMaterial({color : matColor, texture : tex, normalMap: ntex });
+                gltfMaterial.material =  {
+                    ambiant: [0.2, 0.2, 0.2],
+                    specular: [1.0, 0.0, 0.0, 4],
+                    color: matColor,
+                    lightning: true,
+                    texture: tex,
+                    normalMap: ntex,
+                    envMap: null
+                  };
+                  
+                  
             }
 
             myDrawable.material = gltfMaterial.material;
@@ -460,11 +467,11 @@ class Gfx3GLTF {
 
             if(obj.primitives[n].drawable == null)
             {
-                let myDrawable = new Gfx3GLTFPrimitive();
+                let myDrawable = new Gfx3Mesh();
 
                 obj.primitives[n].drawable = myDrawable;
 
-                myDrawable.clearVertices();
+                
 
                 if(obj.primitives[n].indices !== undefined){
 
@@ -475,6 +482,8 @@ class Gfx3GLTF {
 
                     let startOffset;
                     let IndicesStride;
+
+                    myDrawable.beginVertices(accessor.count);
 
                     if(accessor.componentType === 5123)
                     {
@@ -497,16 +506,22 @@ class Gfx3GLTF {
                     }
 
                 }else{
+
+                    myDrawable.beginVertices(this.scene.accessors[obj.primitives[n].attributes.POSITION].count);
+
                     for(let i=0;i<this.scene.accessors[obj.primitives[n].attributes.POSITION].count;i++)
                     {
                         this.getVertex(obj.primitives[n], i);
                     }
     
                 }
-                myDrawable.commitVertices();   
+                myDrawable.endVertices();   
+
+                obj.primitives[n].drawable=myDrawable;
             }
 
-            let newNode = new Gfx3DrawableNode(obj.primitives[n].drawable! , this.nodesCounter++);
+            let newNode = new Gfx3Node(this.nodesCounter++);
+            newNode.drawable = obj.primitives[n].drawable;
             newNode.name ="material "+ this.scene.materials[obj.primitives[n].material].name;
             newObj.addChild(newNode);
 

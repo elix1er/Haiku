@@ -51,32 +51,40 @@ export const PIPELINE_DESC: any = {
 
 export const VERTEX_SHADER = `
 @group(0) @binding(0) var<uniform> vpcMatrix: mat4x4<f32>;
-@group(0) @binding(1) var<uniform> normMatrix: mat4x4<f32>;
+
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
-  @location(0) normal: vec4<f32>
+  @location(0) pos: vec4<f32>,
 };
 
 @vertex
 fn main(
   @location(0) position : vec4<f32>,
-  @location(1) normal : vec3<f32>
 ) -> VertexOutput {
   var output : VertexOutput;
-  output.Position = vpcMatrix * position;
-  output.normal = normalize(normMatrix * vec4<f32>(normal, 0));
+  output.pos= position;
+  output.Position = position;
+  output.Position.z = 1;
   return output;
 }`;
 
 export const FRAGMENT_SHADER = `
+@group(0) @binding(0) var<uniform> vpcMatrix: mat4x4<f32>;
+
 @group(1) @binding(0) var CubeMapSampler: sampler;
 @group(1) @binding(1) var CubeMapTexture: texture_cube<f32>;
 
 @fragment
 fn main(
-  @location(0) normal: vec4<f32>
+
+  @builtin(position) Position: vec4<f32>,
+  @location(0) pos: vec4<f32>
+ 
 ) -> @location(0) vec4<f32> {
-  var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler,  normal.xyz));
+
+  var t = vpcMatrix * pos;
+
+  var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler,   normalize(t.xyz / t.w)));
   return textureColor;
 }`;

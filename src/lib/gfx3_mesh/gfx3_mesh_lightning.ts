@@ -1,11 +1,11 @@
 class Gfx3MeshLightning {
-  position: vec3;
+  position: vec4;
 
   constructor() {
-    this.position = [0, 0, 0];
+    this.position = [0, 0, 0, 1.0];
   }
 
-  getPosition(): vec3 {
+  getPosition(): vec4 {
     return this.position;
   }
 }

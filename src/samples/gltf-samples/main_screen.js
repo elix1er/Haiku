@@ -31,6 +31,8 @@ class MainScreen extends Screen {
     this.handleMouseMoveCb = this.handleMouseMove.bind(this);
 
     this.uiMenu1 = new UIMenuText();
+    this.uiMenuAlpha = [];
+    this.currentAlpha = -1;
 
     this.skybox = new Gfx3Skybox();
     this.gltfs = [];
@@ -41,24 +43,48 @@ class MainScreen extends Screen {
     
   }
 
-  handleMenu1ItemSelected(data) {
+  handleMenu2ItemSelected(data) {
     //uiManager.focus(this.uiMenu2);
-  }
 
-  handleMenu2Closed() {
-    this.uiMenu1.unselectWidgets();
-    uiManager.focus(this.uiMenu1);
-  }
-
-  handleMenu1ItemSelected(data) {
-    const GLTFUrl = this.gltfList[data.index].base + '/'+this.gltfList[data.index].name+'/glTF/' +this.gltfList[data.index].gltf;
+    const GLTFUrl = this.gltfList[data.id].base + '/'+this.gltfList[data.id].name+'/glTF/' +this.gltfList[data.id].gltf;
     
     const newGLTF = new Gfx3GLTF();
     newGLTF.loadFromFile(GLTFUrl);
     this.gltfs.push(newGLTF);
+  }
+
+  handleMenu2Closed() {
+    this.uiMenuAlpha[this.currentAlpha].unselectWidgets();
+
+    eventManager.unsubscribe( this.uiMenuAlpha[this.currentAlpha], 'E_CLOSED', this);
+    eventManager.unsubscribe( this.uiMenuAlpha[this.currentAlpha], 'E_ITEM_SELECTED', this);
+
+    uiManager.removeWidget( this.uiMenuAlpha[this.currentAlpha]);
+    this.currentAlpha=-1;
+
+    uiManager.focus(this.uiMenu1);
+
+  }
+
+  handleMenu1ItemSelected(data) {
 
     this.uiMenu1.unselectWidgets();
-    uiManager.focus(this.uiMenu1);
+
+    if(this.currentAlpha>=0)
+        uiManager.removeWidget( this.uiMenuAlpha[this.currentAlpha]);
+    
+    this.currentAlpha=data.id;
+
+    console.log(this.uiMenuAlpha[this.currentAlpha]);
+
+
+    uiManager.addWidget(this.uiMenuAlpha[this.currentAlpha], 'position:absolute; top: 0px; left:10%; bottom:0; width : 40%');
+    uiManager.focus(this.uiMenuAlpha[this.currentAlpha]);
+
+    eventManager.subscribe(this.uiMenuAlpha[this.currentAlpha], 'E_CLOSED', this, this.handleMenu2Closed);
+    eventManager.subscribe(this.uiMenuAlpha[this.currentAlpha], 'E_ITEM_SELECTED', this, this.handleMenu2ItemSelected);
+    
+    
   }
   async onEnter() {
 
@@ -68,11 +94,25 @@ class MainScreen extends Screen {
 
     for(let i in GLLTFS)
     {
+
         this.gltfList.push({ name :  GLLTFS[i].name, gltf : GLLTFS[i].variants["glTF"], base: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/"});
-        this.uiMenu1.add(i, GLLTFS[i].name);
+
+        const alpha = GLLTFS[i].name[0];
+        const aidx  = GLLTFS[i].name.charCodeAt(0);
+
+        if(this.uiMenuAlpha[aidx] == undefined){
+            this.uiMenu1.add(aidx, alpha);
+            this.uiMenuAlpha[aidx] = new UIMenuText();
+
+            
+        }
+            
+        this.uiMenuAlpha[aidx].add(i, GLLTFS[i].name);
+
+
     }
 
-    uiManager.addWidget(this.uiMenu1, 'position:absolute; top:0px; left:0; bottom:0; width:40%');
+    uiManager.addWidget(this.uiMenu1, 'position:absolute; top:0px; left: 0 ; bottom:0; width:10%');
     uiManager.focus(this.uiMenu1);
   
     const cm= await gfx3TextureManager.loadCubemapTexture('./samples/real-time/box_', 'png');

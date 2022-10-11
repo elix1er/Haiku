@@ -4,7 +4,7 @@
 
 ![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37)
 
-**psx.ts** is like a bunch of micro-module of which becomes a powerful 2D/3D game engine specialized to build PSX Demake videogames.    
+**psx.ts** is like a bunch of micro-module of which becomes a powerful 2D/3D game engine specialized to build PSX demake videogames.    
 
 ## General features
 - 🧊 2D - Sprites, tilemaps

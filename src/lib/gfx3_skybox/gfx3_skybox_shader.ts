@@ -52,10 +52,9 @@ export const PIPELINE_DESC: any = {
 export const VERTEX_SHADER = `
 @group(0) @binding(0) var<uniform> vpcMatrix: mat4x4<f32>;
 
-
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
-  @location(0) pos: vec4<f32>,
+  @location(0) pos: vec4<f32>
 };
 
 @vertex
@@ -63,9 +62,9 @@ fn main(
   @location(0) position : vec4<f32>,
 ) -> VertexOutput {
   var output : VertexOutput;
-  output.pos= position;
   output.Position = position;
   output.Position.z = 1;
+  output.pos = position;
   return output;
 }`;
 
@@ -77,14 +76,10 @@ export const FRAGMENT_SHADER = `
 
 @fragment
 fn main(
-
   @builtin(position) Position: vec4<f32>,
   @location(0) pos: vec4<f32>
- 
 ) -> @location(0) vec4<f32> {
-
   var t = vpcMatrix * pos;
-
-  var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler,   normalize(t.xyz / t.w)));
+  var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler, normalize(t.xyz / t.w)));
   return textureColor;
 }`;

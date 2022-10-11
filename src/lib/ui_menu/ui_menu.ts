@@ -53,6 +53,14 @@ class UIMenu extends UIWidget {
     }
   }
 
+  delete(): void {
+    for (const widget of this.widgets) {
+      widget.delete();
+    }
+
+    super.delete();
+  }
+
   update(ts: number): void {
     for (const widget of this.widgets) {
       widget.update(ts);
@@ -295,7 +303,7 @@ class UIMenu extends UIWidget {
       return;
     }
 
-    this.focusWidget(this.widgets.indexOf(widget), true);
+    this.focusWidget(this.widgets.indexOf(widget), false, true);
   }
 }
 

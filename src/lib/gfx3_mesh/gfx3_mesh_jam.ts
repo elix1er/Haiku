@@ -117,7 +117,7 @@ class Gfx3MeshJAM extends Gfx3Mesh {
       const ny = nay + ((nby - nay) * interpolateFactor);
       const nz = naz + ((nbz - naz) * interpolateFactor);
 
-      this.defineVertexNormal(vx, vy, vz, ux, uy, nx, ny, nz);
+      this.defineVertex(vx, vy, vz, ux, uy, nx, ny, nz, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
 
     this.endVertices();

@@ -94,7 +94,6 @@ fn main(
   var myColor: vec3<f32>;
   var opacity: f32;
   var mvPosition = mvMatrix * position;
-
   output.Position = pcMatrix * mvPosition;
 
   myColor = baseColor.rgb;
@@ -112,8 +111,8 @@ fn main(
   /* lighting */
   if(params[1] != 0.0)
   {
-    
     output.lightDir = normalize(lightPos.xyz - mvPosition.xyz);
+
     // normal map 
     if(params[2] != 0.0)
     {

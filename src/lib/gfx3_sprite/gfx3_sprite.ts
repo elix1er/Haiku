@@ -23,11 +23,6 @@ class Gfx3Sprite extends Gfx3Drawable {
     gfx3SpriteRenderer.drawSprite(this);
   }
 
-  defineVertex(x: number, y: number, z: number, uvx: number, uvy: number): void {
-    this.vertices.push(x, y, z, uvx, uvy);
-    this.vertexCount++;
-  }
-
   getTransformMatrix() {
     let matrix = Utils.MAT4_IDENTITY();
     matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_TRANSLATE(this.position[0], this.position[1], this.position[2]));

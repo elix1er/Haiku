@@ -1,6 +1,6 @@
 import { gfx2TextureManager} from '../../lib/gfx2/gfx2_texture_manager';
 import { Gfx2Drawable} from '../../lib/gfx2/gfx2_drawable';
-import { Gfx2JAS} from '../../lib/gfx2_jas/gfx2_jas';
+import { Gfx2SpriteJAS} from '../../lib/gfx2_sprite/gfx2_sprite_jas';
 // ---------------------------------------------------------------------------------------
 import { MotionInterpolation} from './motion_interpolation';
 
@@ -14,7 +14,7 @@ const DIRECTION = {
 class Controller extends Gfx2Drawable {
   constructor() {
     super();
-    this.jas = new Gfx2JAS();
+    this.jas = new Gfx2SpriteJAS();
     this.direction = DIRECTION.FORWARD;
     this.speed = 3;
     this.width = 0;

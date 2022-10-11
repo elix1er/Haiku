@@ -146,7 +146,7 @@ class InputManager {
     this.addPad(pad);
   }
 
-  handleKeyDown(e: KeyboardEvent): void {
+  handleKeyDown(e: KeyboardEvent): boolean {
     if (!this.keymap.get(e.key)) {
       for (const actionId of this.findActionIds('keyboard', e.key)) {
         eventManager.emit(this, 'E_ACTION_ONCE', { actionId: actionId });
@@ -160,6 +160,10 @@ class InputManager {
     }
 
     this.keymap.set(e.key, true);
+
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
   }
 
   handleKeyUp(e: KeyboardEvent): void {

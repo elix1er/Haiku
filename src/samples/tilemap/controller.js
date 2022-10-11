@@ -2,7 +2,7 @@ import { eventManager } from '../../lib/core/event_manager';
 import { inputManager } from '../../lib/input/input_manager';
 import { gfx2TextureManager } from '../../lib/gfx2/gfx2_texture_manager';
 import { Gfx2Drawable } from '../../lib/gfx2/gfx2_drawable';
-import { Gfx2JAS } from '../../lib/gfx2_jas/gfx2_jas';
+import { Gfx2SpriteJAS } from '../../lib/gfx2_sprite/gfx2_sprite_jas';
 // ---------------------------------------------------------------------------------------
 
 const DIRECTION = {
@@ -22,7 +22,7 @@ const DIRECTION_TO_VEC2 = {
 class Controller extends Gfx2Drawable {
   constructor() {
     super();
-    this.jas = new Gfx2JAS();
+    this.jas = new Gfx2SpriteJAS();
     this.moving = false;
     this.direction = DIRECTION.FORWARD;
     this.speed = 0.05;

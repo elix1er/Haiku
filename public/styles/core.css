@@ -18,7 +18,7 @@ body {
 /*#############################################################################################*/
 
 .u-focused {
-  border: 1px transparent solid;
+  /* empty rules here */
 }
 
 .u-disabled {
@@ -27,7 +27,7 @@ body {
 }
 
 .u-selected {
-  border: 1px transparent solid;
+  /* empty rules here */
 }
 
 .u-hidden {
@@ -360,6 +360,7 @@ body {
 .UIMenuText {
   border: 10px solid;
   border-image: url(../textures/ui_border.png) 3 fill;
+  overflow-y: auto;
 }
 
 .UIMenuText.u-focused .UIMenuTextItem.u-focused {

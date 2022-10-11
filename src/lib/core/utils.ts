@@ -39,8 +39,8 @@ class Utils {
     return (Math.random() * (max - min)) + min;
   }
 
-  static CLAMP(a: number, b: number, c: number): number {
-    return Math.max(b, Math.min(c, a));
+  static CLAMP(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
   }
 
   static DEG_TO_RAD(deg: number): number {
@@ -690,54 +690,48 @@ class Utils {
       a[3], a[7], a[11], a[15]
     ]
   }
-  
-  static QUAT_TO_EULER(q: vec4, order:string) {
 
-    function clamp(value: number, min: number, max: number) {
-      return (value < min ? min : (value > max ? max : value));
-    }
+  static QUAT_TO_EULER(q: vec4, order: string) {
     // Borrowed from Three.JS :)
     // q is assumed to be normalized
     // http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
-    var sqx = q[0] * q[0];
-    var sqy = q[1] * q[1];
-    var sqz = q[2] * q[2];
-    var sqw = q[3] * q[3];
+    const sqx = q[0] * q[0];
+    const sqy = q[1] * q[1];
+    const sqz = q[2] * q[2];
+    const sqw = q[3] * q[3];
+    const out = [];
 
-    let out =[];
-
-    if ( order === 'XYZ' ) {
-      out[0] = Math.atan2( 2 * ( q[0] * q[3] - q[1] * q[2] ), ( sqw - sqx - sqy + sqz ) );
-      out[1] = Math.asin(  clamp( 2 * ( q[0] * q[2] + q[1] * q[3] ), -1, 1 ) );
-      out[2] = Math.atan2( 2 * ( q[2] * q[3] - q[0] * q[1] ), ( sqw + sqx - sqy - sqz ) );
-    } else if ( order ===  'YXZ' ) {
-      out[0] = Math.asin(  clamp( 2 * ( q[0] * q[3] - q[1] * q[2] ), -1, 1 ) );
-      out[1] = Math.atan2( 2 * ( q[0] * q[2] + q[1] * q[3] ), ( sqw - sqx - sqy + sqz ) );
-      out[2] = Math.atan2( 2 * ( q[0] * q[1] + q[2] * q[3] ), ( sqw - sqx + sqy - sqz ) );
-    } else if ( order === 'ZXY' ) {
-      out[0] = Math.asin(  clamp( 2 * ( q[0] * q[3] + q[1] * q[2] ), -1, 1 ) );
-      out[1] = Math.atan2( 2 * ( q[1] * q[3] - q[2] * q[0] ), ( sqw - sqx - sqy + sqz ) );
-      out[2] = Math.atan2( 2 * ( q[2] * q[3] - q[0] * q[1] ), ( sqw - sqx + sqy - sqz ) );
-    } else if ( order === 'ZYX' ) {
-      out[0] = Math.atan2( 2 * ( q[0] * q[3] + q[2] * q[1] ), ( sqw - sqx - sqy + sqz ) );
-      out[1] = Math.asin(  clamp( 2 * ( q[1] * q[3] - q[0] * q[2] ), -1, 1 ) );
-      out[2] = Math.atan2( 2 * ( q[0] * q[1] + q[2] * q[3] ), ( sqw + sqx - sqy - sqz ) );
-    } else if ( order === 'YZX' ) {
-      out[0] = Math.atan2( 2 * ( q[0] * q[3] - q[2] * q[1] ), ( sqw - sqx + sqy - sqz ) );
-      out[1] = Math.atan2( 2 * ( q[1] * q[3] - q[0] * q[2] ), ( sqw + sqx - sqy - sqz ) );
-      out[2] = Math.asin(  clamp( 2 * ( q[0] * q[1] + q[2] * q[3] ), -1, 1 ) );
-    } else if ( order === 'XZY' ) {
-      out[0] = Math.atan2( 2 * ( q[0] * q[3] + q[1] * q[2] ), ( sqw - sqx + sqy - sqz ) );
-      out[1] = Math.atan2( 2 * ( q[0] * q[2] + q[1] * q[3] ), ( sqw + sqx - sqy - sqz ) );
-      out[2] = Math.asin(  clamp( 2 * ( q[2] * q[3] - q[0] * q[1] ), -1, 1 ) );
+    if (order === 'XYZ') {
+      out[0] = Math.atan2(2 * (q[0] * q[3] - q[1] * q[2]), (sqw - sqx - sqy + sqz));
+      out[1] = Math.asin(Utils.CLAMP(2 * (q[0] * q[2] + q[1] * q[3]), -1, 1));
+      out[2] = Math.atan2(2 * (q[2] * q[3] - q[0] * q[1]), (sqw + sqx - sqy - sqz));
+    } else if (order === 'YXZ') {
+      out[0] = Math.asin(Utils.CLAMP(2 * (q[0] * q[3] - q[1] * q[2]), -1, 1));
+      out[1] = Math.atan2(2 * (q[0] * q[2] + q[1] * q[3]), (sqw - sqx - sqy + sqz));
+      out[2] = Math.atan2(2 * (q[0] * q[1] + q[2] * q[3]), (sqw - sqx + sqy - sqz));
+    } else if (order === 'ZXY') {
+      out[0] = Math.asin(Utils.CLAMP(2 * (q[0] * q[3] + q[1] * q[2]), -1, 1));
+      out[1] = Math.atan2(2 * (q[1] * q[3] - q[2] * q[0]), (sqw - sqx - sqy + sqz));
+      out[2] = Math.atan2(2 * (q[2] * q[3] - q[0] * q[1]), (sqw - sqx + sqy - sqz));
+    } else if (order === 'ZYX') {
+      out[0] = Math.atan2(2 * (q[0] * q[3] + q[2] * q[1]), (sqw - sqx - sqy + sqz));
+      out[1] = Math.asin(Utils.CLAMP(2 * (q[1] * q[3] - q[0] * q[2]), -1, 1));
+      out[2] = Math.atan2(2 * (q[0] * q[1] + q[2] * q[3]), (sqw + sqx - sqy - sqz));
+    } else if (order === 'YZX') {
+      out[0] = Math.atan2(2 * (q[0] * q[3] - q[2] * q[1]), (sqw - sqx + sqy - sqz));
+      out[1] = Math.atan2(2 * (q[1] * q[3] - q[0] * q[2]), (sqw + sqx - sqy - sqz));
+      out[2] = Math.asin(Utils.CLAMP(2 * (q[0] * q[1] + q[2] * q[3]), -1, 1));
+    } else if (order === 'XZY') {
+      out[0] = Math.atan2(2 * (q[0] * q[3] + q[1] * q[2]), (sqw - sqx + sqy - sqz));
+      out[1] = Math.atan2(2 * (q[0] * q[2] + q[1] * q[3]), (sqw + sqx - sqy - sqz));
+      out[2] = Math.asin(Utils.CLAMP(2 * (q[2] * q[3] - q[0] * q[1]), -1, 1));
     } else {
       console.log('No order given for quaternion to euler conversion.');
-      return [0,0,0];
+      return [0, 0, 0];
     }
 
     return out;
   }
-  
 }
 
 export { Utils };

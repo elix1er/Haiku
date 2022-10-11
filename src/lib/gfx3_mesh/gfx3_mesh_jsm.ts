@@ -24,7 +24,7 @@ class Gfx3MeshJSM extends Gfx3Mesh {
       const nx = json['Normals'][i * 3 + 0];
       const ny = json['Normals'][i * 3 + 1];
       const nz = json['Normals'][i * 3 + 2];
-      this.defineVertexNormal(vx, vy, vz, ux, uy, nx, ny, nz);
+      this.defineVertex(vx, vy, vz, ux, uy, nx, ny, nz, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     }
 
     this.endVertices();

@@ -23,18 +23,6 @@ class Gfx3Mesh extends Gfx3Drawable {
     gfx3MeshRenderer.drawMesh(this);
   }
 
-  defineVertexNormal(x: number, y: number, z: number, uvx: number, uvy: number, nx: number, ny: number, nz: number): void {
-    this.vertices.push(x, y, z, uvx, uvy, nx, ny, nz, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  }
-
-  defineVertexTangeant(x: number, y: number, z: number, uvx: number, uvy: number, nx: number, ny: number, nz: number, tx: number, ty: number, tz: number, bx: number, by: number, bz: number): void {
-    this.vertices.push(x, y, z, uvx, uvy, nx, ny, nz, tx, ty, tz, bx, by, bz);
-  }
-
-  defineVertex(x: number, y: number, z: number, uvx: number, uvy: number): void {
-    this.vertices.push(x, y, z, uvx, uvy, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  }
-
   setMaterial(material: Partial<Gfx3Material> = {}): void {
     this.material.ambiant = material.ambiant ?? [0.2, 0.2, 0.2];
     this.material.specular = material.specular ?? [1.0, 0.0, 0.0, 4];

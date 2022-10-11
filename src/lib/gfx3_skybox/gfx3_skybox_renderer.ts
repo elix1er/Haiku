@@ -30,7 +30,6 @@ class Gfx3SkyboxRenderer {
     viewMatrix[13] = 0;
     viewMatrix[14] = 0;
     const vpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), viewMatrix);
-
     gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(Utils.MAT4_INVERT(vpcMatrix)));
 
     const cubemap = this.skybox.getCubemap();

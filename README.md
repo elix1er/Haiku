@@ -29,7 +29,7 @@ Clone this repo, go to the root of project and launch the build with the followi
 ```
 
 ## How to integrate your 3D models ?
-The [aliyah-blender-exporter](https://github.com/Anuban-corp/aliyah-blender-exporter) allows you to export your models in Aliyah compatible formats!
+The [psx-blender-exporter](https://github.com/Anuban-corp/psx-blender-exporter) allows you to export your models in **psx.ts** compatible formats!
 
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
@@ -45,10 +45,3 @@ If you have a suggestion that would make this better, please fork the repo and c
 ## Some parts taken from this work
 - Use DOM for UI elements
 - Use the psx-style technologies
-
-## Roadmap
-- Implement Multiple-light
-- Vertex Coloring
-- Implement Texture Scrolling
-- Implement Skinned Mesh
-- Make binding with Ammo.js

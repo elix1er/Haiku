@@ -7,13 +7,13 @@
 **psx.ts** is like a bunch of micro-module of which becomes a powerful 2D/3D game engine specialized to build PSX Demake videogames.    
 
 ## General features
-🧊 2D - Sprites, tilemaps
-🧊 3D - Render pipelines, debug shapes, lights, meshes, materials, sprites, skybox and walkmeshs
-🎮 Input - Action mapper for keyboard and gamepad
-📺 Screen - Handle different screens of your game
-📜 Scripts - Write game behaviors
-🔊 Sound - Sound manager built on the Web Audio API
-🎨 UI - Component architecture very efficient to keep project clean and scalable
+- 🧊 2D - Sprites, tilemaps
+- 🧊 3D - Render pipelines, debug shapes, lights, meshes, materials, sprites, skybox and walkmeshs
+- 🎮 Input - Action mapper for keyboard and gamepad
+- 📺 Screen - Handle different screens of your game
+- 📜 Scripts - Write game behaviors
+- 🔊 Sound - Sound manager built on the Web Audio API
+- 🎨 UI - Component architecture very efficient to keep project clean and scalable
 
 ## Getting started
 You need to install [nodejs](https://nodejs.org/en/download/). 

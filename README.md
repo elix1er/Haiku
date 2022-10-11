@@ -2,7 +2,7 @@
     <img src="https://sprightly-beijinho.netlify.app/assets/images/logo-9849da864a27064e12d65e3ceffb5488.jpg" alt="logo" width="300"/>
 </p>
 
-![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37)
+![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-2.0.0-blue)
 
 **psx.ts** is like a bunch of micro-module of which becomes a powerful 2D/3D game engine specialized to build PSX demake videogames.    
 

@@ -68,15 +68,9 @@ class UIMenu extends UIWidget {
   }
 
   focus(focusIndex = MenuFocus.AUTO): void {
-    if (focusIndex == MenuFocus.AUTO && this.focusedWidget) {
-      const focusedIndex = this.widgets.indexOf(this.focusedWidget);
+    if (this.widgets.length > 0 && focusIndex == MenuFocus.AUTO) {
+      const focusedIndex = this.focusedWidget ? this.widgets.indexOf(this.focusedWidget) : 0;
       this.focusWidget(focusedIndex, true);
-    }
-    else if (focusIndex == MenuFocus.AUTO && !this.focusedWidget) {
-      this.focusWidget(0, true);
-    }
-    else if (focusIndex >= 0) {
-      this.focusWidget(focusIndex, true);
     }
 
     super.focus();

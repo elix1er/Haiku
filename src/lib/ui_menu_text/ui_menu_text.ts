@@ -2,14 +2,14 @@ import { UIMenu } from '../ui_menu/ui_menu';
 import { UIMenuTextItem } from './ui_menu_text_item';
 
 class UIMenuText extends UIMenu {
-  constructor(options = {}) {
+  constructor(options: { className?: string } = {}) {
     super(Object.assign(options, {
-      className: 'UIMenuText'
+      className: options.className ?? 'UIMenuText'
     }));
   }
 
   add(id: string, text: string): void {
-    const item = new UIMenuTextItem();
+    const item = new UIMenuTextItem({ className: this.className + 'Item' });
     item.setId(id);
     item.setText(text);
     this.addWidget(item);

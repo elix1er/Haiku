@@ -1,12 +1,10 @@
 import { UIWidget } from '../ui/ui_widget';
 
 class UIMenuTextItem extends UIWidget {
-  constructor(options: { text?: string } = {}) {
+  constructor(options: { className?: string } = {}) {
     super({
-      className: 'UIMenuTextItem'
+      className: options.className ?? 'UIMenuTextItem'
     });
-
-    this.node.textContent = options.text ?? '';
   }
 
   setText(text: string): void {

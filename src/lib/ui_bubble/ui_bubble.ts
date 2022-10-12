@@ -121,7 +121,6 @@ class UIBubble extends UIWidget {
     this.currentActionTextOffset = 0;
     this.finished = false;
     this.uiMenu.clear();
-    this.uiMenu.focus();
   }
 
   setStepDuration(stepDuration: number): void {

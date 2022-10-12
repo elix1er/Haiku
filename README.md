@@ -8,7 +8,8 @@
 
 ## General features
 - 🧊 2D - Sprites, tilemaps
-- 🧊 3D - Render pipelines, debug shapes, lights, meshes, materials, sprites, skybox and walkmeshs
+- 🧊 3D - Render pipelines, debug shapes, lights, meshes, materials, sprites, billboard, skybox, walkmeshs, multiple-camera
+- 💥 VFX - Gouraud support, specular support, cubemap support, normal mapping, envmap support
 - 🎮 Input - Action mapper for keyboard and gamepad
 - 📺 Screen - Handle different screens of your game
 - 📜 Scripts - Write game behaviors

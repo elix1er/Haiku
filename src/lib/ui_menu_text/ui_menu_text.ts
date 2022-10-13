@@ -9,7 +9,7 @@ class UIMenuText extends UIMenu {
   }
 
   add(id: string, text: string): void {
-    const item = new UIMenuTextItem({ className: this.className + 'Item' });
+    const item = new UIMenuTextItem();
     item.setId(id);
     item.setText(text);
     this.addWidget(item);

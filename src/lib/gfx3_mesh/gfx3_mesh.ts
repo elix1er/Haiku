@@ -25,7 +25,7 @@ class Gfx3Mesh extends Gfx3Drawable {
 
   setMaterial(material: Partial<Gfx3Material> = {}): void {
     this.material.ambiant = material.ambiant ?? [0.2, 0.2, 0.2];
-    this.material.specular = material.specular ?? [1.0, 0.0, 0.0, 4];
+    this.material.specular = material.specular ?? [0.0, 0.0, 0.0, 0];
     this.material.color = material.color ?? [1.0, 1.0, 1.0, 1.0];
     this.material.lightning = material.lightning ?? false;
     this.material.texture = material.texture ?? null;

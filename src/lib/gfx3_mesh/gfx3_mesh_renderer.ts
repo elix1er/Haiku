@@ -49,7 +49,7 @@ class Gfx3MeshRenderer {
       gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvMatrix));
       gfx3Manager.writeUniformGroup(this.uniformGroup, 1, new Float32Array(pcMatrix));
       gfx3Manager.writeUniformGroup(this.uniformGroup, 2, new Float32Array(normMatrix));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 3, new Float32Array(this.lightning ? this.lightning.getPosition() : [0, 0, 0]));
+      gfx3Manager.writeUniformGroup(this.uniformGroup, 3, new Float32Array(this.lightning ? this.lightning.getPosition() : [0, 100, 0]));
       gfx3Manager.writeUniformGroup(this.uniformGroup, 4, new Float32Array(material.ambiant));
       gfx3Manager.writeUniformGroup(this.uniformGroup, 5, new Float32Array(material.color));
       gfx3Manager.writeUniformGroup(this.uniformGroup, 6, new Float32Array(material.specular));

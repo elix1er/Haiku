@@ -39,21 +39,6 @@ class Gfx3Drawable extends Gfx3Transformable {
     this.vertexCount++;
   }
 
-  // defineVertexNormal(x: number, y: number, z: number, uvx: number, uvy: number, nx: number, ny: number, nz: number): void {
-  //   this.vertices.push(x, y, z, uvx, uvy, nx, ny, nz, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  //   this.vertexCount++;
-  // }
-
-  // defineVertexTangeant(x: number, y: number, z: number, uvx: number, uvy: number, nx: number, ny: number, nz: number, tx: number, ty: number, tz: number, bx: number, by: number, bz: number): void {
-  //   this.vertices.push(x, y, z, uvx, uvy, nx, ny, nz, tx, ty, tz, bx, by, bz);
-  //   this.vertexCount++;
-  // }
-
-  // defineVertex(x: number, y: number, z: number, uvx: number, uvy: number): void {
-  //   this.vertices.push(x, y, z, uvx, uvy, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  //   this.vertexCount++;
-  // }
-
   endVertices(): void {
     gfx3Manager.writeVertexBuffer(this.vertexSubBuffer, this.vertices);
     this.boundingBox = Gfx3BoundingBox.createFromVertices(this.vertices, this.vertexStride);

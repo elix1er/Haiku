@@ -1,9 +1,12 @@
 import { eventManager } from '../core/event_manager';
+import { Utils } from '../core/utils';
 import { Gfx3Mesh } from './gfx3_mesh';
 
 interface JAMFrame {
   vertices: Array<number>;
   normals: Array<number>;
+  tangentes: Array<number>;
+  binormals: Array<number>;
 };
 
 interface JAMAnimation {
@@ -45,10 +48,59 @@ class Gfx3MeshJAM extends Gfx3Mesh {
 
     this.frames = [];
     for (const obj of json['Frames']) {
-      this.frames.push({
-        vertices: obj['Vertices'],
-        normals: obj['Normals']
-      });
+      const frame: JAMFrame = {
+        vertices: [],
+        normals: [],
+        tangentes: [],
+        binormals: []
+      };
+
+      for (let i = 0; i < json['NumVertices']; i += 3) {
+        const v0 = obj['Vertices'].slice((i * 3) + 0, (i * 3) + 3);
+        const v1 = obj['Vertices'].slice((i * 3) + 3, (i * 3) + 6);
+        const v2 = obj['Vertices'].slice((i * 3) + 6, (i * 3) + 9);
+
+        const uv0 = json['TextureCoords'].slice((i * 2) + 0, (i * 2) + 2);
+        const uv1 = json['TextureCoords'].slice((i * 2) + 2, (i * 2) + 4);
+        const uv2 = json['TextureCoords'].slice((i * 2) + 4, (i * 2) + 6);
+
+        const n0 = obj['Normals'].slice((i * 3) + 0, (i * 3) + 3);
+        const n1 = obj['Normals'].slice((i * 3) + 3, (i * 3) + 6);
+        const n2 = obj['Normals'].slice((i * 3) + 6, (i * 3) + 9);
+
+        const deltaPos1 = Utils.VEC3_SUBSTRACT(v1, v0);
+        const deltaPos2 = Utils.VEC3_SUBSTRACT(v2, v0);
+
+        const deltaUV1 = Utils.VEC2_SUBSTRACT(uv1, uv0);
+        const deltaUV2 = Utils.VEC2_SUBSTRACT(uv2, uv0);
+
+        const r = 1.0 / (deltaUV1[0] * deltaUV2[1] - deltaUV1[1] * deltaUV2[0]);
+
+        const tx = (deltaPos1[0] * deltaUV2[1] - deltaPos2[0] * deltaUV1[1]) * r;
+        const ty = (deltaPos1[1] * deltaUV2[1] - deltaPos2[1] * deltaUV1[1]) * r;
+        const tz = (deltaPos1[2] * deltaUV2[1] - deltaPos2[2] * deltaUV1[1]) * r;
+
+        const binormx = (deltaPos2[0] * deltaUV1[0] - deltaPos1[0] * deltaUV2[0]) * r;
+        const binormy = (deltaPos2[1] * deltaUV1[0] - deltaPos1[1] * deltaUV2[0]) * r;
+        const binormz = (deltaPos2[2] * deltaUV1[0] - deltaPos1[2] * deltaUV2[0]) * r;
+
+        this.defineVertex(v0[0], v0[1], v0[2], uv0[0], uv0[1], n0[0], n0[1], n0[2], tx, ty, tz, binormx, binormy, binormz);
+        this.defineVertex(v1[0], v1[1], v1[2], uv1[0], uv1[1], n1[0], n1[1], n1[2], tx, ty, tz, binormx, binormy, binormz);
+        this.defineVertex(v2[0], v2[1], v2[2], uv2[0], uv2[1], n2[0], n2[1], n2[2], tx, ty, tz, binormx, binormy, binormz);
+
+        frame.vertices.push(v0[0], v0[1], v0[2]);
+        frame.vertices.push(v1[0], v1[1], v1[2]);
+        frame.vertices.push(v2[0], v2[1], v2[2]);
+
+        frame.normals.push(n0[0], n0[1], n0[2]);
+        frame.normals.push(n1[0], n1[1], n1[2]);
+        frame.normals.push(n2[0], n2[1], n2[2]);
+
+        frame.tangentes.push(tx, ty, tz);
+        frame.binormals.push(binormx, binormy, binormz);
+      }
+
+      this.frames.push(frame);
     }
 
     this.animations = [];
@@ -117,7 +169,27 @@ class Gfx3MeshJAM extends Gfx3Mesh {
       const ny = nay + ((nby - nay) * interpolateFactor);
       const nz = naz + ((nbz - naz) * interpolateFactor);
 
-      this.defineVertex(vx, vy, vz, ux, uy, nx, ny, nz, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+      const tax = currentFrame.tangentes[Math.floor(i / 3) + 0];
+      const tay = currentFrame.tangentes[Math.floor(i / 3) + 1];
+      const taz = currentFrame.tangentes[Math.floor(i / 3) + 2];
+      const tbx = nextFrame.tangentes[Math.floor(i / 3) + 0];
+      const tby = nextFrame.tangentes[Math.floor(i / 3) + 1];
+      const tbz = nextFrame.tangentes[Math.floor(i / 3) + 2];
+      const tx = tax + ((tbx - tax) * interpolateFactor);
+      const ty = tay + ((tby - tay) * interpolateFactor);
+      const tz = taz + ((tbz - taz) * interpolateFactor);
+
+      const bax = currentFrame.binormals[Math.floor(i / 3) + 0];
+      const bay = currentFrame.binormals[Math.floor(i / 3) + 1];
+      const baz = currentFrame.binormals[Math.floor(i / 3) + 2];
+      const bbx = nextFrame.binormals[Math.floor(i / 3) + 0];
+      const bby = nextFrame.binormals[Math.floor(i / 3) + 1];
+      const bbz = nextFrame.binormals[Math.floor(i / 3) + 2];
+      const bx = tax + ((bbx - bax) * interpolateFactor);
+      const by = tay + ((bby - bay) * interpolateFactor);
+      const bz = taz + ((bbz - baz) * interpolateFactor);
+
+      this.defineVertex(vx, vy, vz, ux, uy, nx, ny, nz, tx, ty, tz, bx, by, bz);
     }
 
     this.endVertices();

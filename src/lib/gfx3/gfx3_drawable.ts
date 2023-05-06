@@ -41,7 +41,7 @@ class Gfx3Drawable extends Gfx3Transformable {
 
   endVertices(): void {
     gfx3Manager.writeVertexBuffer(this.vertexSubBuffer, this.vertices);
-    this.boundingBox = Gfx3BoundingBox.createFromVertices(this.vertices, this.vertexStride);
+    this.boundingBox.fromVertices(this.vertices, this.vertexStride);
   }
 
   getVertexSubBufferOffset(): number {
@@ -52,8 +52,16 @@ class Gfx3Drawable extends Gfx3Transformable {
     return this.vertexSubBuffer.vertices.byteLength;
   }
 
+  getVertices(): Array<number> {
+    return this.vertices;
+  }
+
   getVertexCount(): number {
     return this.vertexCount;
+  }
+
+  getBoundingBox(): Gfx3BoundingBox {
+    return this.boundingBox;
   }
 
   getWorldBoundingBox(): Gfx3BoundingBox {

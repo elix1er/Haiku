@@ -1,5 +1,5 @@
 export const SHADER_VERTEX_ATTR_COUNT = 14;
-export const SHADER_UNIFORM_ATTR_COUNT = 8;
+export const SHADER_UNIFORM_ATTR_COUNT = 11;
 
 export const PIPELINE_DESC: any = {
   label: 'Mesh pipeline',
@@ -21,7 +21,7 @@ export const PIPELINE_DESC: any = {
         offset: 5 * 4,
         format: 'float32x3'
       }, {
-        shaderLocation: 3, /*tangeant*/
+        shaderLocation: 3, /*tangent*/
         offset: 8 * 4,
         format: 'float32x3'
       }, {
@@ -62,24 +62,17 @@ export const PIPELINE_DESC: any = {
 };
 
 export const VERTEX_SHADER = `
-@group(0) @binding(0) var<uniform> mvMatrix: mat4x4<f32>;
-@group(0) @binding(1) var<uniform> pcMatrix: mat4x4<f32>;
-@group(0) @binding(2) var<uniform> normMatrix: mat4x4<f32>;
-@group(0) @binding(3) var<uniform> lightPos: vec3<f32>;
-@group(0) @binding(4) var<uniform> ambiantColor: vec3<f32>;
-@group(0) @binding(5) var<uniform> baseColor: vec4<f32>;
-@group(0) @binding(6) var<uniform> specular: vec4<f32>;
-@group(0) @binding(7) var<uniform> params: vec4<f32>;
+@group(0) @binding(0) var<uniform> MVPC_MATRIX: mat4x4<f32>;
+@group(0) @binding(1) var<uniform> NORM_MATRIX: mat3x3<f32>;
+@group(0) @binding(2) var<uniform> M_MATRIX: mat4x4<f32>;
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
-  @location(0) fragUV: vec2<f32>,
-  @location(1) color: vec4<f32>,
-  @location(2) normal: vec3<f32>,
-  @location(3) tangeant: vec3<f32>,
-  @location(4) binormal: vec3<f32>,
-  @location(5) lightDir: vec3<f32>,
-  @location(6) eyeDir: vec3<f32>
+  @location(0) FragPos: vec3<f32>,
+  @location(1) FragUV: vec2<f32>,
+  @location(2) FragNormal: vec3<f32>,
+  @location(3) FragTangent: vec3<f32>,
+  @location(4) FragBinormal: vec3<f32>
 };
 
 @vertex
@@ -87,65 +80,36 @@ fn main(
   @location(0) position: vec4<f32>,
   @location(1) uv: vec2<f32>,
   @location(2) normal: vec3<f32>,
-  @location(3) tangeant: vec3<f32>,
+  @location(3) tangent: vec3<f32>,
   @location(4) binormal: vec3<f32>
 ) -> VertexOutput {
   var output: VertexOutput;
-  var myColor: vec3<f32>;
-  var opacity: f32;
-  var mvPosition = mvMatrix * position;
-  output.Position = pcMatrix * mvPosition;
-
-  myColor = baseColor.rgb;
-  opacity = baseColor.w;
-
-  /* diffuse texture */
-  if(params[0] != 0.0)
-  {
-    output.fragUV = uv;
-  }
-
-  output.normal = normalize(normMatrix * vec4<f32>(normal.x, normal.y, normal.z, 0.0)).xyz;  
-  output.eyeDir = normalize(mvPosition.xyz);
-
-  /* lighting */
-  if(params[1] != 0.0)
-  {
-    output.lightDir = normalize(lightPos.xyz - mvPosition.xyz);
-
-    // normal map 
-    if(params[2] != 0.0)
-    {
-      var t = normalize(normMatrix * vec4<f32>(tangeant.x, tangeant.y, tangeant.z, 0.0));
-      var b = normalize(normMatrix * vec4<f32>(binormal.x, binormal.y, binormal.z, 0.0));
-      output.tangeant = t.xyz;
-      output.binormal = b.xyz;
-    }
-    else
-    {
-      var lightDot = max(0.0, dot(output.lightDir, output.normal));
-      myColor *= lightDot;
-
-      if (lightDot > 0.0)
-      {
-        var rvec = reflect(-output.lightDir, output.normal);
-        var specularFac = pow(max(0.0, dot(output.eyeDir, rvec)), specular.a) * specular.rgb;
-        myColor += specularFac;
-      }
-    }
-
-    myColor += ambiantColor;
-  }
-
-  output.color = vec4<f32>(myColor.r, myColor.g, myColor.b , opacity);
+  output.Position = MVPC_MATRIX * position;
+  output.FragPos = vec4(M_MATRIX * position).xyz;
+  output.FragUV = uv;
+  output.FragNormal = NORM_MATRIX * normal;
+  output.FragTangent = NORM_MATRIX * tangent;
+  output.FragBinormal = NORM_MATRIX * binormal;
   return output;
 }`;
 
 export const FRAGMENT_SHADER = `
-@group(0) @binding(4) var<uniform> ambiantColor: vec3<f32>;
-@group(0) @binding(5) var<uniform> baseColor: vec4<f32>;
-@group(0) @binding(6) var<uniform> specular: vec4<f32>;
-@group(0) @binding(7) var<uniform> params: vec4<f32>;
+struct MaterialParams {
+  OPACITY: f32,
+  HAS_TEXTURE: f32,
+  HAS_LIGHTNING: f32,
+  HAS_NORMAL_MAP: f32,
+  HAS_ENV_MAP: f32
+}
+
+@group(0) @binding(3)  var<uniform> CAMERA_POS: vec3<f32>;
+@group(0) @binding(4)  var<uniform> POINT_LIGHT0: vec4<f32>;
+@group(0) @binding(5)  var<uniform> POINT_LIGHT1: vec4<f32>;
+@group(0) @binding(6)  var<uniform> DIR_LIGHT: vec4<f32>;
+@group(0) @binding(7)  var<uniform> MAT_AMBIANT_COLOR: vec4<f32>;
+@group(0) @binding(8)  var<uniform> MAT_DIFFUSE_COLOR: vec4<f32>;
+@group(0) @binding(9)  var<uniform> MAT_SPECULAR: vec4<f32>;
+@group(0) @binding(10) var<uniform> MAT_PARAMS: MaterialParams;
 
 @group(1) @binding(0) var Sampler: sampler;
 @group(1) @binding(1) var Texture: texture_2d<f32>;
@@ -158,55 +122,111 @@ export const FRAGMENT_SHADER = `
 
 @fragment
 fn main(
-  @location(0) fragUV: vec2<f32>,
-  @location(1) color: vec4<f32>,
-  @location(2) normal: vec3<f32>,
-  @location(3) tangeant: vec3<f32>,
-  @location(4) binormal: vec3<f32>,
-  @location(5) lightDir: vec3<f32>,
-  @location(6) eyeDir: vec3<f32>
+  @builtin(position) Position: vec4<f32>,
+  @location(0) FragPos: vec3<f32>,
+  @location(1) FragUV: vec2<f32>,
+  @location(2) FragNormal: vec3<f32>,
+  @location(3) FragTangent: vec3<f32>,
+  @location(4) FragBinormal: vec3<f32>
 ) -> @location(0) vec4<f32> {
-  var finalColor = color;
-
-  /* diffuse texture */
-  if(params[0] != 0.0)
+  var outputColor: vec4<f32>;
+  var normal: vec3<f32> = normalize(FragNormal);
+  var textureColor = vec4<f32>(0, 0, 0, 0);
+  
+  if (MAT_PARAMS.HAS_TEXTURE == 1.0)
   {
-    var textureColor:vec4<f32> = (textureSample(Texture, Sampler, fragUV));
-    finalColor *= textureColor;
+    textureColor = textureSample(Texture, Sampler, FragUV);
   }
 
-  /* normal map */
-  if(params[2] != 0.0)
+  if(MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
   {
-    var pixelNormal:vec4<f32> = (textureSample(NormTexture, NormSampler, fragUV));
-    var pnorm = normalize((pixelNormal.xyz - 0.5) * 2.0);
+    var normalMap:vec4<f32> = textureSample(NormTexture, NormSampler, FragUV);
+    normal = normalize(normalize(FragTangent) * normalMap.x + normalize(FragBinormal) * normalMap.y + normal * normalMap.z);
+  }
 
-    // compute polygon space pixel lighting 
-    var tangeantSpace = mat3x3<f32>(tangeant, binormal, normal);
-    var newNormal = tangeantSpace * pnorm;
-
-    // apply pixel lighting 
-    var lightDot = dot(newNormal,  lightDir);
-    var lcol = finalColor.rgb * max(0.0, lightDot);
-
-    if (lightDot > 0.0)
+  if (MAT_PARAMS.HAS_LIGHTNING == 0.0)
+  {
+    outputColor = textureColor;
+  }
+  else
+  {
+    if (DIR_LIGHT.w == 1.0)
     {
-      var rvec = reflect(-lightDir, newNormal);
-      var specularFac = pow(max(0.0,dot(eyeDir, rvec)), specular.a) * specular.rgb;
-      lcol += specularFac;
+      outputColor += CalcDirLight(DIR_LIGHT.xyz, normal, FragPos, textureColor);
     }
 
-    lcol += ambiantColor;
-    finalColor = vec4<f32>(lcol.r, lcol.g, lcol.b, finalColor.a );
+    if (POINT_LIGHT0.w == 1.0)
+    {
+      outputColor += CalcPointLight(POINT_LIGHT0.xyz, normal, FragPos, textureColor);
+    }
+
+    if (POINT_LIGHT1.w == 1.0)
+    {
+      outputColor += CalcPointLight(POINT_LIGHT1.xyz, normal, FragPos, textureColor);
+    }
   }
 
-  /* env map */
-  if(params[3] != 0.0)
+  if(MAT_PARAMS.HAS_ENV_MAP == 1.0)
   {
-    var rvec = normalize(reflect(-eyeDir, normal));
-    var envMapColor:vec4<f32> = (textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z)));
-    finalColor *= envMapColor;
+    var viewDir = normalize(CAMERA_POS - FragPos);
+    var rvec = normalize(reflect(viewDir, normal));
+    outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z)) * textureColor;
   }
 
-  return finalColor;
-}`;
+  if (MAT_PARAMS.OPACITY != 1.0)
+  {
+    outputColor.a = MAT_PARAMS.OPACITY;
+  }
+
+  return outputColor;
+}
+
+// *****************************************************************************************************************
+// UTILS
+// *****************************************************************************************************************
+
+fn CalcDirLight(lightDir: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, textureColor: vec4<f32>) -> vec4<f32>
+{
+    var ambientColor = MAT_AMBIANT_COLOR * textureColor;
+    var diffuseColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
+    var specularColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
+
+    var reverseLightDir = normalize(-lightDir);
+    var diffuseFactor = max(dot(normal, reverseLightDir), 0.0);
+
+    if (diffuseFactor > 0.0)
+    {
+      diffuseColor = MAT_DIFFUSE_COLOR * diffuseFactor * textureColor;
+      var reflectDir = reflect(-reverseLightDir, normal);
+      var viewDir = normalize(CAMERA_POS - fragPos);
+      var specularFactor = max(dot(viewDir, reflectDir), 0.0);
+      if (specularFactor > 0.0) {
+        specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a) * textureColor;
+      }
+    }
+
+  return ambientColor + diffuseColor + specularColor;
+}
+
+fn CalcPointLight(lightPos: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, textureColor: vec4<f32>) -> vec4<f32>
+{
+  var ambientColor = MAT_AMBIANT_COLOR * textureColor;
+  var diffuseColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
+  var specularColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
+  var reverseLightDir = normalize(lightPos - fragPos);
+  var diffuseFactor = max(dot(normal, reverseLightDir), 0.0);
+
+  if (diffuseFactor > 0.0)
+  {
+    diffuseColor = MAT_DIFFUSE_COLOR * diffuseFactor * textureColor;
+    var reflectDir = reflect(-reverseLightDir, normal);
+    var viewDir = normalize(CAMERA_POS - fragPos);
+    var specularFactor = max(dot(viewDir, reflectDir), 0.0);
+    if (specularFactor > 0.0) {
+      specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a) * textureColor;
+    }
+  }
+
+  return ambientColor + diffuseColor + specularColor;
+}
+`;

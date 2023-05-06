@@ -19,16 +19,16 @@ class Gfx3SkyboxRenderer {
       return;
     }
 
+    const currentView = gfx3Manager.getCurrentView();
     const passEncoder = gfx3Manager.getPassEncoder();
     passEncoder.setPipeline(this.pipeline);
 
     gfx3Manager.destroyUniformGroup(this.uniformGroup);
     this.uniformGroup = gfx3Manager.createUniformGroup(SHADER_UNIFORM_ATTR_COUNT * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
 
-    const viewMatrix = gfx3Manager.getCurrentViewMatrix();
-    viewMatrix[12] = 0;
-    viewMatrix[13] = 0;
-    viewMatrix[14] = 0;
+    const viewMatrix = currentView.getCameraViewMatrix();
+    viewMatrix[12] = viewMatrix[13] = viewMatrix[14] = 0;
+
     const vpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), viewMatrix);
     gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(Utils.MAT4_INVERT(vpcMatrix)));
 

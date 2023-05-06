@@ -15,6 +15,7 @@ class Gfx3SpriteRenderer {
   }
 
   render(): void {
+    const currentView = gfx3Manager.getCurrentView();
     const passEncoder = gfx3Manager.getPassEncoder();
     passEncoder.setPipeline(this.pipeline);
 
@@ -23,9 +24,9 @@ class Gfx3SpriteRenderer {
 
     for (const sprite of this.sprites) {
       if (sprite.getBillboardMode()) {
-        const viewMatrix = gfx3Manager.getCurrentViewMatrix();
-        let mvMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentViewMatrix(), sprite.getTransformMatrix());
-        mvMatrix = Utils.MAT4_MULTIPLY(mvMatrix, gfx3Manager.getCurrentCameraMatrix());
+        const viewMatrix = currentView.getCameraViewMatrix();
+        let mvMatrix = Utils.MAT4_MULTIPLY(viewMatrix, sprite.getTransformMatrix());
+        mvMatrix = Utils.MAT4_MULTIPLY(mvMatrix, currentView.getCameraMatrix());
         mvMatrix = Utils.MAT4_MULTIPLY(mvMatrix, Utils.MAT4_TRANSLATE(viewMatrix[12], viewMatrix[13], viewMatrix[14]));
         const mvpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), mvMatrix);
         gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvpcMatrix));

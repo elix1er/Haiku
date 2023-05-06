@@ -1,18 +1,21 @@
 import { eventManager } from '../../lib/core/event_manager';
 import { uiManager } from '../../lib/ui/ui_manager';
+import { inputManager } from '../../lib/input/input_manager';
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
 import { Utils } from '../../lib/core/utils';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3JWM } from '../../lib/gfx3_jwm/gfx3_jwm';
+import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
 import { ScriptMachine } from '../../lib/script/script_machine';
 import { UIDialog } from '../../lib/ui_dialog/ui_dialog';
 // ---------------------------------------------------------------------------------------
 import { Spawn } from './spawn';
 import { Model } from './model';
 import { Trigger } from './trigger';
-import { Controller } from './controller';
 import { TrackingCamera } from './tracking_camera';
 // ---------------------------------------------------------------------------------------
+
+const CHAR_SPEED = 4;
 
 class Room {
   constructor() {
@@ -20,18 +23,22 @@ class Room {
     this.description = '';
     this.map = new Gfx3MeshJSM();
     this.walkmesh = new Gfx3JWM();
-    this.controller = new Controller();
+    this.controller = new Model();
     this.camera = new TrackingCamera(0);
     this.scriptMachine = new ScriptMachine();
     this.spawns = [];
     this.models = [];
     this.triggers = [];
+    this.pause = false;
 
     this.scriptMachine.registerCommand('LOAD_ROOM', this.$loadRoom.bind(this));
     this.scriptMachine.registerCommand('CONTINUE', this.$continue.bind(this));
     this.scriptMachine.registerCommand('STOP', this.$stop.bind(this));
     this.scriptMachine.registerCommand('UI_CREATE_DIALOG', this.$uiCreateDialog.bind(this));
     this.scriptMachine.registerCommand('MODEL_PLAY_ANIMATION', this.$modelPlayAnimation.bind(this));
+
+    eventManager.subscribe(inputManager, 'E_ACTION_ONCE', this, this.handleActionOnce);
+    eventManager.subscribe(this.controller, 'E_MOVED', this, this.handleControllerMoved);
   }
 
   async loadFromFile(path, spawnName) {
@@ -43,12 +50,10 @@ class Room {
 
     this.map = new Gfx3MeshJSM();
     await this.map.loadFromFile(json['MapFile']);
-    this.map.setMaterial({ texture: await gfx3TextureManager.loadTexture(json['MapTextureFile']) });
+    this.map.setMaterial(new Gfx3Material({ texture: await gfx3TextureManager.loadTexture(json['MapTextureFile']) }));
 
     this.walkmesh = new Gfx3JWM();
     await this.walkmesh.loadFromFile(json['WalkmeshFile']);
-
-    this.controller = new Controller();
     await this.controller.loadFromData(json['Controller']);
 
     this.camera = new TrackingCamera(0);
@@ -84,9 +89,6 @@ class Room {
     await this.scriptMachine.loadFromFile(json['ScriptFile']);
     this.scriptMachine.jump('ON_INIT');
     this.scriptMachine.setEnabled(true);
-
-    eventManager.subscribe(this.controller, 'E_ACTION', this, this.handleControllerAction);
-    eventManager.subscribe(this.controller, 'E_MOVED', this, this.handleControllerMoved);
   }
 
   delete() {
@@ -94,11 +96,40 @@ class Room {
       model.delete();
     }
 
-    eventManager.unsubscribe(this.controller, 'E_ACTION', this);
+    eventManager.unsubscribe(inputManager, 'E_ACTION_ONCE', this);
     eventManager.unsubscribe(this.controller, 'E_MOVED', this);
   }
 
   update(ts) {
+    let moving = false;
+    let moveDir = Utils.VEC3_ZERO;
+
+    if (inputManager.isActiveAction('LEFT')) {
+      moveDir = Utils.VEC3_LEFT;
+      moving = true;
+    }
+    else if (inputManager.isActiveAction('RIGHT')) {
+      moveDir = Utils.VEC3_RIGHT;
+      moving = true;
+    }
+    else if (inputManager.isActiveAction('UP')) {
+      moveDir = Utils.VEC3_FORWARD;
+      moving = true;
+    }
+    else if (inputManager.isActiveAction('DOWN')) {
+      moveDir = Utils.VEC3_BACKWARD;
+      moving = true;
+    }
+
+    if (moving && !this.pause) {
+      const moveX = moveDir[0] * CHAR_SPEED * (ts / 1000);
+      const moveZ = moveDir[2] * CHAR_SPEED * (ts / 1000);
+      this.controller.move(moveX, moveZ, true);
+    }
+    else {
+      this.controller.move(0, 0);
+    }
+
     this.map.update(ts);
     this.walkmesh.update(ts);
     this.controller.update(ts);
@@ -128,7 +159,11 @@ class Room {
     }
   }
 
-  handleControllerAction({ handPositionX, handPositionY, handPositionZ }) {
+  handleActionOnce(data) {
+    if (data.actionId != 'OK' || this.pause) {
+      return;
+    }
+
     for (let trigger of this.triggers) {
       if (Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition()) <= this.controller.getRadius() + trigger.getRadius()) {
         if (trigger.getOnActionBlockId()) {
@@ -139,7 +174,7 @@ class Room {
     }
 
     for (let model of this.models) {
-      if (Utils.VEC3_DISTANCE(model.getPosition(), [handPositionX, handPositionY, handPositionZ]) <= model.getRadius()) {
+      if (Utils.VEC3_DISTANCE(model.getPosition(), this.controller.getHandPosition()) <= model.getRadius()) {
         if (model.getOnActionBlockId()) {
           this.scriptMachine.jump(model.getOnActionBlockId());
           return;
@@ -150,22 +185,20 @@ class Room {
 
   handleControllerMoved({ moveX, moveZ }) {
     for (let other of this.models) {
-      let delta = Utils.VEC3_SUBSTRACT(this.controller.getPosition(), other.getPosition());
-      let distance = Utils.VEC3_LENGTH(delta);
-      let distanceMin = this.controller.getRadius() + other.getRadius();
-      if (distance < distanceMin) {
-        let c = Math.PI * 2 - (Math.PI * 2 - Math.atan2(delta[2], delta[0]));
-        moveX += Math.cos(c) * (distanceMin - distance);
-        moveZ += Math.sin(c) * (distanceMin - distance);
+      let velocityImpact = [0, 0];
+      if (Utils.CIRCLE_COLLIDE(this.controller.getNextPosition(), this.controller.getRadius(), other.getPosition(), other.getRadius(), velocityImpact)) {
+        moveX += velocityImpact[0];
+        moveZ += velocityImpact[1];
         break;
       }
     }
 
-    let walker = this.walkmesh.moveWalker('CONTROLLER', moveX, moveZ);
-    this.controller.setPosition(walker.x, walker.y, walker.z);
+    const newPosition = this.walkmesh.moveWalker('CONTROLLER', moveX, moveZ);
+    const move = Utils.VEC3_SUBSTRACT(newPosition, this.controller.getPosition())
+    this.controller.setVelocity(move[0], move[1], move[2]);
 
     for (let trigger of this.triggers) {
-      let distance = Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition());
+      let distance = Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
       let distanceMin = this.controller.getRadius() + trigger.getRadius();
 
       if (trigger.getOnEnterBlockId() && !trigger.isHovered() && distance < distanceMin) {
@@ -180,17 +213,17 @@ class Room {
   }
 
   async $loadRoom(path, spawnName) {
-    this.controller.setControllable(false);
+    this.pause = true;
     await this.loadFromFile(path, spawnName);
-    this.controller.setControllable(true);
+    this.pause = false;
   }
 
   $continue() {
-    this.controller.setControllable(true);
+    this.pause = false;
   }
 
   $stop() {
-    this.controller.setControllable(false);
+    this.pause = true;
   }
 
   async $uiCreateDialog(author, text) {

@@ -4,12 +4,13 @@
 
 ![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-2.0.0-blue)
 
-**psx.ts** is like a bunch of micro-module which becomes a powerful 2D/3D game engine specialized to build PSX demake videogames.    
+**WebStationX** is 2D/3D game engine think to be easy and fast.
+Allow build for pragmatics web-developper to build games easyly !
 
 ## General features
 - 🧊 2D - Sprites, tilemaps
-- 🧊 3D - Render pipelines, debug shapes, lights, meshes, materials, sprites, billboard, skybox, walkmeshs, multiple-camera
-- 💥 VFX - Gouraud support, specular support, cubemap support, normal mapping, envmap support
+- 🧊 3D - Debug shapes, point lights, directional light, meshes, materials, sprites, billboard, skybox, walkmeshs, multiple-camera, ray, nav-mesh, bsp
+- 💥 VFX - Phong, normal-map, env-map
 - 🎮 Input - Action mapper for keyboard and gamepad
 - 📺 Screen - Handle different screens of your game
 - 📜 Scripts - Write game behaviors
@@ -30,7 +31,7 @@ Clone this repo, go to the root of project and launch the build with the followi
 ```
 
 ## How to integrate your 3D models ?
-The [psx-blender-exporter](https://github.com/Anuban-corp/psx-blender-exporter) allows you to export your models in **psx.ts** compatible formats!
+The [WebStation Blender Exporter](https://github.com/jay19240/WebStationX-Blender-Exporter) allows you to export your models in compatible formats!
 
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
@@ -45,4 +46,18 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 ## Some parts taken from this work
 - Use DOM for UI elements
-- Use the psx-style technologies
+- Use human readable custom format for all graphics stuff
+- No physics engine, we assume if you need one there is many pretty lib for that like ammo.js or canon.js
+
+## First todo-list
+- Texture Scroll UV (for me)
+- Texture Frames (JSM/JAM) (for me)
+- Vertex Light (for me)
+- Loader OBJ (for antoine)
+- Textures Equirectangulaires (for antoine)
+- Particules system (for antoine)
+
+## Fun todo-list
+- Transform a-star in a generic way (2D & 3D)
+- Translate triple-triad demo (Work In Progress)
+- Translate new demo from nft game (Work In Progress)

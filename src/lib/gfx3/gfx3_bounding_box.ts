@@ -9,19 +9,15 @@ class Gfx3BoundingBox {
     this.max = max;
   }
 
-  static createFromVertices(vertices: Array<number>, vertexStride: number): Gfx3BoundingBox {
-    const min: vec3 = [vertices[0], vertices[1], vertices[2]];
-    const max: vec3 = [vertices[0], vertices[1], vertices[2]];
-
-    for (let i = 0; i < vertices.length; i += vertexStride) {
-      for (let j = 0; j < 3; j++) {
-        const v = vertices[i + j];
-        min[j] = Math.min(v, min[j]);
-        max[j] = Math.max(v, max[j]);
-      }
-    }
-
-    return new Gfx3BoundingBox(min, max);
+  static create(center: vec3, size: vec3): Gfx3BoundingBox {
+    const box = new Gfx3BoundingBox();
+    box.min[0] = center[0] - (size[0] * 0.5);
+    box.min[1] = center[1] - (size[1] * 0.5);
+    box.min[2] = center[2] - (size[2] * 0.5);
+    box.max[0] = center[0] + (size[0] * 0.5);
+    box.max[1] = center[1] + (size[1] * 0.5);
+    box.max[2] = center[2] + (size[2] * 0.5);
+    return box;
   }
 
   static merge(aabbs: Array<Gfx3BoundingBox>): Gfx3BoundingBox {
@@ -36,6 +32,22 @@ class Gfx3BoundingBox {
     }
 
     return new Gfx3BoundingBox(min, max);
+  }
+
+  fromVertices(vertices: Array<number>, vertexStride: number): void {
+    const min: vec3 = [vertices[0], vertices[1], vertices[2]];
+    const max: vec3 = [vertices[0], vertices[1], vertices[2]];
+
+    for (let i = 0; i < vertices.length; i += vertexStride) {
+      for (let j = 0; j < 3; j++) {
+        const v = vertices[i + j];
+        min[j] = Math.min(v, min[j]);
+        max[j] = Math.max(v, max[j]);
+      }
+    }
+
+    this.min = min;
+    this.max = max;
   }
 
   merge(aabb: Gfx3BoundingBox): Gfx3BoundingBox {
@@ -118,6 +130,14 @@ class Gfx3BoundingBox {
       (x >= this.min[0] && x <= this.max[0]) &&
       (y >= this.min[1] && y <= this.max[1]) &&
       (z >= this.min[2] && z <= this.max[2])
+    );
+  }
+
+  isPointInsideEps(x: number, y: number, z: number): boolean {
+    return (
+      (x >= this.min[0] - 0.001 && x <= this.max[0] + 0.001) &&
+      (y >= this.min[1] - 0.001 && y <= this.max[1] + 0.001) &&
+      (z >= this.min[2] - 0.001 && z <= this.max[2] + 0.001)
     );
   }
 

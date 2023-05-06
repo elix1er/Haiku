@@ -9,7 +9,16 @@ class Gfx2BoundingRect {
     this.max = max;
   }
 
-  static createFromVertices(vertices: Array<number>): Gfx2BoundingRect {
+  static create(x: number, y:number, width: number, height: number): Gfx2BoundingRect {
+    const box = new Gfx2BoundingRect();
+    box.min[0] = x;
+    box.min[1] = y;
+    box.max[0] = x + width;
+    box.max[1] = y + height;
+    return box;
+  }
+
+  fromVertices(vertices: Array<number>): void {
     const min: vec2 = [vertices[0], vertices[1]];
     const max: vec2 = [vertices[0], vertices[1]];
 
@@ -21,7 +30,8 @@ class Gfx2BoundingRect {
       }
     }
 
-    return new Gfx2BoundingRect(min, max);
+    this.min = min;
+    this.max = max;
   }
 
   getCenter(): vec2 {
@@ -32,10 +42,10 @@ class Gfx2BoundingRect {
     return [x, y];
   }
 
-  getSize(): { w: number, h: number } {
+  getSize(): vec2 {
     const w = this.max[0] - this.min[0];
     const h = this.max[1] - this.min[1];
-    return { w, h };
+    return [w, h];
   }
 
   getRadius(): number {

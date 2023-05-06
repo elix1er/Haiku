@@ -119,7 +119,7 @@ class Gfx3JWM extends Gfx3Transformable {
     });
   }
 
-  moveWalker(id: string, mx: number, mz: number): WalkerPoint {
+  moveWalker(id: string, mx: number, mz: number): vec3 {
     const walker = this.walkers.find(w => w.id == id);
     if (!walker) {
       throw new Error('Gfx3JWM::moveWalker: walker with id ' + id + ' cannot be found.');
@@ -202,7 +202,11 @@ class Gfx3JWM extends Gfx3Transformable {
       walker.points[4].z += mz;
     }
 
-    return walker.points[0];
+    return [
+      walker.points[0].x,
+      walker.points[0].y,
+      walker.points[0].z
+    ];
   }
 
   clearWalkers(): void {

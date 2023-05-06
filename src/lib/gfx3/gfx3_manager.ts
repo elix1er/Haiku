@@ -224,6 +224,8 @@ class Gfx3Manager {
 
   destroyUniformGroup(uniformGroup: UniformGroup): void {
     uniformGroup.buffer.destroy();
+    uniformGroup.offset = 0;
+    uniformGroup.entries = [];
   }
 
   writeUniformGroup(uniformGroup: UniformGroup, binding: number, data: Float32Array): void {
@@ -317,8 +319,8 @@ class Gfx3Manager {
   getScreenPosition(viewIndex: number, x: number, y: number, z: number): vec2 {
     const view = this.views[viewIndex];
     const viewport = view.getViewport();
-    const viewportWidth = this.canvas.width * viewport.widthFactor;
-    const viewportHeight = this.canvas.height * viewport.heightFactor;
+    const viewportWidth = (this.canvas.width * viewport.widthFactor);
+    const viewportHeight = (this.canvas.height * viewport.heightFactor);
 
     let matrix = Utils.MAT4_IDENTITY();
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getClipMatrix());
@@ -326,10 +328,13 @@ class Gfx3Manager {
     matrix = Utils.MAT4_MULTIPLY(matrix, view.getCameraViewMatrix());
 
     const pos = Utils.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
+    const viewportRealWidth = viewportWidth / window.devicePixelRatio;
+    const viewportRealHeight = viewportHeight / window.devicePixelRatio;
+
     pos[0] = pos[0] / pos[3];
     pos[1] = pos[1] / pos[3];
-    pos[0] = ((pos[0] + 1.0) * viewportWidth) / (2.0);
-    pos[1] = viewportHeight - ((pos[1] + 1.0) * viewportHeight) / (2.0);
+    pos[0] = ((pos[0] + 1.0) * viewportRealWidth) / (2.0);
+    pos[1] = viewportRealHeight - ((pos[1] + 1.0) * viewportRealHeight) / (2.0);
     return [pos[0], pos[1]];
   }
 
@@ -353,14 +358,6 @@ class Gfx3Manager {
     const viewportWidth = this.canvas.width * viewport.widthFactor;
     const viewportHeight = this.canvas.height * viewport.heightFactor;
     return this.currentView.getPCMatrix(viewportWidth / viewportHeight);
-  }
-
-  getCurrentCameraMatrix(): mat4 {
-    return this.currentView.getCameraMatrix();
-  }
-
-  getCurrentViewMatrix(): mat4 {
-    return this.currentView.getCameraViewMatrix();
   }
 
   getCurrentViewProjectionMatrix(): mat4 {

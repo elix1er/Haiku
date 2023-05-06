@@ -8,29 +8,15 @@ class Gfx3Mesh extends Gfx3Drawable {
 
   constructor() {
     super(SHADER_VERTEX_ATTR_COUNT);
-    this.material = {
-      ambiant: [0.2, 0.2, 0.2],
-      specular: [1.0, 0.0, 0.0, 4],
-      color: [1.0, 1.0, 1.0, 1.0],
-      lightning: false,
-      texture: null,
-      normalMap: null,
-      envMap: null
-    };
+    this.material = new Gfx3Material({});
   }
 
   draw(): void {
     gfx3MeshRenderer.drawMesh(this);
   }
 
-  setMaterial(material: Partial<Gfx3Material> = {}): void {
-    this.material.ambiant = material.ambiant ?? [0.2, 0.2, 0.2];
-    this.material.specular = material.specular ?? [0.0, 0.0, 0.0, 0];
-    this.material.color = material.color ?? [1.0, 1.0, 1.0, 1.0];
-    this.material.lightning = material.lightning ?? false;
-    this.material.texture = material.texture ?? null;
-    this.material.normalMap = material.normalMap ?? null;
-    this.material.envMap = material.envMap ?? null;
+  setMaterial(material: Gfx3Material): void {
+    this.material = material;
   }
 
   getMaterial(): Gfx3Material {

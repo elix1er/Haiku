@@ -31,7 +31,7 @@ class Gfx3Transformable {
     this.position = [x, y, z];
   }
 
-  move(x: number, y: number, z: number): void {
+  translate(x: number, y: number, z: number): void {
     this.position[0] += x;
     this.position[1] += y;
     this.position[2] += z;
@@ -97,6 +97,15 @@ class Gfx3Transformable {
     matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_Z(this.rotation[2]));
     matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_SCALE(this.scale[0], this.scale[1], this.scale[2]));
     return matrix;
+  }
+
+  getLocalAxies(): Array<vec3> {
+    const matrix = this.getTransformMatrix();
+    return [
+      [matrix[0], matrix[1], matrix[2]],
+      [matrix[4], matrix[5], matrix[6]],
+      [matrix[8], matrix[9], matrix[10]]      
+    ];
   }
 }
 

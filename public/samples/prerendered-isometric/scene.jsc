@@ -19,7 +19,7 @@
       },
       {
         "Name": "UI_CREATE_DIALOG",
-        "Args": ["Unit :", "samples/prerendered-isometric/princess-avatar.jpg", "Bienvenue dans notre scène de démonstration.", "500", "10px", "10px"]
+        "Args": ["Princess :", "samples/prerendered-isometric/princess-avatar.jpg", "Bienvenue dans le monde d'Ivalice jeune aventurier.", "500", "10px", "10px"]
       },
       {
         "Name": "CONTINUE",

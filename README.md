@@ -10,12 +10,14 @@ Note: This project comes with a dozen diverse and varied examples.
 
 ## General features
 - 🧊 2D - Sprites, tilemaps
-- 🧊 3D - Debug shapes, point lights, directional light, meshes, materials, sprites, billboard, skybox, walkmeshs, multiple-camera, ray, nav-mesh, bsp
+- 🧊 3D - Debug shapes, light, mesh, animated mesh, material, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover
 - 💥 VFX - Phong, normal-map, env-map
 - 🎮 Input - Action mapper for keyboard and gamepad
+- 🚔 Pathfinder - A* for 2D & 3D
 - 📺 Screen - Handle different screens of your game
 - 📜 Scripts - Write game behaviors
 - 🔊 Sound - Sound manager built on the Web Audio API
+- 🌳 Tree - Binary Space Partion for 2D & 3D
 - 🎨 UI - Component architecture very efficient to keep project clean and scalable
 
 ## Getting started

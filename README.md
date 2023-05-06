@@ -5,7 +5,7 @@
 ![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.0-blue)
 
 **WebStationX** is a typescript 2D/3D video game engine based on WebGPU. The idea is simple: provide a complete and coherent development kit from ui to rendering.
-Against the current fashion, WebStationX use simple and pragmatic techniques, the goal here is to eliminate as many black boxes as possible, thus giving maximum control to the user.
+Against the current fashion, WebStationX use simple and pragmatic techniques, the goal here is to eliminate as many black boxes as possible to giving maximum control to the user.
 Note: This project comes with a dozen diverse and varied examples.
 
 ## General features

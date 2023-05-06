@@ -50,6 +50,12 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Use human readable custom format for all graphics stuff
 - No physics engine, we assume if you need one there is many pretty lib for that like ammo.js or canon.js
 
+## Platform
+**Chrome Canary: 113+**  
+**Edge Canary: 113+**
+
+> *As WebGPU is not released, please enable `chrome://flags/#enable-unsafe-webgpu` or `edge://flags/#enable-unsafe-webgpu`*
+
 ## First todo-list
 - Texture Scroll UV (for me)
 - Texture Frames (JSM/JAM) (for me)
@@ -62,3 +68,6 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Transform a-star in a generic way (2D & 3D)
 - Translate triple-triad demo (Work In Progress)
 - Translate new demo from nft game (Work In Progress)
+
+## License 
+WebStationX engine is released under the [MIT](https://opensource.org/licenses/MIT) license. 

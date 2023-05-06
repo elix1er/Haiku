@@ -74,7 +74,7 @@ class Gfx3MeshNav {
       collideWall: false
     };
 
-    const min: vec3 = [aabb.min[0] - res.move[0], aabb.min[1] - res.move[1], aabb.min[2] - res.move[2]];
+    const min: vec3 = [aabb.min[0] + res.move[0], aabb.min[1] + res.move[1], aabb.min[2] + res.move[2]];
     const max: vec3 = [aabb.max[0] + res.move[0], aabb.max[1] + res.move[1], aabb.max[2] + res.move[2]];
     const frags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(min, max)));
 
@@ -130,13 +130,13 @@ class Gfx3MeshNav {
 
     // We check the floor elevation on the next position and correct the delta between current elevation and floor elevation.
     // Note: This is done only if the impact delta is less or equal to the floorCaptureLimit.
-    // const footElevation = center[1] - (size[1] * 0.5);
-    // const elevation = GET_ELEVATION(frags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]], this.floorCaptureLimit);
+    const footElevation = center[1] - (size[1] * 0.5);
+    const elevation = GET_ELEVATION(frags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]], this.floorCaptureLimit);
 
-    // if (elevation != Infinity) {
-    //   res.collideFloor = true;
-    //   res.move[1] = elevation - footElevation;
-    // }
+    if (elevation != Infinity) {
+      res.collideFloor = true;
+      res.move[1] = elevation - footElevation;
+    }
 
     return res;
   }

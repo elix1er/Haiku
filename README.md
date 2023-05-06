@@ -59,17 +59,17 @@ If you have a suggestion that would make this better, please fork the repo and c
 > *As WebGPU is not released, please enable `chrome://flags/#enable-unsafe-webgpu` or `edge://flags/#enable-unsafe-webgpu`*
 
 ## First todo-list
-- Texture Scroll UV (for me)
-- Texture Frames (JSM/JAM) (for me)
-- Vertex Light (for me)
-- Loader OBJ (for antoine)
-- Textures Equirectangulaires (for antoine)
-- Particules system (for antoine)
+- Texture Scroll UV (Owner: Me, Delay: 1/2 weeks)
+- Texture Frames (JSM/JAM) (Owner: me, Delay: 3 weeks)
+- Vertex Light (Owner: me, Delay: N/A)
+- Loader OBJ (Owner: Antoine, Delay: 1 month)
+- Textures Equirectangulaires (Owner: Antoine, Delay: 1 month)
+- Particules system (Owner: Antoine, Delay: 1 month)
 
 ## Fun todo-list
 - Transform a-star in a generic way (2D & 3D)
-- Translate triple-triad demo (Work In Progress)
-- Translate new demo from nft game (Work In Progress)
+- Translate triple-triad demo (Work: In Progress, Delay: 1 month)
+- Translate new demo from nft game (Work: In Progress, Delay: 1 month)
 
 ## License 
 WebStationX engine is released under the [MIT](https://opensource.org/licenses/MIT) license. 

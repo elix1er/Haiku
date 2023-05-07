@@ -35,19 +35,19 @@ class Gfx3MeshJSM extends Gfx3Mesh {
       const deltaUV1 = Utils.VEC2_SUBSTRACT(uv1, uv0);
       const deltaUV2 = Utils.VEC2_SUBSTRACT(uv2, uv0);
 
-      const r = 1.0 / (deltaUV1[0] * deltaUV2[1] - deltaUV1[1] * deltaUV2[0]);
+      const r = 1.0 / ((deltaUV1[0] * deltaUV2[1]) - (deltaUV1[1] * deltaUV2[0]));
 
-      const tx = (deltaPos1[0] * deltaUV2[1] - deltaPos2[0] * deltaUV1[1]) * r;
-      const ty = (deltaPos1[1] * deltaUV2[1] - deltaPos2[1] * deltaUV1[1]) * r;
-      const tz = (deltaPos1[2] * deltaUV2[1] - deltaPos2[2] * deltaUV1[1]) * r;
+      const tx = ((deltaPos1[0] * deltaUV2[1]) - (deltaPos2[0] * deltaUV1[1])) * r;
+      const ty = ((deltaPos1[1] * deltaUV2[1]) - (deltaPos2[1] * deltaUV1[1])) * r;
+      const tz = ((deltaPos1[2] * deltaUV2[1]) - (deltaPos2[2] * deltaUV1[1])) * r;
 
-      const binormx = (deltaPos2[0] * deltaUV1[0] - deltaPos1[0] * deltaUV2[0]) * r;
-      const binormy = (deltaPos2[1] * deltaUV1[0] - deltaPos1[1] * deltaUV2[0]) * r;
-      const binormz = (deltaPos2[2] * deltaUV1[0] - deltaPos1[2] * deltaUV2[0]) * r;
+      const bx = ((deltaPos2[0] * deltaUV1[0]) - (deltaPos1[0] * deltaUV2[0])) * r;
+      const by = ((deltaPos2[1] * deltaUV1[0]) - (deltaPos1[1] * deltaUV2[0])) * r;
+      const bz = ((deltaPos2[2] * deltaUV1[0]) - (deltaPos1[2] * deltaUV2[0])) * r;
 
-      this.defineVertex(v0[0], v0[1], v0[2], uv0[0], uv0[1], n0[0], n0[1], n0[2], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-      this.defineVertex(v1[0], v1[1], v1[2], uv1[0], uv1[1], n1[0], n1[1], n1[2], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-      this.defineVertex(v2[0], v2[1], v2[2], uv2[0], uv2[1], n2[0], n2[1], n2[2], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+      this.defineVertex(v0[0], v0[1], v0[2], uv0[0], uv0[1], n0[0], n0[1], n0[2], tx, ty, tz, bx, by, bz);
+      this.defineVertex(v1[0], v1[1], v1[2], uv1[0], uv1[1], n1[0], n1[1], n1[2], tx, ty, tz, bx, by, bz);
+      this.defineVertex(v2[0], v2[1], v2[2], uv2[0], uv2[1], n2[0], n2[1], n2[2], tx, ty, tz, bx, by, bz);
     }
 
     this.endVertices();

@@ -12,18 +12,11 @@ const DIRECTION = {
   BACKWARD: 'BACKWARD'
 };
 
-const DIRECTION_TO_VEC2 = {
-  LEFT: [-1, 0],
-  RIGHT: [1, 0],
-  FORWARD: [0, -1],
-  BACKWARD: [0, 1]
-};
-
 class Controller extends Gfx2Drawable {
   constructor() {
     super();
     this.jas = new Gfx2SpriteJAS();
-    this.moving = false;
+    this.velocity = [0, 0];
     this.direction = DIRECTION.FORWARD;
     this.speed = 0.05;
     this.width = 0;
@@ -48,41 +41,37 @@ class Controller extends Gfx2Drawable {
   }
 
   update(ts) {
-    if (inputManager.isActiveAction('LEFT')) {
-      this.moving = true;
-      this.direction = DIRECTION.LEFT;
-    }
-    else if (inputManager.isActiveAction('RIGHT')) {
-      this.moving = true;
-      this.direction = DIRECTION.RIGHT;
-    }
-    else if (inputManager.isActiveAction('UP')) {
-      this.moving = true;
-      this.direction = DIRECTION.FORWARD;
-    }
-    else if (inputManager.isActiveAction('DOWN')) {
-      this.moving = true;
-      this.direction = DIRECTION.BACKWARD;
-    }
-    else {
-      this.moving = false;
-    }
-
-    if (this.moving) {
-      let prevPositionX = this.position[0];
-      let prevPositionY = this.position[1];
-      this.position[0] += DIRECTION_TO_VEC2[this.direction][0] * this.speed * ts;
-      this.position[1] += DIRECTION_TO_VEC2[this.direction][1] * this.speed * ts;
-      eventManager.emit(this, 'E_MOVED', { prevPositionX, prevPositionY });
-    }
-
+    this.position[0] += this.velocity[0];
+    this.position[1] += this.velocity[1];
     this.jas.setPosition(this.position[0], this.position[1]);
-    this.jas.play(this.moving ? 'RUN_' + this.direction : 'IDLE_' + this.direction, true, true);
     this.jas.update(ts);
   }
 
   draw() {
     this.jas.draw();
+  }
+
+  move(mx, my, direction = null) {
+    this.velocity[0] = mx;
+    this.velocity[1] = my;
+
+    if (mx != 0 || my != 0) {
+      this.direction = direction;
+      this.jas.play('RUN_' + direction, true, true);
+      eventManager.emit(this, 'E_MOVED', { moveX: mx, moveY: my });
+    }
+    else {
+      this.jas.play('IDLE_' + this.direction, true, true);
+    }
+  }
+
+  setVelocity(mx, my) {
+    this.velocity[0] = mx;
+    this.velocity[1] = my;
+  }
+
+  getSpeed() {
+    return this.speed;
   }
 
   getWidth() {
@@ -91,6 +80,13 @@ class Controller extends Gfx2Drawable {
 
   getHeight() {
     return this.height;
+  }
+
+  getNextPosition() {
+    return [
+      this.position[0] + this.velocity[0],
+      this.position[1] + this.velocity[1]
+    ];
   }
 
   getCollider1X() {

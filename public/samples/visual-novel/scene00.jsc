@@ -17,9 +17,9 @@
       },
       {
         "Name": "UI_CREATE_CHOICES",
-        "Args": ["Ren", "Souhaite-tu visiter le campus avec moi ?", [
+        "Args": ["Ren", "Souhaites-tu visiter le campus avec moi ?", [
           {
-            "Text": "Oui biensurs, allons voir ça !",
+            "Text": "Oui bien-surs, allons voir ça !",
             "Jumpto": "0000"
           },
           {

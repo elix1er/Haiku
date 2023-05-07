@@ -118,6 +118,20 @@ class Gfx3SpriteJAS extends Gfx3Sprite {
     this.looped = looped;
     this.frameProgress = 0;
   }
+
+  setOffsetNormalized(offsetXFactor: number, offsetYFactor: number) {
+    if (!this.currentAnimation) {
+      return;
+    }
+
+    const currentFrame = this.currentAnimation.frames[this.currentAnimationFrameIndex];
+    if (!currentFrame) {
+      return;
+    }
+
+    this.offset[0] = currentFrame.width * offsetXFactor;
+    this.offset[1] = currentFrame.height * offsetYFactor;
+  }
 }
 
 export { Gfx3SpriteJAS };

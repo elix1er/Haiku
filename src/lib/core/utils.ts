@@ -1,8 +1,16 @@
 class Utils {
+  static EPSILON = 0.0000001;
+
   static FAIL(message: string) {
     const elem = document.querySelector<HTMLDivElement>('#APP_FAIL')!;
     elem.classList.add('SHOW');
     elem.textContent = message;
+  }
+
+  static WAIT(ms: number): Promise<any> {
+    return new Promise((resolve: Function) => {
+      window.setTimeout(() => resolve(), ms);
+    });
   }
 
   static SHUFFLE(arr: Array<any>): Array<any> {
@@ -133,10 +141,22 @@ class Utils {
 
   static VEC2_PROJECTION_COS(a: vec2, b: vec2): vec2 {
     const bLength = Math.sqrt(b[0] * b[0] + b[1] * b[1]);
-    const bNormalizer = (a[0] * b[0] + a[1] * b[1]) / (bLength * bLength);
-    const x = b[0] * bNormalizer;
-    const y = b[1] * bNormalizer;
+    const scale = (a[0] * b[0] + a[1] * b[1]) / (bLength * bLength); // @todo: rendre le calcule plus clair
+    const x = b[0] * scale;
+    const y = b[1] * scale;
     return [x, y];
+  }
+
+  static VEC2_QUADRATIC_BEZIER(p0: vec2, p1: vec2, p2: vec2, t: number): vec2 {
+	  const pAX = p0[0] + ((p1[0] - p0[0]) * t);
+	  const pAY = p0[1] + ((p1[1] - p0[1]) * t);
+
+	  const pBX = p1[0] + ((p2[0] - p1[0]) * t);
+	  const pBY = p1[1] + ((p2[1] - p1[1]) * t);
+
+	  const pFX = pAX + ((pBX - pAX) * t);
+	  const pFY = pAY + ((pBY - pAY) * t);
+	  return [pFX, pFY ];
   }
 
   /**************************************************************************/
@@ -220,6 +240,7 @@ class Utils {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
   }
 
+  // @todo: optimize with equation plan
   static VEC3_TRIANGLE_POINT_ELEVATION(a: vec3, b: vec3, c: vec3, p: vec2): number {
     const ab = Utils.VEC3_CREATE(b[0] - a[0], 0, b[2] - a[2]);
     const ca = Utils.VEC3_CREATE(a[0] - c[0], 0, a[2] - c[2]);
@@ -264,6 +285,45 @@ class Utils {
   static VEC3_TRIANGLE_POINT_IS_INSIDE(a: vec3, b: vec3, c: vec3, p: vec2): boolean {
     const sides = Utils.VEC3_TRIANGLE_POINT_OUTSIDES(a, b, c, p);
     return !sides.ab && !sides.bc && !sides.ca;
+  }
+
+  static VEC3_TRIANGLE_NORMAL(a: vec3, b: vec3, c: vec3): vec3 {
+    const ab = Utils.VEC3_SUBSTRACT(b, a);
+    const ac = Utils.VEC3_SUBSTRACT(c, a);
+    return Utils.VEC3_CROSS(ab, ac);
+  }
+
+  static VEC3_QUADRATIC_BEZIER(p0: vec3, p1: vec3, p2: vec3, t: number): vec3 {
+	  const pAX = p0[0] + ((p1[0] - p0[0]) * t);
+	  const pAY = p0[1] + ((p1[1] - p0[1]) * t);
+	  const pAZ = p0[2] + ((p1[2] - p0[2]) * t);
+	  
+    const pBX = p1[0] + ((p2[0] - p1[0]) * t);
+	  const pBY = p1[1] + ((p2[1] - p1[1]) * t);
+	  const pBZ = p1[2] + ((p2[2] - p1[2]) * t);
+
+    const pFX = pAX + ((pBX - pAX) * t);
+	  const pFY = pAY + ((pBY - pAY) * t);
+	  const pFZ = pAZ + ((pBZ - pAZ) * t);
+
+    return [pFX, pFY, pFZ];
+  }
+
+  /**************************************************************************/
+
+  static CIRCLE_COLLIDE(c1: vec3, r1: number, c2: vec3, r2: number, outVelocity: vec2 = [0, 0]): boolean {
+    const delta = Utils.VEC3_SUBSTRACT(c1, c2);
+    const distance = Utils.VEC3_LENGTH(delta);
+    const distanceMin = r1 + r2;
+
+    if (distance > distanceMin) {
+      return false;
+    }
+
+    const c = Math.PI * 2 - (Math.PI * 2 - Math.atan2(delta[2], delta[0]));
+    outVelocity[0] = Math.cos(c) * (distanceMin - distance);
+    outVelocity[1] = Math.sin(c) * (distanceMin - distance);
+    return true;
   }
 
   /**************************************************************************/
@@ -670,7 +730,7 @@ class Utils {
   }
 
   static MAT4_LOOKAT(position: vec3, target: vec3, vertical: vec3 = [0, 1, 0]): mat4 {
-    const axeZ = Utils.VEC3_NORMALIZE(Utils.VEC3_SUBSTRACT(target, position));
+    const axeZ = Utils.VEC3_NORMALIZE(Utils.VEC3_SUBSTRACT(position, target));
     const axeX = Utils.VEC3_CROSS(vertical, axeZ);
     const axeY = Utils.VEC3_CROSS(axeZ, axeX);
 
@@ -691,7 +751,7 @@ class Utils {
     ]
   }
 
-  static QUAT_TO_EULER(q: vec4, order: string) {
+  static QUAT_TO_EULER(q: vec4, order: string): vec3 {
     // Borrowed from Three.JS :)
     // q is assumed to be normalized
     // http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
@@ -699,7 +759,7 @@ class Utils {
     const sqy = q[1] * q[1];
     const sqz = q[2] * q[2];
     const sqw = q[3] * q[3];
-    const out = [];
+    const out = Utils.VEC3_CREATE();
 
     if (order === 'XYZ') {
       out[0] = Math.atan2(2 * (q[0] * q[3] - q[1] * q[2]), (sqw - sqx - sqy + sqz));
@@ -726,8 +786,7 @@ class Utils {
       out[1] = Math.atan2(2 * (q[0] * q[2] + q[1] * q[3]), (sqw + sqx - sqy - sqz));
       out[2] = Math.asin(Utils.CLAMP(2 * (q[2] * q[3] - q[0] * q[1]), -1, 1));
     } else {
-      console.log('No order given for quaternion to euler conversion.');
-      return [0, 0, 0];
+      throw new Error('Utils::QUAT_TO_EULER: No order given for quaternion to euler conversion.');
     }
 
     return out;

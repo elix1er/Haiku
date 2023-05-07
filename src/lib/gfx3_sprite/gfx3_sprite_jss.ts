@@ -39,6 +39,11 @@ class Gfx3SpriteJSS extends Gfx3Sprite {
   setTextureRect(left: number, top: number, width: number, height: number): void {
     this.textureRect = [left, top, width, height];
   }
+
+  setOffsetNormalized(offsetXFactor: number, offsetYFactor: number) {
+    this.offset[0] = this.textureRect[2] * offsetXFactor;
+    this.offset[1] = this.textureRect[3] * offsetYFactor;
+  }
 }
 
 export { Gfx3SpriteJSS };

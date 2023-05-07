@@ -1,19 +1,23 @@
 <p align="center">
-    <img src="https://sprightly-beijinho.netlify.app/assets/images/logo-9849da864a27064e12d65e3ceffb5488.jpg" alt="logo" width="300"/>
+    <img src="https://raw.githubusercontent.com/jay19240/WebStationX/main/public/textures/banner.png" alt="logo" width="100%"/>
 </p>
 
-![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-2.0.0-blue)
+![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.0-blue)
 
-**psx.ts** is like a bunch of micro-module which becomes a powerful 2D/3D game engine specialized to build PSX demake videogames.    
+**WebStationX** is a typescript 2D/3D video game engine based on WebGPU. The idea is simple: provide a complete and coherent development kit from ui to rendering.
+This engine use simple and pragmatic techniques to eliminate as many as possible black boxes to giving maximum control to the user.  
+Important note: This project comes with a dozen diverse and varied examples.
 
 ## General features
-- 🧊 2D - Sprites, tilemaps
-- 🧊 3D - Render pipelines, debug shapes, lights, meshes, materials, sprites, billboard, skybox, walkmeshs, multiple-camera
-- 💥 VFX - Gouraud support, specular support, cubemap support, normal mapping, envmap support
+- 👾 2D - Sprite, animated tilemap
+- 🧊 3D - Debug shapes, light, static mesh, animated mesh, material, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover
+- 💥 VFX - Phong, normal-map, env-map
 - 🎮 Input - Action mapper for keyboard and gamepad
+- 🚔 Pathfinder - A* for 2D & 3D
 - 📺 Screen - Handle different screens of your game
 - 📜 Scripts - Write game behaviors
 - 🔊 Sound - Sound manager built on the Web Audio API
+- 🌳 Tree - Binary Space Partion for 2D & 3D
 - 🎨 UI - Component architecture very efficient to keep project clean and scalable
 
 ## Getting started
@@ -30,7 +34,7 @@ Clone this repo, go to the root of project and launch the build with the followi
 ```
 
 ## How to integrate your 3D models ?
-The [psx-blender-exporter](https://github.com/Anuban-corp/psx-blender-exporter) allows you to export your models in **psx.ts** compatible formats!
+The [WebStation Blender Exporter](https://github.com/jay19240/WebStationX-Blender-Exporter) allows you to export your models in compatible formats!
 
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
@@ -45,4 +49,27 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 ## Some parts taken from this work
 - Use DOM for UI elements
-- Use the psx-style technologies
+- Use human readable custom format for all graphics stuff
+- No physics engine, we assume if you need one there is many pretty lib for that like ammo.js or canon.js
+
+## Platform
+**Chrome Canary: 113+**  
+**Edge Canary: 113+**
+
+> *As WebGPU is not released, please enable `chrome://flags/#enable-unsafe-webgpu` or `edge://flags/#enable-unsafe-webgpu`*
+
+## First todo-list
+- Texture Scroll UV (Owner: Me, Delay: 1/2 weeks)
+- Texture Frames (JSM/JAM) (Owner: me, Delay: 3 weeks)
+- Vertex Light (Owner: me, Delay: N/A)
+- Loader OBJ (Owner: Antoine, Delay: 1 month)
+- Textures Equirectangulaires (Owner: Antoine, Delay: 1 month)
+- Particules system (Owner: Antoine, Delay: 1 month)
+
+## Fun todo-list
+- Transform a-star in a generic way (2D & 3D)
+- Add triple-triad demo (Work: In Progress, Delay: 1 month)
+- Multiplayer game cars with physics server authoritative (Work: In Progress, Delay: 1 month)
+
+## License 
+WebStationX engine is released under the [MIT](https://opensource.org/licenses/MIT) license. 

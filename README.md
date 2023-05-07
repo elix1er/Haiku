@@ -9,7 +9,7 @@ This engine use simple and pragmatic techniques to eliminate as many as possible
 Important note: This project comes with a dozen diverse and varied examples.
 
 ## General features
-- 👾 2D - Sprites, tilemaps
+- 👾 2D - Sprite, animated tilemap
 - 🧊 3D - Debug shapes, light, static mesh, animated mesh, material, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover
 - 💥 VFX - Phong, normal-map, env-map
 - 🎮 Input - Action mapper for keyboard and gamepad

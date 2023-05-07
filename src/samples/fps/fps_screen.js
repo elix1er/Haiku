@@ -104,7 +104,7 @@ class FPSScreen extends Screen {
       this.cameraGravitySpeed = 0;
     }
     else {
-      this.cameraGravitySpeed = this.cameraGravitySpeed < GRAVITY_MAX ? this.cameraGravitySpeed + GRAVITY_RATE : GRAVITY_MAX;
+      // this.cameraGravitySpeed = this.cameraGravitySpeed < GRAVITY_MAX ? this.cameraGravitySpeed + GRAVITY_RATE : GRAVITY_MAX;
     }
 
     this.camera.setVelocity(navInfo.move[0], navInfo.move[1], navInfo.move[2]);

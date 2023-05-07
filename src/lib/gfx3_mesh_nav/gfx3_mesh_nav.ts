@@ -49,7 +49,7 @@ class Gfx3MeshNav {
   constructor() {
     this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new TreePartition3D(new Gfx3BoundingBox([0, 0, 0], [0, 0, 0]), 'x'));
     this.frags = [];
-    this.lift = 0.1;
+    this.lift = 0.5;
     this.floorCaptureLimit = 0.1;
     this.wallCaptureLimit = 0.1;
   }
@@ -85,9 +85,9 @@ class Gfx3MeshNav {
     // 2. Avoid some intolerent situation for player with little object on the floor (a. idem).
     const points: Array<vec3> = [
       [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
-      // [aabb.min[0], aabb.min[1] + this.lift, aabb.min[2]],
-      // [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
-      // [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
+      [aabb.min[0], aabb.min[1] + this.lift, aabb.min[2]],
+      [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
+      [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
     ];
 
     let deviatedPoints: Array<boolean> = [];
@@ -99,6 +99,7 @@ class Gfx3MeshNav {
         res.move[0] = 0;
         res.move[2] = 0;
         res.collideWall = true;
+        // console.log('max deviations');
         break;
       }
 
@@ -121,6 +122,7 @@ class Gfx3MeshNav {
         res.collideWall = true;
         numDeviations++;
         deviatedPoints[i] = true;
+        console.log(i, 'projected', newMove);
         i = 0;
         continue;
       }

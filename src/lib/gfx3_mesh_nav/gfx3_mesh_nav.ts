@@ -74,20 +74,20 @@ class Gfx3MeshNav {
       collideWall: false
     };
 
-    const min: vec3 = [aabb.min[0] - res.move[0], aabb.min[1] - res.move[1], aabb.min[2] - res.move[2]];
-    const max: vec3 = [aabb.max[0] + res.move[0], aabb.max[1] + res.move[1], aabb.max[2] + res.move[2]];
-    let frags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(min, max)));
+    const min: vec3 = [aabb.min[0] - Math.abs(move[0]), aabb.min[1] - Math.abs(move[1]), aabb.min[2] - Math.abs(move[2])];
+    const max: vec3 = [aabb.max[0] + Math.abs(move[0]), aabb.max[1] + Math.abs(move[1]), aabb.max[2] + Math.abs(move[2])];
+    const frags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(min, max)));
 
     // Let's go to check wall triangles now.
     // To do this, firstly we need to get 4 points, one by corner.
     // We need to lift these points because many reasons to do this:
     // 1. Avoid possible collide with little border (a. they are simply avoid because aabb is upper of them).
-    // 2. Avoid some intolerent situation for player with little object on the floor (a. idem).
+    // 2. Avoid some intolerent situation for the player caused by little object on the floor (a. idem).
     const points: Array<vec3> = [
-      // [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
+      [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
       [aabb.min[0], aabb.min[1] + this.lift, aabb.min[2]],
-      // [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
-      // [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
+      [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
+      [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
     ];
 
     let deviatedPoints: Array<boolean> = [];
@@ -95,20 +95,10 @@ class Gfx3MeshNav {
     let i = 0;
 
     while (i < points.length) {
-      // if (numDeviations >= 2) {
-      //   res.move[0] = 0;
-      //   res.move[2] = 0;
-      //   res.collideWall = true;
-      //   // console.log('max deviations');
-      //   break;
-      // }
-
       if (deviatedPoints[i]) {
         i++;
         continue;
       }
-
-
 
       const newMove = MOVE(frags, points[i], [res.move[0], res.move[2]], this.wallCaptureLimit);
 
@@ -119,20 +109,14 @@ class Gfx3MeshNav {
         console.log('blocked');
         break;
       }
-      // else if (newMove[0] != res.move[0] || newMove[1] != res.move[2]) {
-      else {
+      else if (newMove[0] != res.move[0] || newMove[1] != res.move[2]) {
         res.move[0] = newMove[0];
         res.move[2] = newMove[1];
         res.collideWall = true;
         numDeviations++;
         deviatedPoints[i] = true;
-
-        // const min: vec3 = [aabb.min[0] + res.move[0], aabb.min[1] + res.move[1], aabb.min[2] + res.move[2]];
-        // const max: vec3 = [aabb.max[0] + res.move[0], aabb.max[1] + res.move[1], aabb.max[2] + res.move[2]];
-        // frags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(min, max)));
-
-        // i = 0;
-        // continue;
+        i = 0;
+        continue;
       }
 
       i++;
@@ -140,13 +124,13 @@ class Gfx3MeshNav {
 
     // We check the floor elevation on the next position and correct the delta between current elevation and floor elevation.
     // Note: This is done only if the impact delta is less or equal to the floorCaptureLimit.
-    // const footElevation = center[1] - (size[1] * 0.5);
-    // const elevation = GET_ELEVATION(frags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]], this.floorCaptureLimit);
+    const footElevation = center[1] - (size[1] * 0.5);
+    const elevation = GET_ELEVATION(frags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]], this.floorCaptureLimit);
 
-    // if (elevation != Infinity) {
-    //   res.collideFloor = true;
-    //   res.move[1] = elevation - footElevation;
-    // }
+    if (elevation != Infinity) {
+      res.collideFloor = true;
+      res.move[1] = elevation - footElevation;
+    }
 
     return res;
   }

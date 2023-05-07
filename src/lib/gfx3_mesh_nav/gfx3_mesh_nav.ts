@@ -74,8 +74,8 @@ class Gfx3MeshNav {
       collideWall: false
     };
 
-    const min: vec3 = [aabb.min[0] - Math.abs(move[0]), aabb.min[1] - Math.abs(move[1]), aabb.min[2] - Math.abs(move[2])];
-    const max: vec3 = [aabb.max[0] + Math.abs(move[0]), aabb.max[1] + Math.abs(move[1]), aabb.max[2] + Math.abs(move[2])];
+    const min: vec3 = [aabb.min[0] - 0.1, aabb.min[1] - 0.1, aabb.min[2] - 0.1];
+    const max: vec3 = [aabb.max[0] + 0.1, aabb.max[1] + 0.1, aabb.max[2] + 0.1];
     const frags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(min, max)));
 
     // Let's go to check wall triangles now.
@@ -84,10 +84,10 @@ class Gfx3MeshNav {
     // 1. Avoid possible collide with little border (a. they are simply avoid because aabb is upper of them).
     // 2. Avoid some intolerent situation for the player caused by little object on the floor (a. idem).
     const points: Array<vec3> = [
-      [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
+      // [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
       [aabb.min[0], aabb.min[1] + this.lift, aabb.min[2]],
-      [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
-      [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
+      // [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
+      // [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
     ];
 
     let deviatedPoints: Array<boolean> = [];
@@ -100,13 +100,15 @@ class Gfx3MeshNav {
         continue;
       }
 
+      // console.log('start point checking:', i);
       const newMove = MOVE(frags, points[i], [res.move[0], res.move[2]], this.wallCaptureLimit);
+      // console.log('end point checking:', i);
 
       if (newMove[0] == 0 && newMove[1] == 0) {
         res.move[0] = 0;
         res.move[2] = 0;
         res.collideWall = true;
-        console.log('blocked');
+        // console.log('blocked');
         break;
       }
       else if (newMove[0] != res.move[0] || newMove[1] != res.move[2]) {
@@ -149,6 +151,8 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, captureLimit: number)
     const delta = Utils.VEC3_SUBSTRACT(outIntersect, point);
     const deltaLength = Utils.VEC3_LENGTH(delta);
 
+    // if (collide) console.log(deltaLength);
+
     if (collide && deltaLength <= captureLimit) {
       // If point collide, we compute the projection of the move on the frag to able sliding.
       // Finally we correct the gap between point and edge to adding delta to the move.
@@ -172,9 +176,16 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, captureLimit: number)
             const newMove = GET_MOVE_PROJECTION(frag, move);
             return newMove;
           }
+
+          const ap = Utils.VEC3_SUBSTRACT(newPos, frag.a);
+          const fragNormal = Utils.VEC3_TRIANGLE_NORMAL(frag.a, frag.b, frag.c);
+          if (Utils.VEC2_DOT([ap[0], ap[2]], [fragNormal[0], fragNormal[2]]) < 0) {
+            console.log('out',frag);
+            return [0, 0];
+          }
         }
 
-        return [0, 0];
+        return move;
       }
     }
   }

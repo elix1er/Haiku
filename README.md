@@ -36,6 +36,12 @@ Clone this repo, go to the root of project and launch the build with the followi
 
 ## How to integrate your 3D models ?
 The [WebStation Blender Exporter](https://github.com/jay19240/WebStationX-Blender-Exporter) allows you to export your models in compatible formats!
+Important note: The Blender coordinate system and the engine don't match, to translate blender -> engine:  
+```
+x = -x
+y = +z
+z = +y
+```
 
 ## Contributions
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.

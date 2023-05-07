@@ -68,7 +68,7 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 ## Fun todo-list
 - Transform a-star in a generic way (2D & 3D)
-- Translate triple-triad demo (Work: In Progress, Delay: 1 month)
+- Add triple-triad demo (Work: In Progress, Delay: 1 month)
 - Multiplayer game cars with physics server authoritative (Work: In Progress, Delay: 1 month)
 
 ## License 

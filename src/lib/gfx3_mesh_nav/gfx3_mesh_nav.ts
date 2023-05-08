@@ -84,10 +84,10 @@ class Gfx3MeshNav {
     // 1. Avoid possible collide with little border (a. they are simply avoid because aabb is upper of them).
     // 2. Avoid some intolerent situation for the player caused by little object on the floor (a. idem).
     const points: Array<vec3> = [
-      // [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
+      [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
       [aabb.min[0], aabb.min[1] + this.lift, aabb.min[2]],
-      // [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
-      // [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
+      [aabb.max[0], aabb.min[1] + this.lift, aabb.min[2]],
+      [aabb.max[0], aabb.min[1] + this.lift, aabb.max[2]]
     ];
 
     let deviatedPoints: Array<boolean> = [];
@@ -151,8 +151,6 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, captureLimit: number)
     const delta = Utils.VEC3_SUBSTRACT(outIntersect, point);
     const deltaLength = Utils.VEC3_LENGTH(delta);
 
-    // if (collide) console.log(deltaLength);
-
     if (collide && deltaLength <= captureLimit) {
       // If point collide, we compute the projection of the move on the frag to able sliding.
       // Finally we correct the gap between point and edge to adding delta to the move.
@@ -171,21 +169,26 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, captureLimit: number)
         return newMove;
       }
       else {
-        for (const frag of frags) {
-          if (frag.intersectBoundingBox(newAABB)) {
-            const newMove = GET_MOVE_PROJECTION(frag, move);
+        console.log('not intersect');
+        for (const otherFrag of frags) {
+          if (otherFrag != frag) {
+            continue;
+          }
+
+          if (otherFrag.intersectBoundingBox(newAABB)) {
+            const newMove = GET_MOVE_PROJECTION(otherFrag, move);
             return newMove;
           }
 
-          const ap = Utils.VEC3_SUBSTRACT(newPos, frag.a);
-          const fragNormal = Utils.VEC3_TRIANGLE_NORMAL(frag.a, frag.b, frag.c);
-          if (Utils.VEC2_DOT([ap[0], ap[2]], [fragNormal[0], fragNormal[2]]) < 0) {
-            console.log('out',frag);
-            return [0, 0];
-          }
+          // const ap = Utils.VEC3_SUBSTRACT(newPos, otherFrag.a);
+          // const fragNormal = Utils.VEC3_TRIANGLE_NORMAL(otherFrag.a, otherFrag.b, otherFrag.c);
+          // if (Utils.VEC2_DOT([ap[0], ap[2]], [fragNormal[0], fragNormal[2]]) < -0.1) {
+          //   console.log('out');
+          //   return [0, 0];
+          // }
         }
 
-        return move;
+        return newMove;
       }
     }
   }

@@ -179,13 +179,6 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, captureLimit: number)
             const newMove = GET_MOVE_PROJECTION(otherFrag, move);
             return newMove;
           }
-
-          // const ap = Utils.VEC3_SUBSTRACT(newPos, otherFrag.a);
-          // const fragNormal = Utils.VEC3_TRIANGLE_NORMAL(otherFrag.a, otherFrag.b, otherFrag.c);
-          // if (Utils.VEC2_DOT([ap[0], ap[2]], [fragNormal[0], fragNormal[2]]) < -0.1) {
-          //   console.log('out');
-          //   return [0, 0];
-          // }
         }
 
         return newMove;

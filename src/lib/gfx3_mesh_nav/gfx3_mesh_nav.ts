@@ -55,7 +55,7 @@ class Gfx3MeshNav {
   constructor() {
     this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new TreePartition3D(new Gfx3BoundingBox([0, 0, 0], [0, 0, 0]), 'x'));
     this.frags = [];
-    this.lift = 0.5;
+    this.lift = 0.2;
   }
 
   loadFromJSM(jsm: Gfx3MeshJSM): void {
@@ -126,16 +126,22 @@ class Gfx3MeshNav {
       [center[0], aabb.max[1] + res.move[1], center[2]]
     )));
 
-    const footElevation = center[1] - (size[1] * 0.5);
-    const elevation = GET_ELEVATION(floorFrags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]]);
-    const delta = Math.abs(elevation - footElevation);
-
-    if (elevation != Infinity && (move[1] == 0 || delta <= Math.abs(move[1]))) {
+    const footElevation = aabb.min[1];
+    const elevation = GET_ELEVATION(floorFrags, [center[0] + res.move[0], center[1], center[2] + res.move[2]]);
+    if (elevation != Infinity) {
       res.collideFloor = true;
       res.move[1] = elevation - footElevation;
     }
 
     return res;
+  }
+
+  setLift(lift: number): void {
+    this.lift = lift;
+  }
+
+  getLift(): number {
+    return this.lift;
   }
 }
 

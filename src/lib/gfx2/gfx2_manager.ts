@@ -74,6 +74,10 @@ class Gfx2Manager {
     return this.canvas.clientHeight;
   }
 
+  getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
   getContext(): CanvasRenderingContext2D {
     return this.ctx;
   }

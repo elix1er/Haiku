@@ -375,6 +375,10 @@ class Gfx3Manager {
     return this.canvas.height;
   }
 
+  getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
   getContext(): GPUCanvasContext {
     return this.ctx;
   }

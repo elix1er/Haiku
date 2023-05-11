@@ -1,14 +1,11 @@
-import { inputManager } from '../../lib/input/input_manager';
 import { eventManager } from '../../lib/core/event_manager';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
-import { Utils } from '../../lib/core/utils';
 import { Gfx3BoundingBox } from '../../lib/gfx3/gfx3_bounding_box';
 // ---------------------------------------------------------------------------------------
 
 const EPSILON = 0.001;
 const FRICTION = 0.5;
-const AABB_HALF_SIZE = 0.5;
-const AABB_HALF_HEIGHT = 1;
+const ROTATION_SPEED = 0.003;
 
 class Camera extends Gfx3Camera {
   constructor() {
@@ -16,8 +13,6 @@ class Camera extends Gfx3Camera {
     this.lastMousePosition = [0, 0];
     this.velocity = [0, 0, 0];
     this.aabb = new Gfx3BoundingBox();
-
-
 
     var e = window.event;
     this.lastMousePosition[0] = e.clientX;
@@ -62,8 +57,8 @@ class Camera extends Gfx3Camera {
   }
 
   handleMouseMove(e) {
-    const newRotationY = (e.clientX - this.lastMousePosition[0]) * 0.003;
-    const newRotationX = (e.clientY - this.lastMousePosition[1]) * 0.003;
+    const newRotationY = (e.clientX - this.lastMousePosition[0]) * ROTATION_SPEED;
+    const newRotationX = (e.clientY - this.lastMousePosition[1]) * ROTATION_SPEED;
     this.rotate(newRotationX, newRotationY, 0);
     this.lastMousePosition[0] = e.clientX;
     this.lastMousePosition[1] = e.clientY;

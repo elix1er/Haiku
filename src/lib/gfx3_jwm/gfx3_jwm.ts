@@ -110,11 +110,11 @@ class Gfx3JWM extends Gfx3Transformable {
     this.walkers.push({
       id: id,
       points: [
-        this.$utilsCreatePoint(x, z),
-        this.$utilsCreatePoint(x + radius, z + radius),
-        this.$utilsCreatePoint(x + radius, z - radius),
-        this.$utilsCreatePoint(x - radius, z - radius),
-        this.$utilsCreatePoint(x - radius, z + radius)
+        CREATE_POINT(this.sectors, x, z),
+        CREATE_POINT(this.sectors, x + radius, z + radius),
+        CREATE_POINT(this.sectors, x + radius, z - radius),
+        CREATE_POINT(this.sectors, x - radius, z - radius),
+        CREATE_POINT(this.sectors, x - radius, z + radius)
       ]
     });
   }
@@ -150,7 +150,7 @@ class Gfx3JWM extends Gfx3Transformable {
     while (i < points.length) {
       let deviation = false;
       if (!deviatedPoints[i]) {
-        const moveInfo = this.$utilsMove(points[i].sectorIndex, points[i].x, points[i].z, mx, mz);
+        const moveInfo = MOVE(this.sectors, this.neighborPool, points[i].sectorIndex, points[i].x, points[i].z, mx, mz);
         if (moveInfo.mx == 0 && moveInfo.mz == 0) {
           moving = false;
           break;
@@ -212,77 +212,81 @@ class Gfx3JWM extends Gfx3Transformable {
   clearWalkers(): void {
     this.walkers = [];
   }
-
-  $utilsFindLocationInfo(x: number, z: number): { sectorIndex: number, elev: number } {
-    for (let i = 0; i < this.sectors.length; i++) {
-      const a = this.sectors[i].v1;
-      const b = this.sectors[i].v2;
-      const c = this.sectors[i].v3;
-      if (Utils.VEC3_TRIANGLE_POINT_IS_INSIDE(a, b, c, [x, z])) {
-        return { sectorIndex: i, elev: Utils.VEC3_TRIANGLE_POINT_ELEVATION(a, b, c, [x, z]) };
-      }
-    }
-
-    return { sectorIndex: -1, elev: Infinity };
-  }
-
-  $utilsMove(sectorIndex: number, x: number, z: number, mx: number, mz: number, i: number = 0): {sectorIndex: number, mx: number, mz: number, elevation: number } {
-    const a = this.sectors[sectorIndex].v1;
-    const b = this.sectors[sectorIndex].v2;
-    const c = this.sectors[sectorIndex].v3;
-
-    const elevation = Utils.VEC3_TRIANGLE_POINT_ELEVATION(a, b, c, [x + mx, z + mz]);
-    if (elevation != Infinity) {
-      return { sectorIndex, mx, mz, elevation };
-    }
-
-    if (i == MOVE_MAX_RECURSIVE_CALL) {
-      return { sectorIndex, mx: 0, mz: 0, elevation: Infinity };
-    }
-
-    const outsides = Utils.VEC3_TRIANGLE_POINT_OUTSIDES(a, b, c, [x + mx, z + mz]);
-    const ab: vec2 = [b[0] - a[0], b[2] - a[2]];
-    const bc: vec2 = [c[0] - b[0], c[2] - b[2]];
-    const ca: vec2 = [a[0] - c[0], a[2] - c[2]];
-
-    if (this.neighborPool[sectorIndex].s1 == -1 && outsides.ab) {
-      const [pmx, pmz] = Utils.VEC2_PROJECTION_COS([mx, mz], ab);
-      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, i + 1);
-    }
-    else if (this.neighborPool[sectorIndex].s2 == -1 && outsides.bc) {
-      const [pmx, pmz] = Utils.VEC2_PROJECTION_COS([mx, mz], bc);
-      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, i + 1);
-    }
-    else if (this.neighborPool[sectorIndex].s3 == -1 && outsides.ca) {
-      const [pmx, pmz] = Utils.VEC2_PROJECTION_COS([mx, mz], ca);
-      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, i + 1);
-    }
-    else if (this.neighborPool[sectorIndex].s1 != -1 && outsides.ab) {
-      const nextSectorIndex = this.neighborPool[sectorIndex].s1;
-      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, i + 1);
-    }
-    else if (this.neighborPool[sectorIndex].s2 != -1 && outsides.bc) {
-      const nextSectorIndex = this.neighborPool[sectorIndex].s2;
-      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, i + 1);
-    }
-    else if (this.neighborPool[sectorIndex].s3 != -1 && outsides.ca) {
-      const nextSectorIndex = this.neighborPool[sectorIndex].s3;
-      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, i + 1);
-    }
-    else {
-      return { sectorIndex, mx, mz, elevation };
-    }
-  }
-
-  $utilsCreatePoint(x: number, z: number): WalkerPoint {
-    const loc = this.$utilsFindLocationInfo(x, z);
-    return {
-      sectorIndex: loc.sectorIndex,
-      x: x,
-      y: loc.elev,
-      z: z
-    };
-  }
 }
 
 export { Gfx3JWM };
+
+// -------------------------------------------------------------------------------------------
+// HELPFUL
+// -------------------------------------------------------------------------------------------
+
+function FIND_LOCATION_INFO(sectors: Array<Sector>, x: number, z: number): { sectorIndex: number, elev: number } {
+  for (let i = 0; i < sectors.length; i++) {
+    const a = sectors[i].v1;
+    const b = sectors[i].v2;
+    const c = sectors[i].v3;
+    if (Utils.VEC3_TRIANGLE_POINT_IS_INSIDE(a, b, c, [x, z])) {
+      return { sectorIndex: i, elev: Utils.VEC3_TRIANGLE_POINT_ELEVATION(a, b, c, [x, z]) };
+    }
+  }
+
+  return { sectorIndex: -1, elev: Infinity };
+}
+
+function MOVE(sectors: Array<Sector>, neighborPool: Array<Neighbor>, sectorIndex: number, x: number, z: number, mx: number, mz: number, i: number = 0): {sectorIndex: number, mx: number, mz: number, elevation: number } {
+  const a = sectors[sectorIndex].v1;
+  const b = sectors[sectorIndex].v2;
+  const c = sectors[sectorIndex].v3;
+
+  const elevation = Utils.VEC3_TRIANGLE_POINT_ELEVATION(a, b, c, [x + mx, z + mz]);
+  if (elevation != Infinity) {
+    return { sectorIndex, mx, mz, elevation };
+  }
+
+  if (i == MOVE_MAX_RECURSIVE_CALL) {
+    return { sectorIndex, mx: 0, mz: 0, elevation: Infinity };
+  }
+
+  const outsides = Utils.VEC3_TRIANGLE_POINT_OUTSIDES(a, b, c, [x + mx, z + mz]);
+  const ab: vec2 = [b[0] - a[0], b[2] - a[2]];
+  const bc: vec2 = [c[0] - b[0], c[2] - b[2]];
+  const ca: vec2 = [a[0] - c[0], a[2] - c[2]];
+
+  if (neighborPool[sectorIndex].s1 == -1 && outsides.ab) {
+    const [pmx, pmz] = Utils.VEC2_PROJECTION_COS([mx, mz], ab);
+    return MOVE(sectors, neighborPool, sectorIndex, x, z, pmx, pmz, i + 1);
+  }
+  else if (neighborPool[sectorIndex].s2 == -1 && outsides.bc) {
+    const [pmx, pmz] = Utils.VEC2_PROJECTION_COS([mx, mz], bc);
+    return MOVE(sectors, neighborPool, sectorIndex, x, z, pmx, pmz, i + 1);
+  }
+  else if (neighborPool[sectorIndex].s3 == -1 && outsides.ca) {
+    const [pmx, pmz] = Utils.VEC2_PROJECTION_COS([mx, mz], ca);
+    return MOVE(sectors, neighborPool, sectorIndex, x, z, pmx, pmz, i + 1);
+  }
+  else if (neighborPool[sectorIndex].s1 != -1 && outsides.ab) {
+    const nextSectorIndex = neighborPool[sectorIndex].s1;
+    return MOVE(sectors, neighborPool, nextSectorIndex, x, z, mx, mz, i + 1);
+  }
+  else if (neighborPool[sectorIndex].s2 != -1 && outsides.bc) {
+    const nextSectorIndex = neighborPool[sectorIndex].s2;
+    return MOVE(sectors, neighborPool, nextSectorIndex, x, z, mx, mz, i + 1);
+  }
+  else if (neighborPool[sectorIndex].s3 != -1 && outsides.ca) {
+    const nextSectorIndex = neighborPool[sectorIndex].s3;
+    return MOVE(sectors, neighborPool, nextSectorIndex, x, z, mx, mz, i + 1);
+  }
+  else {
+    return { sectorIndex, mx, mz, elevation };
+  }
+}
+
+function CREATE_POINT(sectors: Array<Sector>, x: number, z: number): WalkerPoint {
+  const loc = FIND_LOCATION_INFO(sectors, x, z);
+  return {
+    sectorIndex: loc.sectorIndex,
+    x: x,
+    y: loc.elev,
+    z: z
+  };
+}

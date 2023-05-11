@@ -6,6 +6,8 @@ import { Gfx3Ray } from '../gfx3_ray/gfx3_ray';
 import { TreePartitionNode } from '../tree/tree_partition_node';
 import { TreePartition3D } from '../tree/tree_partition_3d';
 
+const MOVE_MAX_RECURSIVE_CALL = 2;
+
 interface NavInfo {
   move: vec3,
   collideFloor: boolean,
@@ -16,12 +18,16 @@ class Frag extends Gfx3BoundingBox {
   a: vec3;
   b: vec3;
   c: vec3;
+  n: vec3;
+  t: vec3;
 
   constructor(vertices: Array<number>) {
     super();
     this.a = [0, 0, 0];
     this.b = [0, 0, 0];
     this.c = [0, 0, 0];
+    this.n = [0, 0, 0];
+    this.t = [0, 0, 0];
 
     this.a[0] = vertices[(0 * SHADER_VERTEX_ATTR_COUNT) + 0];
     this.a[1] = vertices[(0 * SHADER_VERTEX_ATTR_COUNT) + 1];
@@ -35,6 +41,8 @@ class Frag extends Gfx3BoundingBox {
     this.c[1] = vertices[(2 * SHADER_VERTEX_ATTR_COUNT) + 1];
     this.c[2] = vertices[(2 * SHADER_VERTEX_ATTR_COUNT) + 2];
 
+    this.n = Utils.VEC3_TRIANGLE_NORMAL(this.a, this.b, this.c);
+    this.t = Utils.VEC3_CROSS([0, 1, 0], this.n);
     super.fromVertices([...this.a, ...this.b, ...this.c], 3);
   }
 }
@@ -43,15 +51,11 @@ class Gfx3MeshNav {
   btree: TreePartitionNode<Gfx3BoundingBox>;
   frags: Array<Frag>;
   lift: number;
-  floorCaptureLimit: number;
-  wallCaptureLimit: number;
 
   constructor() {
     this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new TreePartition3D(new Gfx3BoundingBox([0, 0, 0], [0, 0, 0]), 'x'));
     this.frags = [];
     this.lift = 0.5;
-    this.floorCaptureLimit = 0.1;
-    this.wallCaptureLimit = 0.1;
   }
 
   loadFromJSM(jsm: Gfx3MeshJSM): void {
@@ -74,15 +78,12 @@ class Gfx3MeshNav {
       collideWall: false
     };
 
-    const min: vec3 = [aabb.min[0] - 0.1, aabb.min[1] - 0.1, aabb.min[2] - 0.1];
-    const max: vec3 = [aabb.max[0] + 0.1, aabb.max[1] + 0.1, aabb.max[2] + 0.1];
-    const frags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(min, max)));
+    aabb.min[1] += this.lift;
+    const wallFrags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(
+      [aabb.min[0] + move[0], aabb.min[1] + move[1], aabb.min[2] + move[2]],
+      [aabb.max[0] + move[0], aabb.max[1] + move[1], aabb.max[2] + move[2]]
+    )));
 
-    // Let's go to check wall triangles now.
-    // To do this, firstly we need to get 4 points, one by corner.
-    // We need to lift these points because many reasons to do this:
-    // 1. Avoid possible collide with little border (a. they are simply avoid because aabb is upper of them).
-    // 2. Avoid some intolerent situation for the player caused by little object on the floor (a. idem).
     const points: Array<vec3> = [
       [aabb.min[0], aabb.min[1] + this.lift, aabb.max[2]],
       [aabb.min[0], aabb.min[1] + this.lift, aabb.min[2]],
@@ -91,7 +92,6 @@ class Gfx3MeshNav {
     ];
 
     let deviatedPoints: Array<boolean> = [];
-    let numDeviations = 0;
     let i = 0;
 
     while (i < points.length) {
@@ -100,22 +100,18 @@ class Gfx3MeshNav {
         continue;
       }
 
-      // console.log('start point checking:', i);
-      const newMove = MOVE(frags, points[i], [res.move[0], res.move[2]], this.wallCaptureLimit);
-      // console.log('end point checking:', i);
+      const newMove = MOVE(wallFrags, points[i], [res.move[0], res.move[2]]);
 
       if (newMove[0] == 0 && newMove[1] == 0) {
         res.move[0] = 0;
         res.move[2] = 0;
         res.collideWall = true;
-        // console.log('blocked');
         break;
       }
       else if (newMove[0] != res.move[0] || newMove[1] != res.move[2]) {
         res.move[0] = newMove[0];
         res.move[2] = newMove[1];
         res.collideWall = true;
-        numDeviations++;
         deviatedPoints[i] = true;
         i = 0;
         continue;
@@ -124,12 +120,17 @@ class Gfx3MeshNav {
       i++;
     }
 
-    // We check the floor elevation on the next position and correct the delta between current elevation and floor elevation.
-    // Note: This is done only if the impact delta is less or equal to the floorCaptureLimit.
-    const footElevation = center[1] - (size[1] * 0.5);
-    const elevation = GET_ELEVATION(frags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]], this.floorCaptureLimit);
+    aabb.min[1] -= this.lift;
+    const floorFrags = this.frags.filter(frag => frag.intersectBoundingBox(new Gfx3BoundingBox(
+      [center[0], aabb.min[1] + res.move[1], center[2]],
+      [center[0], aabb.max[1] + res.move[1], center[2]]
+    )));
 
-    if (elevation != Infinity) {
+    const footElevation = center[1] - (size[1] * 0.5);
+    const elevation = GET_ELEVATION(floorFrags, [center[0] + res.move[0], footElevation, center[2] + res.move[2]]);
+    const delta = Math.abs(elevation - footElevation);
+
+    if (elevation != Infinity && (move[1] == 0 || delta <= Math.abs(move[1]))) {
       res.collideFloor = true;
       res.move[1] = elevation - footElevation;
     }
@@ -144,66 +145,43 @@ export { Gfx3MeshNav };
 // HELPFUL
 // -------------------------------------------------------------------------------------------
 
-function MOVE(frags: Array<Frag>, point: vec3, move: vec2, captureLimit: number): vec2 {
+function MOVE(frags: Array<Frag>, point: vec3, move: vec2, i: number = 0): vec2 {
+  let minFrag = null;
+  let minFragLength = 999999;
+
+  if (i > MOVE_MAX_RECURSIVE_CALL) {
+    return [0, 0];
+  }
+
   for (const frag of frags) {
     const outIntersect: vec3 = [0, 0, 0];
-    const collide = Gfx3Ray.intersectTriangle(point, [move[0], 0, move[1]], frag.a, frag.b, frag.c, true, outIntersect);
-    const delta = Utils.VEC3_SUBSTRACT(outIntersect, point);
-    const deltaLength = Utils.VEC3_LENGTH(delta);
-
-    if (collide && deltaLength <= captureLimit) {
-      // If point collide, we compute the projection of the move on the frag to able sliding.
-      // Finally we correct the gap between point and edge to adding delta to the move.
-      const newMove = GET_MOVE_PROJECTION(frag, move);
-      newMove[0] += delta[0] - (Math.sign(delta[0]) * Utils.EPSILON);
-      newMove[1] += delta[2] - (Math.sign(delta[2]) * Utils.EPSILON);
-
-      // We create the new projected point and a very small AABB.
-      // And we check if the new projected point is always on the frag.
-      // If yes, no problem we can return the new position.
-      // Otherwise, the projected point is out of the current frag and we need to search the good frag.
-      // If no frag is found, no solution for this point so return a zero move.
-      const newPos = Utils.VEC3_ADD(point, [newMove[0], 0, newMove[1]]);
-      const newAABB = Gfx3BoundingBox.create(newPos, [0.001, 0.001, 0.001]);
-      if (frag.intersectBoundingBox(newAABB)) {
-        return newMove;
-      }
-      else {
-        console.log('not intersect');
-        for (const otherFrag of frags) {
-          if (otherFrag != frag) {
-            continue;
-          }
-
-          if (otherFrag.intersectBoundingBox(newAABB)) {
-            const newMove = GET_MOVE_PROJECTION(otherFrag, move);
-            return newMove;
-          }
-        }
-
-        return newMove;
+    if (Gfx3Ray.intersectPlan(point, [move[0], 0, move[1]], frag.a, frag.b, frag.c, frag.n, true, outIntersect)) {
+      const pen = Utils.VEC3_SUBSTRACT(outIntersect, point);
+      const penLength = Utils.VEC3_LENGTH(pen);
+      if (penLength <= Utils.VEC2_LENGTH(move) + 0.001 && penLength < minFragLength) {
+        minFragLength = penLength;
+        minFrag = frag;
       }
     }
+  }
+
+  if (minFrag) {
+    const newMove = GET_MOVE_PROJECTION(minFrag, move);
+    return MOVE(frags, point, newMove, i + 1);
   }
 
   return move;
 }
 
 function GET_MOVE_PROJECTION(frag: Frag, move: vec2): vec2 {
-  const fragNormal = Utils.VEC3_TRIANGLE_NORMAL(frag.a, frag.b, frag.c);
-  const fragTangeant = Utils.VEC3_CROSS([0, 1, 0], fragNormal);
-  const newMove = Utils.VEC2_PROJECTION_COS([move[0], move[1]], [fragTangeant[0], fragTangeant[2]]);
+  const newMove = Utils.VEC2_PROJECTION_COS([move[0], move[1]], [frag.t[0], frag.t[2]]);
   return newMove;
 }
 
-function GET_ELEVATION(frags: Array<Frag>, center: vec3, captureLimit: number): number {
+function GET_ELEVATION(frags: Array<Frag>, center: vec3): number {
   for (const frag of frags) {
     const outIntersect: vec3 = [0, 0, 0];
-    const collide = Gfx3Ray.intersectTriangle(center, [0, -1, 0], frag.a, frag.b, frag.c, false, outIntersect);
-    const delta = Utils.VEC3_SUBSTRACT(outIntersect, center);
-    const deltaLength = Utils.VEC3_LENGTH(delta);
-
-    if (collide && deltaLength <= captureLimit) {
+    if (Gfx3Ray.intersectTriangle(center, [0, -1, 0], frag.a, frag.b, frag.c, true, outIntersect)) {
       return outIntersect[1];
     }
   }

@@ -1,13 +1,21 @@
 import { Utils } from '../core/utils';
 
 class Gfx3Ray {
-  static intersectTriangle(origin: vec3, dir: vec3, a: vec3, b: vec3, c: vec3, onlyDir: boolean = false, outIntersectPoint: vec3 = [0, 0, 0]): boolean {
+  static intersectTriangle(origin: vec3, dir: vec3, a: vec3, b: vec3, c: vec3, culling: boolean = false, outIntersectPoint: vec3 = [0, 0, 0]): boolean {
     const ab = Utils.VEC3_SUBSTRACT(b, a);
     const ac = Utils.VEC3_SUBSTRACT(c, a);
     const n = Utils.VEC3_CROSS(ab, ac);
-    const s = Utils.VEC3_DOT(dir, n);
 
-    if (onlyDir && s >= 0) {
+    if (!Gfx3Ray.intersectPlan(origin, dir, a, b, c, n, culling, outIntersectPoint)) {
+      return false;
+    }
+
+    return Gfx3Ray.isInsideTriangle(outIntersectPoint, a, b, c, n);
+  }
+
+  static intersectPlan(origin: vec3, dir: vec3, a: vec3, b: vec3, c: vec3, n: vec3, culling: boolean, outIntersectPoint: vec3 = [0, 0, 0]): boolean {
+    const s = Utils.VEC3_DOT(dir, n);
+    if (culling && s >= 0) {
       return false;
     }
 
@@ -20,15 +28,20 @@ class Gfx3Ray {
     const t = (l - d) / s;
 
     const p = Utils.VEC3_CREATE(origin[0] + (dir[0] * t), origin[1] + (dir[1] * t), origin[2] + (dir[2] * t));
+    outIntersectPoint[0] = p[0];
+    outIntersectPoint[1] = p[1];
+    outIntersectPoint[2] = p[2];
+
+    return true;
+  }
+
+  static isInsideTriangle(p: vec3, a: vec3, b: vec3, c: vec3, n: vec3): boolean {
+    const ab = Utils.VEC3_SUBSTRACT(b, a);
     const bc = Utils.VEC3_SUBSTRACT(c, b);
     const ca = Utils.VEC3_SUBSTRACT(a, c);
     const ap = Utils.VEC3_SUBSTRACT(p, a);
     const bp = Utils.VEC3_SUBSTRACT(p, b);
     const cp = Utils.VEC3_SUBSTRACT(p, c);
-
-    outIntersectPoint[0] = p[0];
-    outIntersectPoint[1] = p[1];
-    outIntersectPoint[2] = p[2];
 
     const crossAPAB = Utils.VEC3_CROSS(ab, ap);
     if (Utils.VEC3_DOT(crossAPAB, n) < Utils.EPSILON) {

@@ -71,14 +71,12 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Texture Scroll UV (Owner: Me, Delay: 1/2 weeks)
 - Texture Frames (JSM/JAM) (Owner: me, Delay: 3 weeks)
 - Vertex Light (Owner: me, Delay: N/A)
-- Loader OBJ (Owner: Antoine, Delay: 1 month)
-- Textures Equirectangulaires (Owner: Antoine, Delay: 1 month)
+- Possible optimization on Gfx3Camera (Owner: me, Delay: N/A)
 - Particules system (Owner: Antoine, Delay: 1 month)
 
 ## Fun todo-list
 - Transform a-star in a generic way (2D & 3D)
 - Add triple-triad demo (Work: In Progress, Delay: 1 month)
-- Multiplayer game cars with physics server authoritative (Work: In Progress, Delay: 1 month)
 
 ## License 
 WebStationX engine is released under the [MIT](https://opensource.org/licenses/MIT) license. 

@@ -131,6 +131,7 @@ class MainScreen extends Screen {
     }
     else {
       for (const t of this.transformations) {
+        this.obj.material.draw();
         gfx3MeshRenderer.drawMesh(this.obj, t.m);
       }
     }

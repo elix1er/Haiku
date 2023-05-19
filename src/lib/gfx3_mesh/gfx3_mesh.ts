@@ -21,7 +21,6 @@ class Gfx3Mesh extends Gfx3Drawable {
   }
 
   draw(): void {
-    this.material.draw();
     gfx3MeshRenderer.drawMesh(this);
   }
 

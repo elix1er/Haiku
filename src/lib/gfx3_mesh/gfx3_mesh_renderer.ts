@@ -97,6 +97,10 @@ class Gfx3MeshRenderer {
 
       const material = command.mesh.getMaterial();
       const materialBuffer = material.getBuffer();
+
+      if(material.changed)
+        material.draw();
+
       passEncoder.setBindGroup(2, materialBuffer.getBindGroup(0));
 
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), command.mesh.getVertexSubBufferOffset(), command.mesh.getVertexSubBufferSize());

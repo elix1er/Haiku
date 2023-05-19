@@ -65,10 +65,6 @@ class Gfx3Material {
   }
 
   draw(): void {
-    if (!this.changed) {
-      return;
-    }
-
     const params = UT.VEC5_CREATE();
     params[0] = this.opacity;
     params[1] = this.texture ? 1 : 0;

@@ -2,7 +2,7 @@ import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
 import { gfx3DebugRenderer } from '../../lib/gfx3/gfx3_debug_renderer';
 import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
 import { inputManager } from '../../lib/input/input_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
@@ -50,22 +50,22 @@ class ViewerScreen extends Screen {
 
   update(ts) {
     const cameraAxies = this.camera.getLocalAxies();
-    let move = Utils.VEC3_CREATE(0, 0, 0);
+    let move = UT.VEC3_CREATE(0, 0, 0);
 
     if (inputManager.isActiveAction('LEFT')) {
-      move = Utils.VEC3_ADD(move, Utils.VEC3_SCALE(cameraAxies[0], -CAMERA_SPEED));
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[0], -CAMERA_SPEED));
     }
 
     if (inputManager.isActiveAction('RIGHT')) {
-      move = Utils.VEC3_ADD(move, Utils.VEC3_SCALE(cameraAxies[0], +CAMERA_SPEED));
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[0], +CAMERA_SPEED));
     }
 
     if (inputManager.isActiveAction('UP')) {
-      move = Utils.VEC3_ADD(move, Utils.VEC3_SCALE(cameraAxies[2], -CAMERA_SPEED));
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[2], -CAMERA_SPEED));
     }
 
     if (inputManager.isActiveAction('DOWN')) {
-      move = Utils.VEC3_ADD(move, Utils.VEC3_SCALE(cameraAxies[2], +CAMERA_SPEED));
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[2], +CAMERA_SPEED));
     }
 
     this.camera.translate(move[0], move[1], move[2]);
@@ -78,7 +78,7 @@ class ViewerScreen extends Screen {
     this.mesh.draw();
     this.skybox.draw();
     gfx3MeshRenderer.enablePointLight(this.light, 0);
-    gfx3DebugRenderer.drawGrid(Utils.MAT4_ROTATE_X(Math.PI * 0.5), 20, 1);
+    gfx3DebugRenderer.drawGrid(UT.MAT4_ROTATE_X(Math.PI * 0.5), 20, 1);
   }
 
   async handleKeyDown(e) {

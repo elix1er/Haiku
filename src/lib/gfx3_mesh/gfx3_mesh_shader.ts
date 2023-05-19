@@ -1,5 +1,4 @@
 export const SHADER_VERTEX_ATTR_COUNT = 14;
-export const SHADER_UNIFORM_ATTR_COUNT = 11;
 
 export const PIPELINE_DESC: any = {
   label: 'Mesh pipeline',
@@ -62,9 +61,9 @@ export const PIPELINE_DESC: any = {
 };
 
 export const VERTEX_SHADER = `
-@group(0) @binding(0) var<uniform> MVPC_MATRIX: mat4x4<f32>;
-@group(0) @binding(1) var<uniform> NORM_MATRIX: mat3x3<f32>;
-@group(0) @binding(2) var<uniform> M_MATRIX: mat4x4<f32>;
+@group(1) @binding(0) var<uniform> MVPC_MATRIX: mat4x4<f32>;
+@group(1) @binding(1) var<uniform> NORM_MATRIX: mat3x3<f32>;
+@group(1) @binding(2) var<uniform> M_MATRIX: mat4x4<f32>;
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
@@ -102,23 +101,30 @@ struct MaterialParams {
   HAS_ENV_MAP: f32
 }
 
-@group(0) @binding(3)  var<uniform> CAMERA_POS: vec3<f32>;
-@group(0) @binding(4)  var<uniform> POINT_LIGHT0: vec4<f32>;
-@group(0) @binding(5)  var<uniform> POINT_LIGHT1: vec4<f32>;
-@group(0) @binding(6)  var<uniform> DIR_LIGHT: vec4<f32>;
-@group(0) @binding(7)  var<uniform> MAT_AMBIANT_COLOR: vec4<f32>;
-@group(0) @binding(8)  var<uniform> MAT_DIFFUSE_COLOR: vec4<f32>;
-@group(0) @binding(9)  var<uniform> MAT_SPECULAR: vec4<f32>;
-@group(0) @binding(10) var<uniform> MAT_PARAMS: MaterialParams;
+@group(0) @binding(0) var<uniform> CAMERA_POS: vec3<f32>;
+@group(0) @binding(1) var<uniform> POINT_LIGHT0: vec4<f32>;
+@group(0) @binding(2) var<uniform> POINT_LIGHT0_COLOR: vec4<f32>;
+@group(0) @binding(3) var<uniform> POINT_LIGHT1: vec4<f32>;
+@group(0) @binding(4) var<uniform> POINT_LIGHT1_COLOR: vec4<f32>;
+@group(0) @binding(5) var<uniform> DIR_LIGHT: vec4<f32>;
+@group(0) @binding(6) var<uniform> DIR_LIGHT_COLOR: vec4<f32>;
 
-@group(1) @binding(0) var Sampler: sampler;
-@group(1) @binding(1) var Texture: texture_2d<f32>;
+@group(2) @binding(0) var<uniform> MAT_AMBIANT_COLOR: vec4<f32>;
+@group(2) @binding(1) var<uniform> MAT_DIFFUSE_COLOR: vec4<f32>;
+@group(2) @binding(2) var<uniform> MAT_SPECULAR: vec4<f32>;
+@group(2) @binding(3) var<uniform> MAT_PARAMS: MaterialParams;
 
-@group(2) @binding(0) var NormSampler: sampler;
-@group(2) @binding(1) var NormTexture: texture_2d<f32>;
+@group(2) @binding(4) var Sampler: sampler;
+@group(2) @binding(5) var Texture: texture_2d<f32>;
 
-@group(3) @binding(0) var EnvMapSampler: sampler;
-@group(3) @binding(1) var EnvMapTexture: texture_cube<f32>;
+@group(2) @binding(6) var NormSampler: sampler;
+@group(2) @binding(7) var NormTexture: texture_2d<f32>;
+
+@group(2) @binding(8) var EnvMapSampler: sampler;
+@group(2) @binding(9) var EnvMapTexture: texture_cube<f32>;
+
+@group(2) @binding(10) var EnvMapSampler2: sampler;
+@group(2) @binding(11) var EnvMapTexture2: texture_2d<f32>;
 
 @fragment
 fn main(
@@ -129,13 +135,19 @@ fn main(
   @location(3) FragTangent: vec3<f32>,
   @location(4) FragBinormal: vec3<f32>
 ) -> @location(0) vec4<f32> {
-  var outputColor: vec4<f32>;
   var normal: vec3<f32> = normalize(FragNormal);
-  var textureColor = vec4<f32>(0, 0, 0, 0);
-  
-  if (MAT_PARAMS.HAS_TEXTURE == 1.0)
-  {
-    textureColor = textureSample(Texture, Sampler, FragUV);
+  var outputColor = vec4(0.0, 0.0, 0.0, 1.0);
+  var texel: vec4<f32>;
+  var a = MAT_AMBIANT_COLOR;
+
+  var c = POINT_LIGHT0_COLOR;
+  var d = DIR_LIGHT_COLOR;
+
+
+  if (MAT_PARAMS.HAS_TEXTURE == 1.0){
+    texel = textureSample(Texture, Sampler, FragUV);
+  }else{
+    texel = vec4(1.0, 1.0, 1.0, 1.0);
   }
 
   if(MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
@@ -144,38 +156,48 @@ fn main(
     normal = normalize(normalize(FragTangent) * normalMap.x + normalize(FragBinormal) * normalMap.y + normal * normalMap.z);
   }
 
-  if (MAT_PARAMS.HAS_LIGHTNING == 0.0)
-  {
-    outputColor = textureColor;
-  }
-  else
-  {
+  
+  if (MAT_PARAMS.HAS_LIGHTNING == 0.0) {
+    outputColor = texel * MAT_DIFFUSE_COLOR;
+  }else{
+    
     if (DIR_LIGHT.w == 1.0)
     {
-      outputColor += CalcDirLight(DIR_LIGHT.xyz, normal, FragPos, textureColor);
+      outputColor += CalcDirLight(DIR_LIGHT.xyz, DIR_LIGHT_COLOR, normal, FragPos, texel);
     }
 
     if (POINT_LIGHT0.w == 1.0)
     {
-      outputColor += CalcPointLight(POINT_LIGHT0.xyz, normal, FragPos, textureColor);
+      outputColor += CalcPointLight(POINT_LIGHT0.xyz, POINT_LIGHT0_COLOR, normal, FragPos, texel);;
     }
 
     if (POINT_LIGHT1.w == 1.0)
     {
-      outputColor += CalcPointLight(POINT_LIGHT1.xyz, normal, FragPos, textureColor);
+      outputColor += CalcPointLight(POINT_LIGHT1.xyz, POINT_LIGHT1_COLOR,  normal, FragPos, texel);
     }
-  }
 
-  if(MAT_PARAMS.HAS_ENV_MAP == 1.0)
+    outputColor +=  MAT_AMBIANT_COLOR;
+  }
+  
+  
+  if(MAT_PARAMS.HAS_ENV_MAP != 0.0)
   {
     var viewDir = normalize(CAMERA_POS - FragPos);
     var rvec = normalize(reflect(viewDir, normal));
-    outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z)) * textureColor;
+
+    if(MAT_PARAMS.HAS_ENV_MAP == 2.0){
+
+      var uv = vec2<f32>(atan2( rvec.z, rvec.x ) * 0.15915494309189535 + 0.5, asin( clamp( rvec.y, - 1.0, 1.0 ) ) * 0.3183098861837907 + 0.5);
+      outputColor += textureSample(EnvMapTexture2, EnvMapSampler2, uv) * 0.2;
+
+    }else{
+      outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z));
+    }
   }
 
   if (MAT_PARAMS.OPACITY != 1.0)
   {
-    outputColor.a = MAT_PARAMS.OPACITY;
+    outputColor.a *= MAT_PARAMS.OPACITY;
   }
 
   return outputColor;
@@ -185,9 +207,9 @@ fn main(
 // UTILS
 // *****************************************************************************************************************
 
-fn CalcDirLight(lightDir: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, textureColor: vec4<f32>) -> vec4<f32>
+fn CalcDirLight(lightDir: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, fragPos: vec3<f32>, texel: vec4<f32>) -> vec4<f32>
 {
-    var ambientColor = MAT_AMBIANT_COLOR * textureColor;
+
     var diffuseColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
     var specularColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -196,37 +218,49 @@ fn CalcDirLight(lightDir: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, text
 
     if (diffuseFactor > 0.0)
     {
-      diffuseColor = MAT_DIFFUSE_COLOR * diffuseFactor * textureColor;
-      var reflectDir = reflect(-reverseLightDir, normal);
-      var viewDir = normalize(CAMERA_POS - fragPos);
-      var specularFactor = max(dot(viewDir, reflectDir), 0.0);
-      if (specularFactor > 0.0) {
-        specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a) * textureColor;
+      diffuseColor = (MAT_DIFFUSE_COLOR * texel + lightColor) * diffuseFactor;
+      if(MAT_SPECULAR.a>0)
+      {
+        var reflectDir = reflect(-reverseLightDir, normal);
+        var viewDir = normalize(CAMERA_POS - fragPos);
+        var specularFactor = max(dot(viewDir, reflectDir), 0.0);
+        if (specularFactor > 0.0) {
+          specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a) ;
+        }
       }
     }
 
-  return ambientColor + diffuseColor + specularColor;
+  return diffuseColor + specularColor;
 }
 
-fn CalcPointLight(lightPos: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, textureColor: vec4<f32>) -> vec4<f32>
+fn CalcPointLight(lightPos: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, fragPos: vec3<f32>, texel: vec4<f32>) -> vec4<f32>
 {
-  var ambientColor = MAT_AMBIANT_COLOR * textureColor;
+
   var diffuseColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
   var specularColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
   var reverseLightDir = normalize(lightPos - fragPos);
   var diffuseFactor = max(dot(normal, reverseLightDir), 0.0);
+  var dist = distance(lightPos, fragPos);
+
+  diffuseFactor *= 10.0/(dist)  ;
 
   if (diffuseFactor > 0.0)
   {
-    diffuseColor = MAT_DIFFUSE_COLOR * diffuseFactor * textureColor;
-    var reflectDir = reflect(-reverseLightDir, normal);
-    var viewDir = normalize(CAMERA_POS - fragPos);
-    var specularFactor = max(dot(viewDir, reflectDir), 0.0);
-    if (specularFactor > 0.0) {
-      specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a) * textureColor;
+    diffuseColor =(MAT_DIFFUSE_COLOR * texel + lightColor) * diffuseFactor;
+    
+    if(MAT_SPECULAR.a>0)
+    {
+      var reflectDir = reflect(-reverseLightDir, normal);
+      var viewDir = normalize(CAMERA_POS - fragPos);
+      var specularFactor = max(dot(viewDir, reflectDir), 0.0);
+      if (specularFactor > 0.0) {
+        specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a);
+      }
     }
   }
 
-  return ambientColor + diffuseColor + specularColor;
+
+
+  return diffuseColor + specularColor;
 }
 `;

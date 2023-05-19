@@ -33,6 +33,7 @@ class UIWidget {
 
   setId(id: string): void {
     this.id = id;
+    this.node.id = id;
   }
 
   getNode(): HTMLDivElement {

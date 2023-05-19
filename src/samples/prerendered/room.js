@@ -2,7 +2,7 @@ import { eventManager } from '../../lib/core/event_manager';
 import { uiManager } from '../../lib/ui/ui_manager';
 import { inputManager } from '../../lib/input/input_manager';
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3JWM } from '../../lib/gfx3_jwm/gfx3_jwm';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -83,7 +83,7 @@ class Room {
 
     let spawn = this.spawns.find(spawn => spawn.getName() == spawnName);
     this.controller.setPosition(spawn.getPositionX(), spawn.getPositionY(), spawn.getPositionZ());
-    this.controller.setRotation(0, Utils.VEC2_ANGLE(spawn.getDirection()), 0);
+    this.controller.setRotation(0, UT.VEC2_ANGLE(spawn.getDirection()), 0);
     this.walkmesh.addWalker('CONTROLLER', this.controller.getPositionX(), this.controller.getPositionZ(), this.controller.getRadius());
 
     await this.scriptMachine.loadFromFile(json['ScriptFile']);
@@ -102,22 +102,22 @@ class Room {
 
   update(ts) {
     let moving = false;
-    let moveDir = Utils.VEC3_ZERO;
+    let moveDir = UT.VEC3_ZERO;
 
     if (inputManager.isActiveAction('LEFT')) {
-      moveDir = Utils.VEC3_LEFT;
+      moveDir = UT.VEC3_LEFT;
       moving = true;
     }
     else if (inputManager.isActiveAction('RIGHT')) {
-      moveDir = Utils.VEC3_RIGHT;
+      moveDir = UT.VEC3_RIGHT;
       moving = true;
     }
     else if (inputManager.isActiveAction('UP')) {
-      moveDir = Utils.VEC3_FORWARD;
+      moveDir = UT.VEC3_FORWARD;
       moving = true;
     }
     else if (inputManager.isActiveAction('DOWN')) {
-      moveDir = Utils.VEC3_BACKWARD;
+      moveDir = UT.VEC3_BACKWARD;
       moving = true;
     }
 
@@ -165,7 +165,7 @@ class Room {
     }
 
     for (let trigger of this.triggers) {
-      if (Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition()) <= this.controller.getRadius() + trigger.getRadius()) {
+      if (UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition()) <= this.controller.getRadius() + trigger.getRadius()) {
         if (trigger.getOnActionBlockId()) {
           this.scriptMachine.jump(trigger.getOnActionBlockId());
           return;
@@ -174,7 +174,7 @@ class Room {
     }
 
     for (let model of this.models) {
-      if (Utils.VEC3_DISTANCE(model.getPosition(), this.controller.getHandPosition()) <= model.getRadius()) {
+      if (UT.VEC3_DISTANCE(model.getPosition(), this.controller.getHandPosition()) <= model.getRadius()) {
         if (model.getOnActionBlockId()) {
           this.scriptMachine.jump(model.getOnActionBlockId());
           return;
@@ -186,7 +186,7 @@ class Room {
   handleControllerMoved({ moveX, moveZ }) {
     for (let other of this.models) {
       let velocityImpact = [0, 0];
-      if (Utils.CIRCLE_COLLIDE(this.controller.getNextPosition(), this.controller.getRadius(), other.getPosition(), other.getRadius(), velocityImpact)) {
+      if (UT.CIRCLE_COLLIDE(this.controller.getNextPosition(), this.controller.getRadius(), other.getPosition(), other.getRadius(), velocityImpact)) {
         moveX += velocityImpact[0];
         moveZ += velocityImpact[1];
         break;
@@ -194,11 +194,11 @@ class Room {
     }
 
     const newPosition = this.walkmesh.moveWalker('CONTROLLER', moveX, moveZ);
-    const move = Utils.VEC3_SUBSTRACT(newPosition, this.controller.getPosition())
+    const move = UT.VEC3_SUBSTRACT(newPosition, this.controller.getPosition())
     this.controller.setVelocity(move[0], move[1], move[2]);
 
     for (let trigger of this.triggers) {
-      let distance = Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
+      let distance = UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
       let distanceMin = this.controller.getRadius() + trigger.getRadius();
 
       if (trigger.getOnEnterBlockId() && !trigger.isHovered() && distance < distanceMin) {

@@ -1,6 +1,6 @@
 import { eventManager } from '../core/event_manager';
 import { gfx3DebugRenderer } from '../gfx3/gfx3_debug_renderer';
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { Gfx3Transformable } from '../gfx3/gfx3_transformable';
 
 class Gfx3Mover {
@@ -31,7 +31,7 @@ class Gfx3Mover {
     }
 
     this.speed = data['Speed'];
-    this.looped = Utils.VEC3_ISEQUAL(data['Points'].at(-1), data['Points'].at(0));
+    this.looped = UT.VEC3_ISEQUAL(data['Points'].at(-1), data['Points'].at(0));
 
     this.debugVertices = [];
     this.debugVertexCount = 0;
@@ -54,14 +54,14 @@ class Gfx3Mover {
     }
 
     const position = this.target.getPosition();
-    const delta = Utils.VEC3_SUBSTRACT(this.points[this.currentPointIndex], position);
-    const move = Utils.VEC3_SCALE(Utils.VEC3_NORMALIZE(delta), this.speed * (ts / 1000));
-    const nextPosition = Utils.VEC3_ADD(position, move);
+    const delta = UT.VEC3_SUBSTRACT(this.points[this.currentPointIndex], position);
+    const move = UT.VEC3_SCALE(UT.VEC3_NORMALIZE(delta), this.speed * (ts / 1000));
+    const nextPosition = UT.VEC3_ADD(position, move);
 
     this.target.setPosition(nextPosition[0], nextPosition[1], nextPosition[2]);
-    this.target.setRotation(0, Utils.VEC2_ANGLE([move[0], move[2]]), 0);
+    this.target.setRotation(0, UT.VEC2_ANGLE([move[0], move[2]]), 0);
 
-    if (Utils.VEC3_LENGTH(delta) < 0.1) {
+    if (UT.VEC3_LENGTH(delta) < 0.1) {
       if (this.currentPointIndex == this.points.length - 1) {
         this.currentPointIndex = this.looped ? 1 : this.points.length - 1;
         this.finished = this.looped ? false : true;
@@ -74,7 +74,7 @@ class Gfx3Mover {
   }
 
   draw(): void {
-    gfx3DebugRenderer.drawVertices(this.debugVertices, this.debugVertexCount, Utils.MAT4_IDENTITY());
+    gfx3DebugRenderer.drawVertices(this.debugVertices, this.debugVertexCount, UT.MAT4_IDENTITY());
   }
 
   play(): void {

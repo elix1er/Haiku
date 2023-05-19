@@ -1,5 +1,5 @@
 import { gfx3Manager } from '../../lib/gfx3/gfx3_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { ProjectionMode } from '../../lib/gfx3/gfx3_view';
 // ---------------------------------------------------------------------------------------
 import { ORTHO_SIZE, ORTHO_DEPTH, CAMERA_MATRIX } from './enums';
@@ -34,8 +34,8 @@ class TrackingCamera {
     let targetScreenPosition = gfx3Manager.getScreenNormalizedPosition(0, targetWorldPosition[0], targetWorldPosition[1], targetWorldPosition[2]);
 
     this.view.setClipOffset(
-      Utils.CLAMP(targetScreenPosition[0] + clipOffset[0], this.minClipOffset[0], this.maxClipOffset[0]),
-      Utils.CLAMP(targetScreenPosition[1] + clipOffset[1], this.minClipOffset[1], this.maxClipOffset[1])
+      UT.CLAMP(targetScreenPosition[0] + clipOffset[0], this.minClipOffset[0], this.maxClipOffset[0]),
+      UT.CLAMP(targetScreenPosition[1] + clipOffset[1], this.minClipOffset[1], this.maxClipOffset[1])
     );
   }
 

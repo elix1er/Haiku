@@ -1,35 +1,59 @@
-import { gfx3Manager, UniformGroup, MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT } from '../gfx3/gfx3_manager';
-import { Utils } from '../core/utils';
-import { Gfx3Texture } from '../gfx3/gfx3_texture';
+import { gfx3Manager, UniformGroup } from '../gfx3/gfx3_manager';
+import { UT } from '../core/utils';
 import { Gfx3Mesh } from './gfx3_mesh';
-import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_UNIFORM_ATTR_COUNT } from './gfx3_mesh_shader';
+import { Gfx3Texture } from '../gfx3/gfx3_texture';
+import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER } from './gfx3_mesh_shader';
 
 interface MeshCommand {
   mesh: Gfx3Mesh;
-  matrix: mat4 | null;
+  matrix: mat4_buf | null;
 };
 
 class Gfx3MeshRenderer {
   pipeline: GPURenderPipeline;
-  uniformGroup: UniformGroup;
-  meshCommands: Array<MeshCommand>;
-
   defaultTexture: Gfx3Texture;
   defaultEnvMap: Gfx3Texture;
-
-  pointLight0: vec4;
-  pointLight1: vec4;
-  dirLight: vec4;
+  materialBuffers: Array<UniformGroup>;
+  worldBuffer: UniformGroup;
+  meshBuffer: UniformGroup;
+  pointLight0: vec4_buf;
+  pointLight0Color: vec4_buf;
+  pointLight1: vec4_buf;
+  pointLight1Color: vec4_buf;
+  dirLight: vec4_buf;
+  dirLightColor: vec3_buf;
+  meshCommands: Array<MeshCommand>;
 
   constructor() {
     this.pipeline = gfx3Manager.loadPipeline('MESH_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
-    this.uniformGroup = gfx3Manager.createUniformGroup(16 * 4);
     this.defaultTexture = gfx3Manager.createTextureFromBitmap();
     this.defaultEnvMap = gfx3Manager.createCubeMapFromBitmap();
+
+    this.materialBuffers = [];
+    this.worldBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
+    this.worldBuffer.addDatasetInput(0, UT.VEC3_SIZE, 'CAM_POS');
+    this.worldBuffer.addDatasetInput(1, UT.VEC4_SIZE, 'POINT_LIGHT0');
+    this.worldBuffer.addDatasetInput(2, UT.VEC4_SIZE, 'POINT_LIGHT0_COLOR');
+    this.worldBuffer.addDatasetInput(3, UT.VEC4_SIZE, 'POINT_LIGHT1');
+    this.worldBuffer.addDatasetInput(4, UT.VEC4_SIZE, 'POINT_LIGHT1_COLOR');
+    this.worldBuffer.addDatasetInput(5, UT.VEC4_SIZE, 'DIR_LIGHT');
+    this.worldBuffer.addDatasetInput(6, UT.VEC4_SIZE, 'DIR_LIGHT_COLOR');
+    this.worldBuffer.allocate(1);
+
+    this.meshBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(1));
+    this.meshBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
+    this.meshBuffer.addDatasetInput(1, UT.MAT4_SIZE, 'NORM_MATRIX');
+    this.meshBuffer.addDatasetInput(2, UT.MAT4_SIZE, 'M_MATRIX');
+    this.meshBuffer.allocate(1);
+
+    this.pointLight0 = UT.VEC4_CREATE();
+    this.pointLight0Color = UT.VEC4_CREATE();
+    this.pointLight1 = UT.VEC4_CREATE();
+    this.pointLight1Color = UT.VEC4_CREATE();
+    this.dirLight = UT.VEC4_CREATE();
+    this.dirLightColor = UT.VEC3_CREATE();
+
     this.meshCommands = [];
-    this.pointLight0 = [0, 0, 0, 0];
-    this.pointLight1 = [0, 0, 0, 0];
-    this.dirLight = [0, 0, 0, 0];
   }
 
   render(): void {
@@ -37,78 +61,114 @@ class Gfx3MeshRenderer {
     const passEncoder = gfx3Manager.getPassEncoder();
     passEncoder.setPipeline(this.pipeline);
 
-    gfx3Manager.destroyUniformGroup(this.uniformGroup);
-    this.uniformGroup = gfx3Manager.createUniformGroup(this.meshCommands.length * SHADER_UNIFORM_ATTR_COUNT * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
+    this.worldBuffer.beginWrite();
+    this.worldBuffer.write(0, new Float32Array(currentView.getCameraPosition()));
+    this.worldBuffer.write(1, this.pointLight0);
+    this.worldBuffer.write(2, this.pointLight0Color);
+    this.worldBuffer.write(3, this.pointLight1);
+    this.worldBuffer.write(4, this.pointLight1Color);
+    this.worldBuffer.write(5, this.dirLight);
+    this.worldBuffer.write(6, this.dirLightColor);
+    this.worldBuffer.endWrite();
+    passEncoder.setBindGroup(0, this.worldBuffer.getBindGroup(0));
 
-    for (const command of this.meshCommands) {
+    const vpcMatrix = currentView.getViewProjectionClipMatrix();
+    const mvpcMatrix = UT.MAT4_CREATE();
+    const normMatrix = UT.MAT4_CREATE();
+
+    if (this.meshBuffer.getSize() < this.meshCommands.length) {
+      this.meshBuffer.allocate(this.meshCommands.length);
+    }
+
+    this.meshBuffer.beginWrite();
+
+    for (let i = 0; i < this.meshCommands.length; i++) {
+      const command = this.meshCommands[i];
       const mMatrix = command.matrix ? command.matrix : command.mesh.getTransformMatrix();
-      const mvpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentViewProjectionMatrix(), mMatrix);
-      const normMatrix = [
-        mMatrix[0], mMatrix[1], mMatrix[2], 0,
-        mMatrix[4], mMatrix[5], mMatrix[6], 0,
-        mMatrix[8], mMatrix[9], mMatrix[10], 0,
-        0, 0, 1
-      ];
+      normMatrix[0] = mMatrix[0]; normMatrix[1] = mMatrix[1]; normMatrix[2] = mMatrix[2];
+      normMatrix[4] = mMatrix[4]; normMatrix[5] = mMatrix[5]; normMatrix[6] = mMatrix[6];
+      normMatrix[8] = mMatrix[8]; normMatrix[9] = mMatrix[9]; normMatrix[10] = mMatrix[10];
+      UT.MAT4_MULTIPLY(vpcMatrix, mMatrix, mvpcMatrix);
+
+      this.meshBuffer.write(0, mvpcMatrix);
+      this.meshBuffer.write(1, normMatrix);
+      this.meshBuffer.write(2, mMatrix);
+      passEncoder.setBindGroup(1, this.meshBuffer.getBindGroup(i));
 
       const material = command.mesh.getMaterial();
-      const materialParams = new Float32Array([
-        material.opacity,
-        material.texture ? 1 : 0,
-        material.lightning ? 1 : 0,
-        material.normalMap ? 1 : 0,
-        material.envMap ? 1 : 0
-      ]);
+      const materialBuffer = material.getBuffer();
+      passEncoder.setBindGroup(2, materialBuffer.getBindGroup(0));
 
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvpcMatrix));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 1, new Float32Array(normMatrix));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 2, new Float32Array(mMatrix));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 3, new Float32Array(currentView.getCameraPosition()));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 4, new Float32Array(this.pointLight0));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 5, new Float32Array(this.pointLight1));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 6, new Float32Array(this.dirLight));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 7, new Float32Array(material.ambiant));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 8, new Float32Array(material.diffuse));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 9, new Float32Array(material.specular));
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 10, materialParams);
-
-      const texture = material.texture ? material.texture : this.defaultTexture;
-      const textureBinding = gfx3Manager.createTextureBinding(this.pipeline, texture.gpuSampler, texture.gpuTexture, 1);
-
-      const normalMap = material.normalMap ? material.normalMap : this.defaultTexture;
-      const normalMapBinding = gfx3Manager.createTextureBinding(this.pipeline, normalMap.gpuSampler, normalMap.gpuTexture, 2);
-
-      const envMap = material.envMap ? material.envMap : this.defaultEnvMap;
-      const envMapBinding = gfx3Manager.createTextureBinding(this.pipeline, envMap.gpuSampler, envMap.gpuTexture, 3, { dimension: 'cube' });
-
-      passEncoder.setBindGroup(0, gfx3Manager.createBindGroup({ layout: this.pipeline.getBindGroupLayout(0), entries: this.uniformGroup.entries }));
-      passEncoder.setBindGroup(1, gfx3Manager.createBindGroup(textureBinding));
-      passEncoder.setBindGroup(2, gfx3Manager.createBindGroup(normalMapBinding));
-      passEncoder.setBindGroup(3, gfx3Manager.createBindGroup(envMapBinding));
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), command.mesh.getVertexSubBufferOffset(), command.mesh.getVertexSubBufferSize());
       passEncoder.draw(command.mesh.getVertexCount());
     }
 
+    this.meshBuffer.endWrite();
+
     this.meshCommands = [];
-    this.pointLight0 = [0, 0, 0, 0];
-    this.pointLight1 = [0, 0, 0, 0];
-    this.dirLight = [0, 0, 0, 0];
+    this.pointLight0[3] = 0;
+    this.pointLight1[3] = 0;
+    this.dirLight[3] = 0;
   }
 
-  drawMesh(mesh: Gfx3Mesh, matrix: mat4 | null = null): void {
+  createMaterialBuffer(): UniformGroup {
+    const buffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(2));
+    buffer.addDatasetInput(0, UT.VEC4_SIZE, 'MAT_AMBIANT_COLOR');
+    buffer.addDatasetInput(1, UT.VEC4_SIZE, 'MAT_DIFFUSE_COLOR');
+    buffer.addDatasetInput(2, UT.VEC4_SIZE, 'MAT_SPECULAR');
+    buffer.addDatasetInput(3, UT.VEC5_SIZE, 'MAT_PARAMS');
+    buffer.addSamplerInput(4, this.defaultTexture.gpuSampler);
+    buffer.addTextureInput(5, this.defaultTexture.gpuTexture);
+    buffer.addSamplerInput(6, this.defaultTexture.gpuSampler);
+    buffer.addTextureInput(7, this.defaultTexture.gpuTexture);
+    buffer.addSamplerInput(8, this.defaultEnvMap.gpuSampler);
+    buffer.addTextureInput(9, this.defaultEnvMap.gpuTexture, { dimension: 'cube' });
+    buffer.addSamplerInput(10, this.defaultTexture.gpuSampler);
+    buffer.addTextureInput(11, this.defaultTexture.gpuTexture);
+    buffer.allocate(1);
+
+    this.materialBuffers.push(buffer);
+    return buffer;
+  }
+
+  destroyMaterialBuffer(buffer: UniformGroup): void {
+    buffer.destroy();
+    const index = this.materialBuffers.indexOf(buffer);
+    this.materialBuffers.splice(index, 1);
+  }
+
+  drawMesh(mesh: Gfx3Mesh, matrix: mat4_buf | null = null): void {
     this.meshCommands.push({ mesh: mesh, matrix: matrix });
   }
 
   enablePointLight(position: vec3, index: number): void {
     if (index == 0) {
-      this.pointLight0 = [position[0], position[1], position[2], 1];
+      this.pointLight0[0] = position[0];
+      this.pointLight0[1] = position[1];
+      this.pointLight0[2] = position[2];
+      this.pointLight0[3] = 1;
     }
     else if (index == 1) {
-      this.pointLight1 = [position[0], position[1], position[2], 1];
+      this.pointLight1[0] = position[0];
+      this.pointLight1[1] = position[1];
+      this.pointLight1[2] = position[2];
+      this.pointLight1[3] = 1;
     }
   }
 
   enableDirLight(direction: vec3): void {
-    this.dirLight = [direction[0], direction[1], direction[2], 1];
+    this.dirLight[0] = direction[0];
+    this.dirLight[1] = direction[1];
+    this.dirLight[2] = direction[2];
+    this.dirLight[0] = 1;
+  }
+
+  getDefaultTexture(): Gfx3Texture {
+    return this.defaultTexture;
+  }
+
+  getDefaultEnvMap(): Gfx3Texture {
+    return this.defaultEnvMap;
   }
 }
 

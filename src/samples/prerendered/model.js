@@ -1,6 +1,6 @@
 import { eventManager } from '../../lib/core/event_manager';
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { Gfx3Transformable } from '../../lib/gfx3/gfx3_transformable';
 import { Gfx3MeshJAM } from '../../lib/gfx3_mesh/gfx3_mesh_jam';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -52,7 +52,7 @@ class Model extends Gfx3Transformable {
     this.velocity[2] = mz;
 
     if (mx != 0 || mz != 0) {
-      this.rotation[1] = Utils.VEC2_ANGLE([this.velocity[0], this.velocity[2]]);
+      this.rotation[1] = UT.VEC2_ANGLE([this.velocity[0], this.velocity[2]]);
       this.jam.play('RUN', true, true);
       eventManager.emit(this, 'E_MOVED', { moveX: mx, moveZ: mz });
     }

@@ -1,4 +1,4 @@
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { Gfx3View } from './gfx3_view';
 import { Gfx3Texture } from './gfx3_texture';
 
@@ -10,11 +10,114 @@ export interface VertexSubBuffer {
   changed: boolean;
 };
 
-export interface UniformGroup {
+export class UniformGroup {
+  device: GPUDevice;
+  layout: GPUBindGroupLayout;
   buffer: GPUBuffer;
-  offset: number;
-  entries: Array<GPUBindGroupEntry>;
-};
+  bufferWriteOffset: number;
+  datasetInputs: Array<{ index: number, size: number }>;
+  samplerInputs: Array<{ index: number, resource: GPUSampler }>;
+  textureInputs: Array<{ index: number, resource: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor }>;
+  storeEntries: Array<Array<GPUBindGroupEntry>>;
+  storeBindGroups: Array<GPUBindGroup>;
+  size: number;
+
+  constructor(device: GPUDevice, layout: GPUBindGroupLayout) {
+    this.device = device;
+    this.layout = layout;
+    this.buffer = device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    this.bufferWriteOffset = 0;
+    this.datasetInputs = [];
+    this.samplerInputs = [];
+    this.textureInputs = [];
+    this.storeEntries = [];
+    this.storeBindGroups = [];
+    this.size = 0;
+  }
+
+  destroy(): void {
+    this.buffer.destroy();
+    this.storeEntries = [];
+    this.storeBindGroups = [];
+  }
+
+  addDatasetInput(index: number, byteLength: number, name: string): void {
+    this.datasetInputs.push({ index: index, size: byteLength });
+  }
+
+  addSamplerInput(index: number, sampler: GPUSampler): void {
+    this.samplerInputs.push({ index: index, resource: sampler });
+  }
+
+  addTextureInput(index: number, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): void {
+    this.textureInputs.push({ index: index, resource: texture, createViewDescriptor: createViewDescriptor });
+  }
+
+  allocate(size: number): void {
+    let offset = 0;
+
+    this.storeBindGroups = [];
+    this.storeEntries = [];
+
+    this.buffer.destroy();
+    this.buffer = this.device.createBuffer({ size: size * this.datasetInputs.length * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+
+    for (let i = 0; i < size; i++) {
+      const entries: Array<GPUBindGroupEntry> = [];
+
+      for (const input of this.datasetInputs) {
+        entries[input.index] = { binding: input.index, resource: { buffer: this.buffer, offset: offset, size: input.size } };
+        offset += MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+      }
+
+      for (const input of this.samplerInputs) {
+        entries[input.index] = { binding: input.index, resource: input.resource };
+      }
+
+      for (const input of this.textureInputs) {
+        entries[input.index] = { binding: input.index, resource: input.resource.createView(input.createViewDescriptor) };
+      }
+
+      this.storeEntries.push(entries);
+      this.storeBindGroups.push(this.device.createBindGroup({ layout: this.layout, entries: entries }));
+    }
+
+    this.size = size;
+  }
+
+  setSamplerEntry(groupIndex: number, index: number, sampler: GPUSampler): void {
+    this.storeEntries[groupIndex][index] = { binding: index, resource: sampler };
+  }
+
+  setTextureEntry(groupIndex: number, index: number, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): void {
+    this.storeEntries[groupIndex][index] = { binding: index, resource: texture.createView(createViewDescriptor) };
+  }
+
+  refresh(groupIndex: number): void {
+    this.storeBindGroups[groupIndex] = this.device.createBindGroup({ layout: this.layout, entries: this.storeEntries[groupIndex] });
+  }
+
+  beginWrite(): void {
+    this.bufferWriteOffset = 0;
+  }
+
+  write(index: number, data: Float32Array): void {
+    this.device.queue.writeBuffer(this.buffer, this.bufferWriteOffset, data);
+    this.bufferWriteOffset += MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+  }
+
+  endWrite(): void {
+    this.bufferWriteOffset = 0;
+  }
+
+  getBindGroup(groupIndex: number): GPUBindGroup {
+    return this.storeBindGroups[groupIndex];
+  }
+
+  getSize(): number {
+    return this.size;
+  }
+}
 
 class Gfx3Manager {
   adapter: GPUAdapter;
@@ -29,7 +132,6 @@ class Gfx3Manager {
   vertexBuffer: GPUBuffer;
   vertexSubBuffers: Array<VertexSubBuffer>;
   vertexSubBuffersSize: number;
-
   views: Array<Gfx3View>;
   currentView: Gfx3View;
 
@@ -46,20 +148,19 @@ class Gfx3Manager {
     this.vertexBuffer = {} as GPUBuffer;
     this.vertexSubBuffers = [];
     this.vertexSubBuffersSize = 0;
-
-    this.views = [new Gfx3View()];
-    this.currentView = this.views[0];
+    this.views = [];
+    this.currentView = this.createView();
   }
 
   async initialize() {
     if (!navigator.gpu) {
-      Utils.FAIL('This browser does not support webgpu');
+      UT.FAIL('This browser does not support webgpu');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - navigator.gpu not found');
     }
 
     this.adapter = (await navigator.gpu.requestAdapter())!;
     if (!this.adapter) {
-      Utils.FAIL('This browser appears to support WebGPU but it\'s disabled');
+      UT.FAIL('This browser appears to support WebGPU but it\'s disabled');
       throw new Error('Gfx3Manager::Gfx3Manager: WebGPU cannot be initialized - Adapter not found');
     }
 
@@ -138,15 +239,15 @@ class Gfx3Manager {
       if (this.vertexSubBuffersSize != this.vertexBuffer.size) {
         this.vertexBuffer.destroy();
         this.vertexBuffer = this.device.createBuffer({ size: this.vertexSubBuffersSize, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
-  
+
         for (const sub of this.vertexSubBuffers) {
           this.device.queue.writeBuffer(this.vertexBuffer, sub.offset, sub.vertices);
           sub.changed = false;
         }
-  
+
         return;
       }
-  
+
       for (const sub of this.vertexSubBuffers) {
         if (sub.changed) {
           this.device.queue.writeBuffer(this.vertexBuffer, sub.offset, sub.vertices);
@@ -156,7 +257,8 @@ class Gfx3Manager {
     }
   }
 
-  beginRender(): void {}
+  beginRender(): void { }
+
   endRender(): void {
     this.passEncoder.end();
     this.device.queue.submit([this.commandEncoder.finish()]);
@@ -182,6 +284,14 @@ class Gfx3Manager {
     const pipeline = this.device.createRenderPipeline(pipelineDesc);
     this.pipelines.set(id, pipeline);
     return pipeline;
+  }
+
+  getPipeline(id: string): GPURenderPipeline {
+    if (!this.pipelines.has(id)) {
+      throw new Error('Gfx3Manager::getPipeline(): pipeline not found !');
+    }
+
+    return this.pipelines.get(id)!;
   }
 
   createVertexBuffer(size: number): VertexSubBuffer {
@@ -214,28 +324,8 @@ class Gfx3Manager {
     sub.changed = true;
   }
 
-  createUniformGroup(size: number): UniformGroup {
-    return {
-      buffer: this.device.createBuffer({ size: size, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST }),
-      offset: 0,
-      entries: []
-    };    
-  }
-
-  destroyUniformGroup(uniformGroup: UniformGroup): void {
-    uniformGroup.buffer.destroy();
-    uniformGroup.offset = 0;
-    uniformGroup.entries = [];
-  }
-
-  writeUniformGroup(uniformGroup: UniformGroup, binding: number, data: Float32Array): void {
-    uniformGroup.entries[binding] = { binding: binding, resource: { buffer: uniformGroup.buffer, offset: uniformGroup.offset, size: data.byteLength } };
-    this.device.queue.writeBuffer(uniformGroup.buffer, uniformGroup.offset, data);
-    uniformGroup.offset += MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
-  }
-
-  createBindGroup(descriptor: GPUBindGroupDescriptor): GPUBindGroup {
-    return this.device.createBindGroup(descriptor);
+  createUniformGroup(layout: GPUBindGroupLayout): UniformGroup {
+    return new UniformGroup(this.device, layout);
   }
 
   createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement): Gfx3Texture {
@@ -303,80 +393,12 @@ class Gfx3Manager {
     return { gpuTexture: cubemapTexture, gpuSampler: gpuSampler };
   }
 
-  createTextureBinding(pipeline: GPURenderPipeline, sampler: GPUSampler, texture: GPUTexture, bindGroupLayoutIndex: number, createViewDescriptor: GPUTextureViewDescriptor = {}): GPUBindGroupDescriptor {
-    return {
-      layout: pipeline.getBindGroupLayout(bindGroupLayoutIndex),
-      entries: [{
-        binding: 0,
-        resource: sampler
-      }, {
-        binding: 1,
-        resource: texture.createView(createViewDescriptor)
-      }]
-    };
-  }
-
-  getScreenPosition(viewIndex: number, x: number, y: number, z: number): vec2 {
-    const view = this.views[viewIndex];
-    const viewport = view.getViewport();
-    const viewportWidth = (this.canvas.width * viewport.widthFactor);
-    const viewportHeight = (this.canvas.height * viewport.heightFactor);
-
-    let matrix = Utils.MAT4_IDENTITY();
-    matrix = Utils.MAT4_MULTIPLY(matrix, view.getClipMatrix());
-    matrix = Utils.MAT4_MULTIPLY(matrix, view.getProjectionMatrix(viewportWidth / viewportHeight));
-    matrix = Utils.MAT4_MULTIPLY(matrix, view.getCameraViewMatrix());
-
-    const pos = Utils.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
-    const viewportRealWidth = viewportWidth / window.devicePixelRatio;
-    const viewportRealHeight = viewportHeight / window.devicePixelRatio;
-
-    pos[0] = pos[0] / pos[3];
-    pos[1] = pos[1] / pos[3];
-    pos[0] = ((pos[0] + 1.0) * viewportRealWidth) / (2.0);
-    pos[1] = viewportRealHeight - ((pos[1] + 1.0) * viewportRealHeight) / (2.0);
-    return [pos[0], pos[1]];
-  }
-
-  getScreenNormalizedPosition(viewIndex: number, x: number, y: number, z: number): vec2 {
-    let view = this.views[viewIndex];
-    let viewport = view.getViewport();
-    let viewportWidth = this.canvas.width * viewport.widthFactor;
-    let viewportHeight = this.canvas.height * viewport.heightFactor;
-
-    let matrix = Utils.MAT4_IDENTITY();
-    matrix = Utils.MAT4_MULTIPLY(matrix, view.getClipMatrix());
-    matrix = Utils.MAT4_MULTIPLY(matrix, view.getProjectionMatrix(viewportWidth / viewportHeight));
-    matrix = Utils.MAT4_MULTIPLY(matrix, view.getCameraViewMatrix());
-
-    let pos = Utils.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
-    return [pos[0] / pos[3], pos[1] / pos[3]];
-  }
-
-  getCurrentProjectionMatrix(): mat4 {
-    const viewport = this.currentView.getViewport();
-    const viewportWidth = this.canvas.width * viewport.widthFactor;
-    const viewportHeight = this.canvas.height * viewport.heightFactor;
-    return this.currentView.getPCMatrix(viewportWidth / viewportHeight);
-  }
-
-  getCurrentViewProjectionMatrix(): mat4 {
-    const viewport = this.currentView.getViewport();
-    const viewportWidth = this.canvas.width * viewport.widthFactor;
-    const viewportHeight = this.canvas.height * viewport.heightFactor;
-    return this.currentView.getVPCMatrix(viewportWidth / viewportHeight);
-  }
-
   getWidth(): number {
     return this.canvas.width;
   }
 
   getHeight(): number {
     return this.canvas.height;
-  }
-
-  getCanvas(): HTMLCanvasElement {
-    return this.canvas;
   }
 
   getContext(): GPUCanvasContext {
@@ -399,8 +421,11 @@ class Gfx3Manager {
     return this.views.length;
   }
 
-  addView(view: Gfx3View): void {
+  createView(): Gfx3View {
+    const view = new Gfx3View();
+    view.setScreenSize(this.canvas.width, this.canvas.height);
     this.views.push(view);
+    return view;
   }
 
   changeView(index: number, view: Gfx3View): void {
@@ -436,6 +461,10 @@ class Gfx3Manager {
     });
 
     this.depthView = this.depthTexture.createView();
+
+    for (const view of this.views) {
+      view.setScreenSize(this.canvas.width, this.canvas.height);
+    }
   }
 }
 

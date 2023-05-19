@@ -1,4 +1,4 @@
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 
 class Gfx3BoundingBox {
   min: vec3;
@@ -9,20 +9,31 @@ class Gfx3BoundingBox {
     this.max = max;
   }
 
-  static create(center: vec3, size: vec3): Gfx3BoundingBox {
+  static createFromCoord(x: number, y: number, z: number, w: number, h: number, d: number): Gfx3BoundingBox {
+    const aabb = new Gfx3BoundingBox();
+    aabb.min[0] = x;
+    aabb.min[1] = y;
+    aabb.min[2] = z;
+    aabb.max[0] = x + w;
+    aabb.max[1] = y + h;
+    aabb.max[2] = z + d;
+    return aabb;
+  }
+
+  static createFromCenter(x: number, y: number, z: number, w: number, h: number, d: number): Gfx3BoundingBox {
     const box = new Gfx3BoundingBox();
-    box.min[0] = center[0] - (size[0] * 0.5);
-    box.min[1] = center[1] - (size[1] * 0.5);
-    box.min[2] = center[2] - (size[2] * 0.5);
-    box.max[0] = center[0] + (size[0] * 0.5);
-    box.max[1] = center[1] + (size[1] * 0.5);
-    box.max[2] = center[2] + (size[2] * 0.5);
+    box.min[0] = x - (w * 0.5);
+    box.min[1] = y - (h * 0.5);
+    box.min[2] = z - (d * 0.5);
+    box.max[0] = x + (w * 0.5);
+    box.max[1] = y + (h * 0.5);
+    box.max[2] = z + (d * 0.5);
     return box;
   }
 
   static merge(aabbs: Array<Gfx3BoundingBox>): Gfx3BoundingBox {
-    const min = aabbs[0].min;
-    const max = aabbs[0].max;
+    const min: vec3 = [aabbs[0].min[0], aabbs[0].min[1], aabbs[0].min[2]];
+    const max: vec3 = [aabbs[0].max[0], aabbs[0].max[1], aabbs[0].max[2]];
 
     for (const aabb of aabbs) {
       for (let i = 0; i < 3; i++) {
@@ -34,7 +45,7 @@ class Gfx3BoundingBox {
     return new Gfx3BoundingBox(min, max);
   }
 
-  fromVertices(vertices: Array<number>, vertexStride: number): void {
+  fromVertices(vertices: Float32Array | Array<number>, vertexStride: number): void {
     const min: vec3 = [vertices[0], vertices[1], vertices[2]];
     const max: vec3 = [vertices[0], vertices[1], vertices[2]];
 
@@ -51,8 +62,8 @@ class Gfx3BoundingBox {
   }
 
   merge(aabb: Gfx3BoundingBox): Gfx3BoundingBox {
-    const min = this.min;
-    const max = this.max;
+    const min: vec3 = [this.min[0], this.min[1], this.min[2]];
+    const max: vec3 = [this.max[0], this.max[1], this.max[2]];
 
     for (let i = 0; i < 3; i++) {
       min[i] = Math.min(aabb.min[i], min[i]);
@@ -80,7 +91,7 @@ class Gfx3BoundingBox {
   }
 
   getRadius(): number {
-    return Utils.VEC3_DISTANCE(this.min, this.max) * 0.5;
+    return UT.VEC3_DISTANCE(this.min, this.max) * 0.5;
   }
 
   getPerimeter(): number {
@@ -97,7 +108,7 @@ class Gfx3BoundingBox {
   }
 
   transform(matrix: mat4): Gfx3BoundingBox {
-    const points: Array<vec3> = [];
+    const points: Array<[number, number, number]> = [];
     points.push([this.min[0], this.min[1], this.min[2]]);
     points.push([this.max[0], this.min[1], this.min[2]]);
     points.push([this.max[0], this.max[1], this.min[2]]);
@@ -108,7 +119,7 @@ class Gfx3BoundingBox {
     points.push([this.min[0], this.min[1], this.max[2]]);
 
     const transformedPoints = points.map((p) => {
-      return Utils.MAT4_MULTIPLY_BY_VEC4(matrix, [p[0], p[1], p[2], 1]);
+      return UT.MAT4_MULTIPLY_BY_VEC4(matrix, [p[0], p[1], p[2], 1]);
     });
 
     const min: vec3 = [transformedPoints[0][0], transformedPoints[0][1], transformedPoints[0][2]];
@@ -130,14 +141,6 @@ class Gfx3BoundingBox {
       (x >= this.min[0] && x <= this.max[0]) &&
       (y >= this.min[1] && y <= this.max[1]) &&
       (z >= this.min[2] && z <= this.max[2])
-    );
-  }
-
-  isPointInsideEps(x: number, y: number, z: number): boolean {
-    return (
-      (x >= this.min[0] - 0.001 && x <= this.max[0] + 0.001) &&
-      (y >= this.min[1] - 0.001 && y <= this.max[1] + 0.001) &&
-      (z >= this.min[2] - 0.001 && z <= this.max[2] + 0.001)
     );
   }
 

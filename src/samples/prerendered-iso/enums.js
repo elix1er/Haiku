@@ -1,4 +1,4 @@
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 
 export const DIRECTION = {
   LEFT: 'LEFT',
@@ -8,10 +8,10 @@ export const DIRECTION = {
 };
 
 export const DIRECTION_TO_VEC3 = {
-  LEFT: Utils.VEC3_LEFT,
-  RIGHT: Utils.VEC3_RIGHT,
-  FORWARD: Utils.VEC3_FORWARD,
-  BACKWARD: Utils.VEC3_BACKWARD
+  LEFT: UT.VEC3_LEFT,
+  RIGHT: UT.VEC3_RIGHT,
+  FORWARD: UT.VEC3_FORWARD,
+  BACKWARD: UT.VEC3_BACKWARD
 };
 
 export const PIXEL_PER_UNIT = 48;

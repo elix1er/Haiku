@@ -1,4 +1,4 @@
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 
 enum ProjectionMode {
   PERSPECTIVE = 'PERSPECTIVE',
@@ -13,8 +13,14 @@ interface Gfx3Viewport {
 };
 
 class Gfx3View {
-  clipOffset: vec2;
+  cacheProjectionMatrix: mat4_buf;
+  cacheProjectionMatrixChanged: boolean;
+  cacheCameraViewMatrix: mat4_buf;
+  cacheCameraViewMatrixChanged: boolean;  
+  cacheClipMatrix: mat4_buf;
+  cacheClipMatrixChanged: boolean;
   cameraMatrix: mat4;
+  clipOffset: vec2;
   viewport: Gfx3Viewport;
   projectionMode: ProjectionMode;
   perspectiveFovy: number;
@@ -23,10 +29,17 @@ class Gfx3View {
   orthographicSize: number;
   orthographicDepth: number;
   bgColor: vec4;
+  screenSize: vec2;
 
   constructor() {
+    this.cacheProjectionMatrix = UT.MAT4_CREATE();
+    this.cacheProjectionMatrixChanged = true;
+    this.cacheCameraViewMatrix = UT.MAT4_CREATE();
+    this.cacheCameraViewMatrixChanged = true;    
+    this.cacheClipMatrix = UT.MAT4_CREATE();
+    this.cacheClipMatrixChanged = true;
+    this.cameraMatrix = UT.MAT4_IDENTITY();
     this.clipOffset = [0.0, 0.0];
-    this.cameraMatrix = Utils.MAT4_IDENTITY();
     this.viewport = { xFactor: 0, yFactor: 0, widthFactor: 1, heightFactor: 1 };
     this.projectionMode = ProjectionMode.PERSPECTIVE;
     this.perspectiveFovy = Math.PI / 4;
@@ -35,32 +48,53 @@ class Gfx3View {
     this.orthographicSize = 1;
     this.orthographicDepth = 700;
     this.bgColor = [0.0, 0.0, 0.0, 0.0];
+    this.screenSize = [0, 0];
   }
 
-  getProjectionMatrix(ar: number): mat4 {
+  getProjectionMatrix(): mat4_buf {
+    if (!this.cacheProjectionMatrixChanged) {
+      return this.cacheProjectionMatrix;
+    }
+
     if (this.projectionMode == ProjectionMode.PERSPECTIVE) {
-      return Utils.MAT4_PERSPECTIVE(this.perspectiveFovy, ar, this.perspectiveNear, this.perspectiveFar);
+      const viewportWidth = this.screenSize[0] * this.viewport.widthFactor;
+      const viewportHeight = this.screenSize[1] * this.viewport.heightFactor;
+      UT.MAT4_PERSPECTIVE(this.perspectiveFovy, viewportWidth / viewportHeight, this.perspectiveNear, this.perspectiveFar, this.cacheProjectionMatrix);
     }
     else if (this.projectionMode == ProjectionMode.ORTHOGRAPHIC) {
-      return Utils.MAT4_ORTHOGRAPHIC(this.orthographicSize, this.orthographicDepth);
+      UT.MAT4_ORTHOGRAPHIC(this.orthographicSize, this.orthographicDepth, this.cacheProjectionMatrix);
     }
 
-    throw new Error('Gfx3Manager::setView(): ProjectionMode not valid !');
+    this.cacheProjectionMatrixChanged = false;
+    return this.cacheProjectionMatrix;
   }
 
-  getPCMatrix(ar: number): mat4 {
-    let pcMatrix = Utils.MAT4_IDENTITY();
-    pcMatrix = Utils.MAT4_MULTIPLY(pcMatrix, this.getClipMatrix());
-    pcMatrix = Utils.MAT4_MULTIPLY(pcMatrix, this.getProjectionMatrix(ar));
-    return pcMatrix;
+  getClipMatrix(): mat4_buf {
+    if (!this.cacheClipMatrixChanged) {
+      return this.cacheClipMatrix;
+    }
+
+    UT.MAT4_INVERT(UT.MAT4_TRANSLATE(this.clipOffset[0], this.clipOffset[1], 0), this.cacheClipMatrix);
+    this.cacheClipMatrixChanged = false;
+    return this.cacheClipMatrix;
   }
 
-  getVPCMatrix(ar: number): mat4 {
-    let vpcMatrix = Utils.MAT4_IDENTITY();
-    vpcMatrix = Utils.MAT4_MULTIPLY(vpcMatrix, this.getClipMatrix());
-    vpcMatrix = Utils.MAT4_MULTIPLY(vpcMatrix, this.getProjectionMatrix(ar));
-    vpcMatrix = Utils.MAT4_MULTIPLY(vpcMatrix, this.getCameraViewMatrix());
-    return vpcMatrix;
+  getCameraViewMatrix(): mat4_buf {
+    if (!this.cacheCameraViewMatrixChanged) {
+      return this.cacheCameraViewMatrix;
+    }
+
+    UT.MAT4_INVERT(this.cameraMatrix, this.cacheCameraViewMatrix);
+    this.cacheCameraViewMatrixChanged = false;
+    return this.cacheCameraViewMatrix;
+  }
+
+  getCameraPosition(): vec3 {
+    return [
+      this.cameraMatrix[12],
+      this.cameraMatrix[13],
+      this.cameraMatrix[14]
+    ];
   }
 
   getClipOffset(): vec2 {
@@ -76,11 +110,9 @@ class Gfx3View {
   }
 
   setClipOffset(x: number, y: number): void {
-    this.clipOffset = [x, y];
-  }
-
-  getClipMatrix(): mat4 {
-    return Utils.MAT4_INVERT(Utils.MAT4_TRANSLATE(this.clipOffset[0], this.clipOffset[1], 0));
+    this.clipOffset[0] = x;
+    this.clipOffset[1] = y;
+    this.cacheClipMatrixChanged = true;
   }
 
   getCameraMatrix(): mat4 {
@@ -89,14 +121,7 @@ class Gfx3View {
 
   setCameraMatrix(cameraMatrix: mat4): void {
     this.cameraMatrix = cameraMatrix;
-  }
-
-  getCameraViewMatrix(): mat4 {
-    return Utils.MAT4_INVERT(this.cameraMatrix);
-  }
-
-  getCameraPosition(): vec3 {
-    return [this.cameraMatrix[12], this.cameraMatrix[13], this.cameraMatrix[14]];
+    this.cacheCameraViewMatrixChanged = true;
   }
 
   getViewport(): Gfx3Viewport {
@@ -105,6 +130,7 @@ class Gfx3View {
 
   setViewport(viewport: Gfx3Viewport): void {
     this.viewport = viewport;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getProjectionMode(): ProjectionMode {
@@ -113,6 +139,7 @@ class Gfx3View {
 
   setProjectionMode(projectionMode: ProjectionMode): void {
     this.projectionMode = projectionMode;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getPerspectiveFovy(): number {
@@ -121,6 +148,7 @@ class Gfx3View {
 
   setPerspectiveFovy(perspectiveFovy: number): void {
     this.perspectiveFovy = perspectiveFovy;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getPerspectiveNear(): number {
@@ -129,6 +157,7 @@ class Gfx3View {
 
   setPerspectiveNear(perspectiveNear: number): void {
     this.perspectiveNear = perspectiveNear;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getPerspectiveFar(): number {
@@ -137,6 +166,7 @@ class Gfx3View {
 
   setPerspectiveFar(perspectiveFar: number): void {
     this.perspectiveFar = perspectiveFar;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getOrthographicSize(): number {
@@ -145,6 +175,7 @@ class Gfx3View {
 
   setOrthographicSize(orthographicSize: number): void {
     this.orthographicSize = orthographicSize;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getOrthographicDepth(): number {
@@ -153,6 +184,7 @@ class Gfx3View {
 
   setOrthographicDepth(orthographicDepth: number): void {
     this.orthographicDepth = orthographicDepth;
+    this.cacheProjectionMatrixChanged = true;
   }
 
   getBgColor(): vec4 {
@@ -160,7 +192,62 @@ class Gfx3View {
   }
 
   setBgColor(r: number, g: number, b: number, a: number): void {
-    this.bgColor = [r, g, b, a];
+    this.bgColor[0] = r;
+    this.bgColor[1] = g;
+    this.bgColor[2] = b;
+    this.bgColor[3] = a;
+  }
+
+  getScreenSize(): vec2 {
+    return this.screenSize;
+  }
+
+  setScreenSize(width: number, height: number): void {
+    this.screenSize[0] = width;
+    this.screenSize[1] = height;
+    this.cacheProjectionMatrixChanged = true;
+  }
+
+  getProjectionClipMatrix(): mat4_buf {
+    const matrix = UT.MAT4_CREATE();
+    UT.MAT4_MULTIPLY(matrix, this.getClipMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getProjectionMatrix(), matrix);
+    return matrix;
+  }
+
+  getViewProjectionClipMatrix(): mat4_buf {
+    const matrix = UT.MAT4_CREATE();
+    UT.MAT4_MULTIPLY(matrix, this.getClipMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getProjectionMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getCameraViewMatrix(), matrix);
+    return matrix;
+  }
+
+  getScreenPosition(x: number, y: number, z: number): vec2 {
+    const matrix = UT.MAT4_IDENTITY();
+    UT.MAT4_MULTIPLY(matrix, this.getClipMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getProjectionMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getCameraViewMatrix(), matrix);
+
+    const pos = UT.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
+    const viewportRealWidth = (this.screenSize[0] * this.viewport.widthFactor) / window.devicePixelRatio;
+    const viewportRealHeight = (this.screenSize[1] * this.viewport.heightFactor) / window.devicePixelRatio;
+
+    pos[0] = pos[0] / pos[3];
+    pos[1] = pos[1] / pos[3];
+    pos[0] = ((pos[0] + 1.0) * viewportRealWidth) / (2.0);
+    pos[1] = viewportRealHeight - ((pos[1] + 1.0) * viewportRealHeight) / (2.0);
+    return [pos[0], pos[1]];
+  }
+
+  getScreenNormalizedPosition(x: number, y: number, z: number): vec2 {
+    const matrix = UT.MAT4_IDENTITY();
+    UT.MAT4_MULTIPLY(matrix, this.getClipMatrix());
+    UT.MAT4_MULTIPLY(matrix, this.getProjectionMatrix());
+    UT.MAT4_MULTIPLY(matrix, this.getCameraViewMatrix());
+
+    const pos = UT.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
+    return [pos[0] / pos[3], pos[1] / pos[3]];
   }
 }
 

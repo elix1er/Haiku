@@ -1,4 +1,4 @@
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 
 class Gfx2Manager {
   canvas: HTMLCanvasElement;
@@ -12,14 +12,14 @@ class Gfx2Manager {
   constructor() {
     this.canvas = <HTMLCanvasElement>document.getElementById('CANVAS_2D')!;
     this.ctx = this.canvas.getContext('2d')!;
-    this.cameraTransform = Utils.MAT3_IDENTITY();
+    this.cameraTransform = UT.MAT3_IDENTITY();
     this.cameraScale = [1, 1];
     this.cameraRotation = 0;
     this.cameraPosition = [0, 0];
     this.bgColor = [0, 0, 0, 0];
 
     if (!this.ctx) {
-      Utils.FAIL('This browser does not support canvas');
+      UT.FAIL('This browser does not support canvas');
       throw new Error('Gfx2Manager::Gfx2Manager: Your browser not support 2D');
     }
   }
@@ -72,10 +72,6 @@ class Gfx2Manager {
 
   getHeight(): number {
     return this.canvas.clientHeight;
-  }
-
-  getCanvas(): HTMLCanvasElement {
-    return this.canvas;
   }
 
   getContext(): CanvasRenderingContext2D {
@@ -133,7 +129,10 @@ class Gfx2Manager {
   }
 
   setBgColor(r: number, g: number, b: number, a: number): void {
-    this.bgColor = [r, g, b, a];
+    this.bgColor[0] = r;
+    this.bgColor[1] = g;
+    this.bgColor[2] = b;
+    this.bgColor[3] = a;
   }
 
   getBgColor(): vec4 {

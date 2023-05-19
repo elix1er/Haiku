@@ -1,7 +1,7 @@
-import { TreePartitionNode, ITreePartitionMethod, SplitResult } from './tree_partition_node';
-import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
+import { TreePartitionNode, ITreePartitionMethod, SplitResult } from '../core/tree_partition_node';
+import { Gfx3BoundingBox } from './gfx3_bounding_box';
 
-class TreePartition3D implements ITreePartitionMethod<Gfx3BoundingBox> {
+class Gfx3TreePartition implements ITreePartitionMethod<Gfx3BoundingBox> {
   box: Gfx3BoundingBox;
   axis: 'x' | 'y' | 'z';
 
@@ -11,7 +11,7 @@ class TreePartition3D implements ITreePartitionMethod<Gfx3BoundingBox> {
   }
 
   search(node: TreePartitionNode<Gfx3BoundingBox>, target: Gfx3BoundingBox, results: Array<Gfx3BoundingBox> = []): Array<Gfx3BoundingBox> {
-    const method = node.getPartitionMethod() as TreePartition3D;
+    const method = node.getPartitionMethod() as Gfx3TreePartition;
     const nodeBox = method.box;
     if (!nodeBox.intersectBoundingBox(target)) {
       return [];
@@ -85,14 +85,14 @@ class TreePartition3D implements ITreePartitionMethod<Gfx3BoundingBox> {
       newAxis = 'x';
     }
 
-    const leftFunction = new TreePartition3D(boxes[0], newAxis);
-    const rightFunction = new TreePartition3D(boxes[1], newAxis);
+    const leftFunction = new Gfx3TreePartition(boxes[0], newAxis);
+    const rightFunction = new Gfx3TreePartition(boxes[1], newAxis);
 
     return { left, right, leftFunction, rightFunction };
   }
 }
 
-export { TreePartition3D };
+export { Gfx3TreePartition };
 
 // -------------------------------------------------------------------------------------------
 // HELPFUL
@@ -103,8 +103,8 @@ function SPLIT_VERTICAL(aabb: Gfx3BoundingBox): Array<Gfx3BoundingBox> {
   const center = aabb.getCenter();
 
   return [
-    Gfx3BoundingBox.create(aabb.min[0], aabb.min[1], aabb.min[2], size[0] / 2, size[1], size[2]),
-    Gfx3BoundingBox.create(center[0], aabb.min[1], aabb.min[2], size[0] / 2, size[1], size[2])
+    Gfx3BoundingBox.createFromCoord(aabb.min[0], aabb.min[1], aabb.min[2], size[0] * 0.5, size[1], size[2]),
+    Gfx3BoundingBox.createFromCoord(center[0], aabb.min[1], aabb.min[2], size[0] * 0.5, size[1], size[2])
   ];
 }
 
@@ -113,8 +113,8 @@ function SPLIT_HORIZONTAL(aabb: Gfx3BoundingBox): Array<Gfx3BoundingBox> {
   const center = aabb.getCenter();
 
   return [
-    Gfx3BoundingBox.create(aabb.min[0], aabb.min[1], aabb.min[2], size[0], size[1] / 2, size[2]),
-    Gfx3BoundingBox.create(aabb.min[0], center[1], aabb.min[2], size[0], size[1] / 2, size[2])
+    Gfx3BoundingBox.createFromCoord(aabb.min[0], aabb.min[1], aabb.min[2], size[0], size[1] * 0.5, size[2]),
+    Gfx3BoundingBox.createFromCoord(aabb.min[0], center[1], aabb.min[2], size[0], size[1] * 0.5, size[2])
   ];
 }
 
@@ -123,7 +123,7 @@ function SPLIT_DEPTH(aabb: Gfx3BoundingBox): Array<Gfx3BoundingBox> {
   const center = aabb.getCenter();
 
   return [
-    Gfx3BoundingBox.create(aabb.min[0], aabb.min[1], aabb.min[2], size[0], size[1], size[2] / 2),
-    Gfx3BoundingBox.create(aabb.min[0], aabb.min[1], center[2], size[0], size[1], size[2])
+    Gfx3BoundingBox.createFromCoord(aabb.min[0], aabb.min[1], aabb.min[2], size[0], size[1], size[2] * 0.5),
+    Gfx3BoundingBox.createFromCoord(aabb.min[0], aabb.min[1], center[2], size[0], size[1], size[2] * 0.5)
   ];
 }

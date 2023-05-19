@@ -1,4 +1,4 @@
-import { Utils } from '../../../lib/core/utils';
+import { UT } from '../../../lib/core/utils';
 // ---------------------------------------------------------------------------------------
 import { DuelistAbstract } from './duelist_abstract';
 import { DirectAttackAction, DrawAction, SummonAction, SetAction, ChangePositionAction, BattleAction, NextPhaseAction, ActivateAction } from './duel_actions';
@@ -76,7 +76,7 @@ class AIDuelist extends DuelistAbstract {
       }
 
       await duel.runAction(new NextPhaseAction(duel));
-      await Utils.WAIT(2000);
+      await UT.WAIT(2000);
     }
   }
 }

@@ -1,5 +1,5 @@
 import { eventManager } from '../core/event_manager';
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { Gfx3Mesh } from './gfx3_mesh';
 
 interface JAMFrame {
@@ -68,11 +68,11 @@ class Gfx3MeshJAM extends Gfx3Mesh {
         const n1 = obj['Normals'].slice((i * 3) + 3, (i * 3) + 6);
         const n2 = obj['Normals'].slice((i * 3) + 6, (i * 3) + 9);
 
-        const deltaPos1 = Utils.VEC3_SUBSTRACT(v1, v0);
-        const deltaPos2 = Utils.VEC3_SUBSTRACT(v2, v0);
+        const deltaPos1 = UT.VEC3_SUBSTRACT(v1, v0);
+        const deltaPos2 = UT.VEC3_SUBSTRACT(v2, v0);
 
-        const deltaUV1 = Utils.VEC2_SUBSTRACT(uv1, uv0);
-        const deltaUV2 = Utils.VEC2_SUBSTRACT(uv2, uv0);
+        const deltaUV1 = UT.VEC2_SUBSTRACT(uv1, uv0);
+        const deltaUV2 = UT.VEC2_SUBSTRACT(uv2, uv0);
 
         const r = 1.0 / ((deltaUV1[0] * deltaUV2[1]) - (deltaUV1[1] * deltaUV2[0]));
 

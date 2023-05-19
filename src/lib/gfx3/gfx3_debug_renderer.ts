@@ -1,5 +1,5 @@
 import { gfx3Manager, UniformGroup, MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT } from '../gfx3/gfx3_manager';
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_UNIFORM_ATTR_COUNT, SHADER_VERTEX_ATTR_COUNT } from './gfx3_debug_shader';
 
 interface Command {
@@ -43,7 +43,7 @@ class Gfx3DebugRenderer {
     this.uniformGroup = gfx3Manager.createUniformGroup(this.commands.length * SHADER_UNIFORM_ATTR_COUNT * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
 
     for (const cmd of this.commands) {
-      const mvpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentViewProjectionMatrix(), cmd.matrix);
+      const mvpcMatrix = UT.MAT4_MULTIPLY(gfx3Manager.getCurrentViewProjectionMatrix(), cmd.matrix);
       gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvpcMatrix));
       this.device.queue.writeBuffer(this.vertexBuffer, vertexBufferOffset, cmd.vertices);
 
@@ -188,7 +188,7 @@ class Gfx3DebugRenderer {
   drawSphere(matrix: mat4, radius: number = 1, step: number = 4): void {
     let vertexCount = 0;
     const vertices: Array<number> = [];
-    const points: Array<vec3> = [];
+    const points: Array<[number, number, number]> = [];
     const angleStep = (Math.PI * 0.5) / step;
 
     for (let i = -step; i <= step; i++) {

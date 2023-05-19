@@ -1,6 +1,6 @@
 import { eventManager } from '../../../lib/core/event_manager';
 import { Gfx3Camera } from '../../../lib/gfx3_camera/gfx3_camera';
-import { Utils } from '../../../lib/core/utils';
+import { UT } from '../../../lib/core/utils';
 // ---------------------------------------------------------------------------------------
 
 class BattleCamera extends Gfx3Camera {
@@ -26,22 +26,22 @@ class BattleCamera extends Gfx3Camera {
       return;
     }
 
-    if (Utils.VEC3_ISEQUAL(this.animationDestPos, this.animationFromPos)) {
+    if (UT.VEC3_ISEQUAL(this.animationDestPos, this.animationFromPos)) {
       return;
     }
 
     if (this.timeElapsed < this.animationDuration) {
       const t = this.timeElapsed / this.animationDuration;
 
-      const delta = Utils.VEC3_SUBSTRACT(this.animationDestPos, this.animationFromPos);
-      const deltaHalf = Utils.VEC3_SCALE(delta, 0.5);
-      const middlePoint = Utils.VEC3_ADD(this.animationFromPos, deltaHalf);
-      const invDeltaHalf = Utils.VEC3_CREATE(-deltaHalf[2], deltaHalf[1], deltaHalf[0]);
-      const handlePosition = Utils.VEC3_ADD(middlePoint, invDeltaHalf);      
-      const currentPos = Utils.VEC3_QUADRATIC_BEZIER(this.animationFromPos, handlePosition, this.animationDestPos, t);
+      const delta = UT.VEC3_SUBSTRACT(this.animationDestPos, this.animationFromPos);
+      const deltaHalf = UT.VEC3_SCALE(delta, 0.5);
+      const middlePoint = UT.VEC3_ADD(this.animationFromPos, deltaHalf);
+      const invDeltaHalf = UT.VEC3_CREATE(-deltaHalf[2], deltaHalf[1], deltaHalf[0]);
+      const handlePosition = UT.VEC3_ADD(middlePoint, invDeltaHalf);      
+      const currentPos = UT.VEC3_QUADRATIC_BEZIER(this.animationFromPos, handlePosition, this.animationDestPos, t);
 
-      const deltaLookAt = Utils.VEC3_SUBSTRACT(this.animationDestLookAt, this.animationFromLookAt);
-      const currentLookAt = Utils.VEC3_ADD(this.animationFromLookAt, Utils.VEC3_SCALE(deltaLookAt, t));
+      const deltaLookAt = UT.VEC3_SUBSTRACT(this.animationDestLookAt, this.animationFromLookAt);
+      const currentLookAt = UT.VEC3_ADD(this.animationFromLookAt, UT.VEC3_SCALE(deltaLookAt, t));
 
       super.setPosition(currentPos[0], currentPos[1], currentPos[2]);
       super.lookAt(currentLookAt[0], currentLookAt[1], currentLookAt[2]);
@@ -55,7 +55,7 @@ class BattleCamera extends Gfx3Camera {
   }
 
   play(animationDestPos, animationDestLookAt, animationDuration) {
-    if (Utils.VEC3_ISEQUAL(animationDestPos, this.originPos)) {
+    if (UT.VEC3_ISEQUAL(animationDestPos, this.originPos)) {
       return;
     }
 
@@ -70,7 +70,7 @@ class BattleCamera extends Gfx3Camera {
   }
 
   playBack(animationDuration = this.animationDuration) {
-    if (Utils.VEC3_ISEQUAL(this.animationFromPos, this.animationDestPos)) {
+    if (UT.VEC3_ISEQUAL(this.animationFromPos, this.animationDestPos)) {
       return;
     }
 

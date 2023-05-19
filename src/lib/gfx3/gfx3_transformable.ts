@@ -1,14 +1,18 @@
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 
 class Gfx3Transformable {
   position: vec3;
   rotation: vec3;
   scale: vec3;
+  cacheMatrix: mat4_buf;
+  cacheMatrixChanged: boolean;
 
   constructor() {
     this.position = [0.0, 0.0, 0.0];
     this.rotation = [0.0, 0.0, 0.0];
     this.scale = [1.0, 1.0, 1.0];
+    this.cacheMatrix = UT.MAT4_CREATE();
+    this.cacheMatrixChanged = true;
   }
 
   getPosition(): vec3 {
@@ -28,13 +32,17 @@ class Gfx3Transformable {
   }
 
   setPosition(x: number, y: number, z: number): void {
-    this.position = [x, y, z];
+    this.position[0] = x;
+    this.position[1] = y;
+    this.position[2] = z;
+    this.cacheMatrixChanged = true;
   }
 
   translate(x: number, y: number, z: number): void {
     this.position[0] += x;
     this.position[1] += y;
     this.position[2] += z;
+    this.cacheMatrixChanged = true;
   }
 
   getRotation(): vec3 {
@@ -54,13 +62,17 @@ class Gfx3Transformable {
   }
 
   setRotation(x: number, y: number, z: number): void {
-    this.rotation = [x, y, z];
+    this.rotation[0] = x;
+    this.rotation[1] = y;
+    this.rotation[2] = z;
+    this.cacheMatrixChanged = true;
   }
 
   rotate(x: number, y: number, z: number): void {
     this.rotation[0] += x;
     this.rotation[1] += y;
     this.rotation[2] += z;
+    this.cacheMatrixChanged = true;
   }
 
   getScale(): vec3 {
@@ -80,23 +92,28 @@ class Gfx3Transformable {
   }
 
   setScale(x: number, y: number, z: number): void {
-    this.scale = [x, y, z];
+    this.scale[0] = x;
+    this.scale[1] = y;
+    this.scale[2] = z;
+    this.cacheMatrixChanged = true;
   }
 
   zoom(x: number, y: number, z: number): void {
     this.scale[0] += x;
     this.scale[1] += y;
     this.scale[2] += z;
+    this.cacheMatrixChanged = true;
   }
 
-  getTransformMatrix(): mat4 {
-    let matrix = Utils.MAT4_IDENTITY();
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_TRANSLATE(this.position[0], this.position[1], this.position[2]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_Y(this.rotation[1]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_X(this.rotation[0])); // y -> x -> z
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_Z(this.rotation[2]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_SCALE(this.scale[0], this.scale[1], this.scale[2]));
-    return matrix;
+  getTransformMatrix(): mat4_buf {
+    if (!this.cacheMatrixChanged) {
+      return this.cacheMatrix;
+    }
+
+    UT.MAT4_IDENTITY(this.cacheMatrix);
+    UT.MAT4_TRANSFORM(this.position, this.rotation, this.scale, this.cacheMatrix);
+    this.cacheMatrixChanged = false;
+    return this.cacheMatrix;
   }
 
   getLocalAxies(): Array<vec3> {
@@ -104,7 +121,7 @@ class Gfx3Transformable {
     return [
       [matrix[0], matrix[1], matrix[2]],
       [matrix[4], matrix[5], matrix[6]],
-      [matrix[8], matrix[9], matrix[10]]      
+      [matrix[8], matrix[9], matrix[10]]
     ];
   }
 }

@@ -26,7 +26,8 @@ class Gfx2Drawable {
   }
 
   setPosition(x: number, y: number): void {
-    this.position = [x, y];
+    this.position[0] = x;
+    this.position[1] = y;
   }
 
   getRotation(): number {
@@ -50,7 +51,8 @@ class Gfx2Drawable {
   }
 
   setOffset(x: number, y: number): void {
-    this.offset = [x, y];
+    this.offset[0] = x;
+    this.offset[1] = y;
   }
 
   isVisible(): boolean {

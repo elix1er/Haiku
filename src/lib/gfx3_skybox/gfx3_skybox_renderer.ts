@@ -1,5 +1,5 @@
 import { gfx3Manager, UniformGroup, MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT } from '../gfx3/gfx3_manager';
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { Gfx3Skybox } from './gfx3_skybox';
 import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_UNIFORM_ATTR_COUNT } from './gfx3_skybox_shader';
 
@@ -29,8 +29,8 @@ class Gfx3SkyboxRenderer {
     const viewMatrix = currentView.getCameraViewMatrix();
     viewMatrix[12] = viewMatrix[13] = viewMatrix[14] = 0;
 
-    const vpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), viewMatrix);
-    gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(Utils.MAT4_INVERT(vpcMatrix)));
+    const vpcMatrix = UT.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), viewMatrix);
+    gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(UT.MAT4_INVERT(vpcMatrix)));
 
     const cubemap = this.skybox.getCubemap();
     const cubemapBinding = gfx3Manager.createTextureBinding(this.pipeline, cubemap.gpuSampler, cubemap.gpuTexture, 1, { dimension: 'cube' });

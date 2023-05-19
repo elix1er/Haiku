@@ -5,10 +5,14 @@ import { gfx3SpriteRenderer } from './lib/gfx3_sprite/gfx3_sprite_renderer';
 import { gfx3SkyboxRenderer } from './lib/gfx3_skybox/gfx3_skybox_renderer';
 import { gfx2Manager } from './lib/gfx2/gfx2_manager';
 import { screenManager } from './lib/screen/screen_manager';
+import { MainScreen } from './samples/perf/main_screen';
 import { uiManager } from './lib/ui/ui_manager';
+/*
+
 // ---------------------------------------------------------------------------------------
 import { BootScreen } from './samples/boot/boot_screen';
 // ---------------------------------------------------------------------------------------
+*/
 
 class GameManager {
   constructor() {
@@ -28,16 +32,16 @@ class GameManager {
     screenManager.update(ts);
 
     gfx3Manager.beginDrawing(0);
-    gfx2Manager.beginDrawing();
+    // gfx2Manager.beginDrawing();
     screenManager.draw();
-    gfx2Manager.endDrawing();
+    // gfx2Manager.endDrawing();
     gfx3Manager.endDrawing();
 
     gfx3Manager.beginRender();
-    gfx3SkyboxRenderer.render();
-    gfx3DebugRenderer.render();
+    // gfx3SkyboxRenderer.render();
+    // gfx3DebugRenderer.render();
     gfx3MeshRenderer.render();
-    gfx3SpriteRenderer.render();
+    // gfx3SpriteRenderer.render();
     gfx3Manager.endRender();
 
     requestAnimationFrame(timeStamp => this.run(timeStamp));
@@ -46,4 +50,4 @@ class GameManager {
 
 export const gameManager = new GameManager();
 gameManager.startup();
-screenManager.requestSetScreen(new BootScreen());
+screenManager.requestSetScreen(new MainScreen());

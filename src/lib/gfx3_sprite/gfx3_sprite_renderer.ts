@@ -1,5 +1,5 @@
 import { gfx3Manager, UniformGroup, MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT } from '../gfx3/gfx3_manager';
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { Gfx3Sprite } from './gfx3_sprite';
 import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_UNIFORM_ATTR_COUNT } from './gfx3_sprite_shader';
 
@@ -25,14 +25,14 @@ class Gfx3SpriteRenderer {
     for (const sprite of this.sprites) {
       if (sprite.getBillboardMode()) {
         const viewMatrix = currentView.getCameraViewMatrix();
-        let mvMatrix = Utils.MAT4_MULTIPLY(viewMatrix, sprite.getTransformMatrix());
-        mvMatrix = Utils.MAT4_MULTIPLY(mvMatrix, currentView.getCameraMatrix());
-        mvMatrix = Utils.MAT4_MULTIPLY(mvMatrix, Utils.MAT4_TRANSLATE(viewMatrix[12], viewMatrix[13], viewMatrix[14]));
-        const mvpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), mvMatrix);
+        let mvMatrix = UT.MAT4_MULTIPLY(viewMatrix, sprite.getTransformMatrix());
+        mvMatrix = UT.MAT4_MULTIPLY(mvMatrix, currentView.getCameraMatrix());
+        mvMatrix = UT.MAT4_MULTIPLY(mvMatrix, UT.MAT4_TRANSLATE(viewMatrix[12], viewMatrix[13], viewMatrix[14]));
+        const mvpcMatrix = UT.MAT4_MULTIPLY(gfx3Manager.getCurrentProjectionMatrix(), mvMatrix);
         gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvpcMatrix));
       }
       else {
-        const mvpcMatrix = Utils.MAT4_MULTIPLY(gfx3Manager.getCurrentViewProjectionMatrix(), sprite.getTransformMatrix());
+        const mvpcMatrix = UT.MAT4_MULTIPLY(gfx3Manager.getCurrentViewProjectionMatrix(), sprite.getTransformMatrix());
         gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvpcMatrix));
       }
 

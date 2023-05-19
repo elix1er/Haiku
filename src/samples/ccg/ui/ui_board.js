@@ -1,6 +1,6 @@
 import { eventManager } from '../../../lib/core/event_manager';
 import { UIWidget } from '../../../lib/ui/ui_widget';
-import { Utils } from '../../../lib/core/utils';
+import { UT } from '../../../lib/core/utils';
 // ---------------------------------------------------------------------------------------
 import { LOCATION } from '../core/enums';
 import { UICardSlot } from './ui_card_slot';
@@ -293,7 +293,7 @@ class UIBoard extends UIWidget {
       bDelta[0] = Math.sign(bDelta[0]) == Math.sign(mx) || mx == 0 ? Math.abs(bDelta[0]) : this.node.offsetWidth - Math.abs(bDelta[0]);
       bDelta[1] = Math.sign(bDelta[1]) == Math.sign(my) || my == 0 ? Math.abs(bDelta[1]) : this.node.offsetHeight - Math.abs(bDelta[1]);
 
-      return Utils.VEC2_LENGTH(aDelta) - Utils.VEC2_LENGTH(bDelta);
+      return UT.VEC2_LENGTH(aDelta) - UT.VEC2_LENGTH(bDelta);
     });
 
     if (this.focusedSlot) {

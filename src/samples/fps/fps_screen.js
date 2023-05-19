@@ -1,7 +1,7 @@
 import { eventManager } from '../../lib/core/event_manager';
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
 import { inputManager } from '../../lib/input/input_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3MeshNav } from '../../lib/gfx3_mesh_nav/gfx3_mesh_nav';
@@ -11,10 +11,10 @@ import { Camera } from './camera';
 // ---------------------------------------------------------------------------------------
 
 const PLAYER_WIDTH = 1;
-const PLAYER_HEIGHT = 1.3;
+const PLAYER_HEIGHT = 2;
 const PLAYER_SIZE = [PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_WIDTH];
 
-const SPEED_MAX = 3;
+const SPEED_MAX = 2;
 const ACCEL_RATE = 1;
 
 const GRAVITY_RATE = 1;
@@ -79,7 +79,7 @@ class FPSScreen extends Screen {
 
     if (moving) {
       this.cameraSpeed = this.cameraSpeed < SPEED_MAX ? this.cameraSpeed + ACCEL_RATE : SPEED_MAX;
-      const ndir = Utils.VEC2_NORMALIZE(dir);
+      const ndir = UT.VEC2_NORMALIZE(dir);
       const mx = ndir[0] * this.cameraSpeed * mts;
       const mz = ndir[1] * this.cameraSpeed * mts;      
       this.camera.move(mx, my, mz);

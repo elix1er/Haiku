@@ -2,7 +2,7 @@ import { eventManager } from '../../lib/core/event_manager';
 import { uiManager } from '../../lib/ui/ui_manager';
 import { inputManager } from '../../lib/input/input_manager';
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3JWM } from '../../lib/gfx3_jwm/gfx3_jwm';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -163,7 +163,7 @@ class Room {
     }
 
     for (let trigger of this.triggers) {
-      if (Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition()) <= this.controller.getRadius() + trigger.getRadius()) {
+      if (UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition()) <= this.controller.getRadius() + trigger.getRadius()) {
         if (trigger.getOnActionBlockId()) {
           this.scriptMachine.jump(trigger.getOnActionBlockId());
           return;
@@ -172,7 +172,7 @@ class Room {
     }
 
     for (let model of this.models) {
-      if (Utils.VEC3_DISTANCE(model.getPosition(), this.controller.getHandPosition()) <= model.getRadius()) {
+      if (UT.VEC3_DISTANCE(model.getPosition(), this.controller.getHandPosition()) <= model.getRadius()) {
         if (model.getOnActionBlockId()) {
           this.scriptMachine.jump(model.getOnActionBlockId());
           return;
@@ -183,18 +183,18 @@ class Room {
 
   handleControllerMoved({ moveX, moveZ }) {
     for (let other of this.models) {
-      if (Utils.VEC3_DISTANCE(other.getPosition(), this.controller.getNextPosition()) <= this.controller.getRadius() + other.getRadius()) {
+      if (UT.VEC3_DISTANCE(other.getPosition(), this.controller.getNextPosition()) <= this.controller.getRadius() + other.getRadius()) {
         this.controller.setVelocity(0, 0, 0);
         return;
       }
     }
 
     let newPosition = this.walkmesh.moveWalker('CONTROLLER', moveX, moveZ);
-    const move = Utils.VEC3_SUBSTRACT(newPosition, this.controller.getPosition())
+    const move = UT.VEC3_SUBSTRACT(newPosition, this.controller.getPosition())
     this.controller.setVelocity(move[0], move[1], move[2]);
 
     for (let trigger of this.triggers) {
-      let distance = Utils.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
+      let distance = UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
       let distanceMin = this.controller.getRadius() + trigger.getRadius();
 
       if (trigger.getOnEnterBlockId() && !trigger.isHovered() && distance < distanceMin) {

@@ -1,6 +1,6 @@
 import { gfx3Manager } from '../gfx3/gfx3_manager';
 import { gfx3SpriteRenderer } from './gfx3_sprite_renderer';
-import { Utils } from '../core/utils.js';
+import { UT } from '../core/utils.js';
 import { Gfx3Drawable } from '../gfx3/gfx3_drawable';
 import { Gfx3Texture } from '../gfx3/gfx3_texture';
 import { SHADER_VERTEX_ATTR_COUNT } from './gfx3_sprite_shader';
@@ -24,14 +24,14 @@ class Gfx3Sprite extends Gfx3Drawable {
   }
 
   getTransformMatrix() {
-    let matrix = Utils.MAT4_IDENTITY();
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_TRANSLATE(this.position[0], this.position[1], this.position[2]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_Y(this.rotation[1]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_X(this.rotation[0])); // y -> x -> z
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_ROTATE_Z(this.rotation[2]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_SCALE(this.scale[0], this.scale[1], this.scale[2]));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_SCALE(1 / this.pixelsPerUnit, 1 / this.pixelsPerUnit, 1 / this.pixelsPerUnit));
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_TRANSLATE(-this.offset[0], -this.offset[1], 0));
+    let matrix = UT.MAT4_IDENTITY();
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_TRANSLATE(this.position[0], this.position[1], this.position[2]));
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_ROTATE_Y(this.rotation[1]));
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_ROTATE_X(this.rotation[0])); // y -> x -> z
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_ROTATE_Z(this.rotation[2]));
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_SCALE(this.scale[0], this.scale[1], this.scale[2]));
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_SCALE(1 / this.pixelsPerUnit, 1 / this.pixelsPerUnit, 1 / this.pixelsPerUnit));
+    matrix = UT.MAT4_MULTIPLY(matrix, UT.MAT4_TRANSLATE(-this.offset[0], -this.offset[1], 0));
     return matrix;
   }
 

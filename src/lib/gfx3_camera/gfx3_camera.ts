@@ -1,5 +1,5 @@
 import { gfx3Manager } from '../gfx3/gfx3_manager';
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
 import { Gfx3View } from '../gfx3/gfx3_view';
 import { Gfx3Transformable } from '../gfx3/gfx3_transformable';
 
@@ -12,38 +12,32 @@ class Gfx3Camera extends Gfx3Transformable {
   }
 
   setPosition(x: number, y: number, z: number): void {
-    this.position = [x, y, z];
+    super.setPosition(x, y, z);
     this.view.setCameraMatrix(this.getTransformMatrix());
   }
 
   translate(x: number, y: number, z: number): void {
-    this.position[0] += x;
-    this.position[1] += y;
-    this.position[2] += z;
+    super.translate(x, y, z);
     this.view.setCameraMatrix(this.getTransformMatrix());
   }
 
   setRotation(x: number, y: number, z: number): void {
-    this.rotation = [x, y, z];
+    super.setRotation(x, y, z);
     this.view.setCameraMatrix(this.getTransformMatrix());
   }
 
   rotate(x: number, y: number, z: number): void {
-    this.rotation[0] += x;
-    this.rotation[1] += y;
-    this.rotation[2] += z;
+    super.rotate(x, y, z);
     this.view.setCameraMatrix(this.getTransformMatrix());
   }
 
   setScale(x: number, y: number, z: number): void {
-    this.scale = [x, y, z];
+    super.setScale(x, y, z);
     this.view.setCameraMatrix(this.getTransformMatrix());
   }
 
   zoom(x: number, y: number, z: number): void {
-    this.scale[0] += x;
-    this.scale[1] += y;
-    this.scale[2] += z;
+    super.zoom(x, y, z);
     this.view.setCameraMatrix(this.getTransformMatrix());
   }
 
@@ -52,8 +46,9 @@ class Gfx3Camera extends Gfx3Transformable {
   }
 
   lookAt(x: number, y: number, z:number): void {
-    let matrix = Utils.MAT4_LOOKAT(this.position, [x, y, z], [0, 1, 0]);
-    matrix = Utils.MAT4_MULTIPLY(matrix, Utils.MAT4_SCALE(this.scale[0], this.scale[1], this.scale[2]));
+    const matrix = this.view.getCameraMatrix();
+    UT.MAT4_LOOKAT(this.position, UT.VEC3_CREATE(x, y, z), UT.VEC3_CREATE(0, 1, 0), matrix);
+    UT.MAT4_MULTIPLY(matrix, UT.MAT4_SCALE(this.scale[0], this.scale[1], this.scale[2]), matrix);
     this.view.setCameraMatrix(matrix);
   }
 
@@ -64,9 +59,9 @@ class Gfx3Camera extends Gfx3Transformable {
   getLocalAxies(): Array<vec3> {
     const matrix = this.view.getCameraMatrix();
     return [
-      [matrix[0], matrix[1], matrix[2]],
-      [matrix[4], matrix[5], matrix[6]],
-      [matrix[8], matrix[9], matrix[10]]      
+      UT.VEC3_CREATE(matrix[0], matrix[1], matrix[2]),
+      UT.VEC3_CREATE(matrix[4], matrix[5], matrix[6]),
+      UT.VEC3_CREATE(matrix[8], matrix[9], matrix[10])
     ];
   }
 }

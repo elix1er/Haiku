@@ -1,5 +1,5 @@
 import { eventManager } from '../../../lib/core/event_manager';
-import { Utils } from '../../../lib/core/utils';
+import { UT } from '../../../lib/core/utils';
 import { COLOR, PIECE_TYPE } from './enums';
 import { Queen } from './piece';
 import { Board } from './board';
@@ -85,11 +85,11 @@ class Game {
     tileFrom.setPiece(null);
     tileTo.setPiece(piece);
 
-    let move = pieceMoves.find(m => m.hasVector(Utils.VEC2_SUBSTRACT(coordTo, coordFrom)));
+    let move = pieceMoves.find(m => m.hasVector(UT.VEC2_SUBSTRACT(coordTo, coordFrom)));
 
     for (let vector of move.getPath()) {
-      let coord = Utils.VEC2_ADD(coordFrom, vector);
-      if (Utils.VEC2_ISEQUAL(coord, coordTo)) {
+      let coord = UT.VEC2_ADD(coordFrom, vector);
+      if (UT.VEC2_ISEQUAL(coord, coordTo)) {
         break;
       }
 

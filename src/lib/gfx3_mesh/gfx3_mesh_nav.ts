@@ -1,10 +1,9 @@
-import { Utils } from '../core/utils';
+import { UT } from '../core/utils';
+import { TreePartitionNode } from '../core/tree_partition_node';
 import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
+import { Gfx3TreePartition } from '../gfx3/gfx3_tree_partition';
 import { Gfx3MeshJSM } from '../gfx3_mesh/gfx3_mesh_jsm';
 import { SHADER_VERTEX_ATTR_COUNT } from '../gfx3_mesh/gfx3_mesh_shader';
-import { Gfx3Ray } from '../gfx3_ray/gfx3_ray';
-import { TreePartitionNode } from '../tree/tree_partition_node';
-import { TreePartition3D } from '../tree/tree_partition_3d';
 
 const MOVE_MAX_RECURSIVE_CALL = 2;
 
@@ -41,8 +40,8 @@ class Frag extends Gfx3BoundingBox {
     this.c[1] = vertices[(2 * SHADER_VERTEX_ATTR_COUNT) + 1];
     this.c[2] = vertices[(2 * SHADER_VERTEX_ATTR_COUNT) + 2];
 
-    this.n = Utils.VEC3_TRIANGLE_NORMAL(this.a, this.b, this.c);
-    this.t = Utils.VEC3_CROSS([0, 1, 0], this.n);
+    this.n = UT.VEC3_TRIANGLE_NORMAL(this.a, this.b, this.c);
+    this.t = UT.VEC3_CROSS([0, 1, 0], this.n);
     super.fromVertices([...this.a, ...this.b, ...this.c], 3);
   }
 }
@@ -53,13 +52,13 @@ class Gfx3MeshNav {
   lift: number;
 
   constructor() {
-    this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new TreePartition3D(new Gfx3BoundingBox([0, 0, 0], [0, 0, 0]), 'x'));
+    this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new Gfx3TreePartition(new Gfx3BoundingBox([0, 0, 0], [0, 0, 0]), 'x'));
     this.frags = [];
     this.lift = 0.2;
   }
 
   loadFromJSM(jsm: Gfx3MeshJSM): void {
-    this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new TreePartition3D(jsm.getBoundingBox(), 'x'));
+    this.btree = new TreePartitionNode<Gfx3BoundingBox>(20, 0, 10, new Gfx3TreePartition(jsm.getBoundingBox(), 'x'));
     this.frags = [];
 
     for (let i = 0; i < jsm.getVertexCount(); i += 3) {
@@ -71,7 +70,7 @@ class Gfx3MeshNav {
   }
 
   moveWalker(center: vec3, size: vec3, move: vec3): NavInfo {
-    const aabb = Gfx3BoundingBox.create(center, size);
+    const aabb = Gfx3BoundingBox.createFromCenter(center[0], center[1], center[2], size[0], size[1], size[2]);
     const res: NavInfo = {
       move: [move[0], move[1], move[2]],
       collideFloor: false,
@@ -161,10 +160,10 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, i: number = 0): vec2 
 
   for (const frag of frags) {
     const outIntersect: vec3 = [0, 0, 0];
-    if (Gfx3Ray.intersectPlan(point, [move[0], 0, move[1]], frag.a, frag.b, frag.c, frag.n, true, outIntersect)) {
-      const pen = Utils.VEC3_SUBSTRACT(outIntersect, point);
-      const penLength = Utils.VEC3_LENGTH(pen);
-      if (penLength <= Utils.VEC2_LENGTH(move) + 0.001 && penLength < minFragLength) {
+    if (UT.RAY_PLAN(point, [move[0], 0, move[1]], frag.a, frag.b, frag.c, frag.n, true, outIntersect)) {
+      const pen = UT.VEC3_SUBSTRACT(outIntersect, point);
+      const penLength = UT.VEC3_LENGTH(pen);
+      if (penLength <= UT.VEC2_LENGTH(move) + 0.001 && penLength < minFragLength) {
         minFragLength = penLength;
         minFrag = frag;
       }
@@ -180,14 +179,14 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, i: number = 0): vec2 
 }
 
 function GET_MOVE_PROJECTION(frag: Frag, move: vec2): vec2 {
-  const newMove = Utils.VEC2_PROJECTION_COS([move[0], move[1]], [frag.t[0], frag.t[2]]);
+  const newMove = UT.VEC2_PROJECTION_COS([move[0], move[1]], [frag.t[0], frag.t[2]]);
   return newMove;
 }
 
 function GET_ELEVATION(frags: Array<Frag>, center: vec3): number {
   for (const frag of frags) {
     const outIntersect: vec3 = [0, 0, 0];
-    if (Gfx3Ray.intersectTriangle(center, [0, -1, 0], frag.a, frag.b, frag.c, true, outIntersect)) {
+    if (UT.RAY_TRIANGLE(center, [0, -1, 0], frag.a, frag.b, frag.c, true, outIntersect)) {
       return outIntersect[1];
     }
   }

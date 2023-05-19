@@ -1,7 +1,7 @@
 import { inputManager } from '../../lib/input/input_manager';
 import { eventManager } from '../../lib/core/event_manager';
 import { gfx2Manager } from '../../lib/gfx2/gfx2_manager';
-import { Utils } from '../../lib/core/utils';
+import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx2Map } from '../../lib/gfx2_map/gfx2_map';
 import { Gfx2MapLayer } from '../../lib/gfx2_map/gfx2_map_layer';
@@ -79,8 +79,8 @@ class TilemapScreen extends Screen {
     let cameraMaxY = this.map.getHeight() - gfx2Manager.getHeight() * 0.5;
 
     gfx2Manager.setCameraPosition(
-      Utils.CLAMP(this.controller.getPositionX(), cameraMinX, cameraMaxX),
-      Utils.CLAMP(this.controller.getPositionY(), cameraMinY, cameraMaxY)
+      UT.CLAMP(this.controller.getPositionX(), cameraMinX, cameraMaxX),
+      UT.CLAMP(this.controller.getPositionY(), cameraMinY, cameraMaxY)
     );
 
     this.layerBackground.update(ts);

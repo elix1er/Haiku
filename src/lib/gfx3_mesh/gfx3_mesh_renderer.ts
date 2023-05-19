@@ -164,7 +164,7 @@ class Gfx3MeshRenderer {
     this.dirLight[0] = direction[0];
     this.dirLight[1] = direction[1];
     this.dirLight[2] = direction[2];
-    this.dirLight[0] = 1;
+    this.dirLight[3] = 1;
   }
 
   getDefaultTexture(): Gfx3Texture {

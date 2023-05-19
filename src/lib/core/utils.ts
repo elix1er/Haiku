@@ -253,7 +253,7 @@ class UT {
     return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
   }
 
-  static VEC3_CROSS(a: vec3, b: vec3, out: vec3 = [0, 0, 0]): vec3 {
+  static VEC3_CROSS(a: vec3, b: vec3|vec4, out: vec3 = [0, 0, 0]): vec3 {
     out[0] = (a[1] * b[2]) - (a[2] * b[1]);
     out[1] = (a[2] * b[0]) - (a[0] * b[2]);
     out[2] = (a[0] * b[1]) - (a[1] * b[0]);
@@ -415,6 +415,31 @@ class UT {
     v[1] = y;
     v[2] = z;
     v[3] = w;
+  }
+
+  
+  static VEC4_ADD3(a: vec4, b: vec4, out: vec4 = [0, 0, 0, 1]): vec4 {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3];
+    return out;
+  }
+  
+  static VEC4_LENGTH3(a: vec4): number {
+    return Math.sqrt((a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]));
+  }
+
+  static VEC4_NORMALIZE3(a: vec4, out: vec4 = [0, 0, 0, 1]): vec4 {
+    const len = UT.VEC4_LENGTH3(a);
+    if (len < 0) 
+      return out;
+
+    out[0]= a[0] / len;
+    out[1]= a[1] / len;
+    out[2]= a[2] / len;
+    out[3]= a[3];
+    return out;
   }
 
   /**************************************************************************/

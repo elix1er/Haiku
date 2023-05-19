@@ -96,13 +96,15 @@ class MainScreen extends Screen {
   }
 
   update(ts) {
-    this.obj.mat.specular[0] = (Math.sin(this.colFac) + 1.0) * 0.5;
-    this.obj.mat.specular[1] = (Math.cos(this.colFac) + 1.0) * 0.5;
-    this.obj.mat.specular[2] = 0;
+    this.obj.material.specular[0] = (Math.sin(this.colFac) + 1.0) * 0.5;
+    this.obj.material.specular[1] = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.material.specular[2] = 0;
 
-    this.obj.mat.diffuse[0] = 0;
-    this.obj.mat.diffuse[1] = (Math.sin(this.colFac) + 1.0) * 0.5;
-    this.obj.mat.diffuse[2] = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.material.diffuse[0] = 0;
+    this.obj.material.diffuse[1] = (Math.sin(this.colFac) + 1.0) * 0.5;
+    this.obj.material.diffuse[2] = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.material.lightning = true;
+    this.obj.material.changed = true;
 
     const r = Math.PI * 2 * 4 / this.transformations.length;
     let n = 0;

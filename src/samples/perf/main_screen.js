@@ -12,8 +12,8 @@ import { Gfx3Mesh } from '../../lib/gfx3_mesh/gfx3_mesh';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
 // ---------------------------------------------------------------------------------------
 
-const GRID_WIDTH = 10;
-const GRID_HEIGHT = 10;
+const GRID_WIDTH = 100;
+const GRID_HEIGHT = 100;
 const GRID_SPACE = 5;
 
 class Transform {
@@ -137,8 +137,8 @@ class MainScreen extends Screen {
 
     // document.getElementById('mode').innerHTML = this.mode;
     // document.getElementById('bind1').innerHTML = gfx3MeshRenderer.binds;
-    // document.getElementById('time').innerHTML = parseInt(gfx3Manager.lastRenderTime);
-    // document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.lastRenderTime)).toFixed(2);
+     document.getElementById('time').innerHTML = parseInt(gfx3Manager.lastRenderTime );
+     document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.lastRenderTime)).toFixed(2);
   }
 
   handleKeyUp(e) {

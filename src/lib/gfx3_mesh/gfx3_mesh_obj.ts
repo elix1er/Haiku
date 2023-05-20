@@ -5,6 +5,14 @@ import { Gfx3Mesh } from './gfx3_mesh';
 import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
 
 class Polygon {
+  n: number;
+  vtx: Array<vec3>;
+  uvs: Array<vec2>;
+  ns: Array<vec3>;
+  nIdxs: Array<number>;
+  ts: Array<vec3 | null>;
+  bs: Array<vec3 | null>;
+
   constructor(n: number) {
     this.n = n;
     this.vtx = Array<vec3>(n);
@@ -18,21 +26,13 @@ class Polygon {
       this.ts[i] = null;
       this.bs[i] = null;
     }
-
   }
-
-  n: number;
-  vtx: Array<vec3>;
-  uvs: Array<vec2>;
-  ns: Array<vec3>;
-  nIdxs: Array<number>;
-  ts: Array<vec3 | null>;
-  bs: Array<vec3 | null>;
 }
 
 class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
-  constructor() {
+  materials: Map<string, Gfx3Material>;
 
+  constructor() {
     super();
     this.materials = new Map<string, Gfx3Material>();
   }
@@ -494,19 +494,6 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     }
 
   }
-
-  dupe(ms: Array<mat4>): Gfx3MeshObj {
-    const ret = new Gfx3MeshObj();
-
-    for (let [n, o] of this) { ret.set(n, o.dupe(ms)); }
-
-    return ret;
-
-  }
-
-
-  materials: Map<string, Gfx3Material>;
-
 }
 
 export { Gfx3MeshObj };

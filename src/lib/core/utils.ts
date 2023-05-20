@@ -228,6 +228,37 @@ class UT {
     v[2] = z;
   }
 
+  static VEC3_LERP(v1:vec3,v2:vec3, n:number):vec3
+  {
+    const d = UT.VEC3_SUBSTRACT(v2, v1);
+    return [v1[0]+ d[0] * n, v1[1]+ d[1] * n, v1[2]+ d[2] * n];
+  }
+  
+  static VEC3_HSL2RGB(h: number, s: number, l: number, out:vec3 = [0,0,0]): vec3 {
+    var r, g, b;
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p:number, q:number, t:number){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    out[0] = Math.round(r);
+    out[1] = Math.round(g );
+    out[2] = Math.round(b );
+    return out;
+  };
+
   static VEC3_DISTANCE(a: vec3, b: vec3): number {
     const x = b[0] - a[0];
     const y = b[1] - a[1];

@@ -41,9 +41,7 @@ class Gfx3MeshRenderer {
     this.worldBuffer.allocate(1);
 
     this.meshBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(1));
-    this.meshBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
-    this.meshBuffer.addDatasetInput(1, UT.MAT4_SIZE, 'NORM_MATRIX');
-    this.meshBuffer.addDatasetInput(2, UT.MAT4_SIZE, 'M_MATRIX');
+    this.meshBuffer.addDatasetInput(0, UT.MAT4_SIZE * 3, 'MODEL_MATRIX');
     this.meshBuffer.allocate(1);
 
     this.pointLight0 = UT.VEC4_CREATE();
@@ -73,30 +71,34 @@ class Gfx3MeshRenderer {
     passEncoder.setBindGroup(0, this.worldBuffer.getBindGroup(0));
 
     const vpcMatrix = currentView.getViewProjectionClipMatrix();
-    const mvpcMatrix = UT.MAT4_CREATE();
-    const normMatrix = UT.MAT4_CREATE();
 
     if (this.meshBuffer.getSize() < this.meshCommands.length) {
       this.meshBuffer.allocate(this.meshCommands.length);
     }
+
+    const totalMatrix = new Float32Array(16 * 3);
 
     this.meshBuffer.beginWrite();
 
     for (let i = 0; i < this.meshCommands.length; i++) {
       const command = this.meshCommands[i];
       const mMatrix = command.matrix ? command.matrix : command.mesh.getTransformMatrix();
-      normMatrix[0] = mMatrix[0]; normMatrix[1] = mMatrix[1]; normMatrix[2] = mMatrix[2];
-      normMatrix[4] = mMatrix[4]; normMatrix[5] = mMatrix[5]; normMatrix[6] = mMatrix[6];
-      normMatrix[8] = mMatrix[8]; normMatrix[9] = mMatrix[9]; normMatrix[10] = mMatrix[10];
-      UT.MAT4_MULTIPLY(vpcMatrix, mMatrix, mvpcMatrix);
+      totalMatrix[32+0]=mMatrix[0];totalMatrix[32+1]=mMatrix[1];totalMatrix[32+2]=mMatrix[2];
+      totalMatrix[32+4]=mMatrix[4];totalMatrix[32+5]=mMatrix[5];totalMatrix[32+6]=mMatrix[6];
+      totalMatrix[32+8]=mMatrix[8];totalMatrix[32+9]=mMatrix[9];totalMatrix[32+10]=mMatrix[10];
+      UT.MAT4_MULTIPLY(vpcMatrix, mMatrix, totalMatrix);
+      for(let n=0;n<16;n++){ totalMatrix[n + 16] = mMatrix[n]; }
 
-      this.meshBuffer.write(0, mvpcMatrix);
-      this.meshBuffer.write(1, normMatrix);
-      this.meshBuffer.write(2, mMatrix);
+      this.meshBuffer.write(0, totalMatrix);
+
       passEncoder.setBindGroup(1, this.meshBuffer.getBindGroup(i));
 
       const material = command.mesh.getMaterial();
       const materialBuffer = material.getBuffer();
+
+      if(material.changed)
+        material.draw();
+
       passEncoder.setBindGroup(2, materialBuffer.getBindGroup(0));
 
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), command.mesh.getVertexSubBufferOffset(), command.mesh.getVertexSubBufferSize());
@@ -116,10 +118,10 @@ class Gfx3MeshRenderer {
     buffer.addDatasetInput(0, UT.VEC4_SIZE, 'MAT_AMBIANT_COLOR');
     buffer.addDatasetInput(1, UT.VEC4_SIZE, 'MAT_DIFFUSE_COLOR');
     buffer.addDatasetInput(2, UT.VEC4_SIZE, 'MAT_SPECULAR');
-    buffer.addDatasetInput(3, UT.VEC5_SIZE, 'MAT_PARAMS');
+    buffer.addDatasetInput(3, UT.VEC6_SIZE, 'MAT_PARAMS');
     buffer.addSamplerInput(4, this.defaultTexture.gpuSampler);
     buffer.addTextureInput(5, this.defaultTexture.gpuTexture);
-    buffer.addSamplerInput(6, this.defaultTexture.gpuSampler);
+    buffer.addTextureInput(6, this.defaultTexture.gpuTexture);
     buffer.addTextureInput(7, this.defaultTexture.gpuTexture);
     buffer.addSamplerInput(8, this.defaultEnvMap.gpuSampler);
     buffer.addTextureInput(9, this.defaultEnvMap.gpuTexture, { dimension: 'cube' });
@@ -160,7 +162,7 @@ class Gfx3MeshRenderer {
     this.dirLight[0] = direction[0];
     this.dirLight[1] = direction[1];
     this.dirLight[2] = direction[2];
-    this.dirLight[0] = 1;
+    this.dirLight[3] = 1;
   }
 
   getDefaultTexture(): Gfx3Texture {

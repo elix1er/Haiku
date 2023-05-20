@@ -17,6 +17,7 @@ class UT {
   static VEC3_DOWN: vec3 = [0, -1, 0];
   static VEC4_SIZE = 16;
   static VEC5_SIZE = 20;
+  static VEC6_SIZE = 24;
   static MAT3_SIZE = 36;
 
   static FAIL(message: string) {
@@ -227,6 +228,37 @@ class UT {
     v[2] = z;
   }
 
+  static VEC3_LERP(v1:vec3,v2:vec3, n:number):vec3
+  {
+    const d = UT.VEC3_SUBSTRACT(v2, v1);
+    return [v1[0]+ d[0] * n, v1[1]+ d[1] * n, v1[2]+ d[2] * n];
+  }
+  
+  static VEC3_HSL2RGB(h: number, s: number, l: number, out:vec3 = [0,0,0]): vec3 {
+    var r, g, b;
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p:number, q:number, t:number){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    out[0] = Math.round(r);
+    out[1] = Math.round(g );
+    out[2] = Math.round(b );
+    return out;
+  };
+
   static VEC3_DISTANCE(a: vec3, b: vec3): number {
     const x = b[0] - a[0];
     const y = b[1] - a[1];
@@ -253,7 +285,7 @@ class UT {
     return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
   }
 
-  static VEC3_CROSS(a: vec3, b: vec3, out: vec3 = [0, 0, 0]): vec3 {
+  static VEC3_CROSS(a: vec3, b: vec3|vec4, out: vec3 = [0, 0, 0]): vec3 {
     out[0] = (a[1] * b[2]) - (a[2] * b[1]);
     out[1] = (a[2] * b[0]) - (a[0] * b[2]);
     out[2] = (a[0] * b[1]) - (a[1] * b[0]);
@@ -417,6 +449,31 @@ class UT {
     v[3] = w;
   }
 
+  
+  static VEC4_ADD3(a: vec4, b: vec4, out: vec4 = [0, 0, 0, 1]): vec4 {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3];
+    return out;
+  }
+  
+  static VEC4_LENGTH3(a: vec4): number {
+    return Math.sqrt((a[0] * a[0]) + (a[1] * a[1]) + (a[2] * a[2]));
+  }
+
+  static VEC4_NORMALIZE3(a: vec4, out: vec4 = [0, 0, 0, 1]): vec4 {
+    const len = UT.VEC4_LENGTH3(a);
+    if (len < 0) 
+      return out;
+
+    out[0]= a[0] / len;
+    out[1]= a[1] / len;
+    out[2]= a[2] / len;
+    out[3]= a[3];
+    return out;
+  }
+
   /**************************************************************************/
   /* VEC5 */
   /**************************************************************************/
@@ -430,6 +487,18 @@ class UT {
     out[4] = v;
     return out;
   }
+
+  static VEC6_CREATE(x: number = 0, y: number = 0, z: number = 0, w: number = 0, v: number = 0, u: number = 0): vec5_buf {
+    const out = new Float32Array(6);
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = w;
+    out[4] = v;
+    out[5] = u;
+    return out;
+  }
+
 
   /**************************************************************************/
   /* MAT3 */

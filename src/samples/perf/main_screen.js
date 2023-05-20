@@ -12,8 +12,8 @@ import { Gfx3Mesh } from '../../lib/gfx3_mesh/gfx3_mesh';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
 // ---------------------------------------------------------------------------------------
 
-const GRID_WIDTH = 10;
-const GRID_HEIGHT = 10;
+const GRID_WIDTH = 100;
+const GRID_HEIGHT = 100;
 const GRID_SPACE = 5;
 
 class Transform {
@@ -61,8 +61,9 @@ class MainScreen extends Screen {
     this.obj = new Gfx3MeshShapeCylinder(2, 5, 24, [1, 1]);
     this.obj.setMaterial(new Gfx3Material({
       lightning: true,
-      texture: await gfx3TextureManager.loadTexture('./samples/perf/color-map.jpg'),
-      normalMap: await gfx3TextureManager.loadTexture('./samples/perf/normal-map.png'),
+      texture: await gfx3TextureManager.loadTexture('./samples/perf/color_map.jpg'),
+      normalMap: await gfx3TextureManager.loadTexture('./samples/perf/normal_map_opengl.jpg'),
+      roughnessMap: await gfx3TextureManager.loadTexture8bit('./samples/perf/roughness_map.jpg'),
       envMapEq: await gfx3TextureManager.loadTexture('./samples/perf/skybox.jpg'),
       specular: UT.VEC4_CREATE(1, 0, 0, 32)
     }));
@@ -96,13 +97,15 @@ class MainScreen extends Screen {
   }
 
   update(ts) {
-    // this.obj.mat.specular[0] = (Math.sin(this.colFac) + 1.0) * 0.5;
-    // this.obj.mat.specular[1] = (Math.cos(this.colFac) + 1.0) * 0.5;
-    // this.obj.mat.specular[2] = 0;
+    this.obj.material.specular[0] = (Math.sin(this.colFac) + 1.0) * 0.5;
+    this.obj.material.specular[1] = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.material.specular[2] = 0;
 
-    // this.obj.mat.diffuse[0] = 0;
-    // this.obj.mat.diffuse[1] = (Math.sin(this.colFac) + 1.0) * 0.5;
-    // this.obj.mat.diffuse[2] = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.material.diffuse[0] = 0;
+    this.obj.material.diffuse[1] = (Math.sin(this.colFac) + 1.0) * 0.5;
+    this.obj.material.diffuse[2] = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.material.lightning = true;
+    this.obj.material.changed = true;
 
     const r = Math.PI * 2 * 4 / this.transformations.length;
     let n = 0;
@@ -123,6 +126,11 @@ class MainScreen extends Screen {
 
   draw() {
     gfx3MeshRenderer.enableDirLight(this.lightDir);
+    gfx3MeshRenderer.dirLightColor[0] = 0.8;
+    gfx3MeshRenderer.dirLightColor[1] = 0.6;
+    gfx3MeshRenderer.dirLightColor[2] = 0.4;
+
+    
 
     this.skySphere.draw();
 
@@ -137,8 +145,8 @@ class MainScreen extends Screen {
 
     // document.getElementById('mode').innerHTML = this.mode;
     // document.getElementById('bind1').innerHTML = gfx3MeshRenderer.binds;
-    // document.getElementById('time').innerHTML = parseInt(gfx3Manager.lastRenderTime);
-    // document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.lastRenderTime)).toFixed(2);
+     document.getElementById('time').innerHTML = parseInt(gfx3Manager.lastRenderTime );
+     document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.lastRenderTime)).toFixed(2);
   }
 
   handleKeyUp(e) {

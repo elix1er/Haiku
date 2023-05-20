@@ -134,6 +134,9 @@ class Gfx3Manager {
   vertexSubBuffersSize: number;
   views: Array<Gfx3View>;
   currentView: Gfx3View;
+  lastRenderStart: number;
+  lastRenderTime: number;
+
 
   constructor() {
     this.adapter = {} as GPUAdapter;
@@ -150,6 +153,8 @@ class Gfx3Manager {
     this.vertexSubBuffersSize = 0;
     this.views = [];
     this.currentView = this.createView();
+    this.lastRenderStart = 0;
+    this.lastRenderTime = 0;
   }
 
   async initialize() {
@@ -257,11 +262,12 @@ class Gfx3Manager {
     }
   }
 
-  beginRender(): void { }
+  beginRender(): void { this.lastRenderStart = new Date().getTime();}
 
   endRender(): void {
     this.passEncoder.end();
     this.device.queue.submit([this.commandEncoder.finish()]);
+    this.lastRenderTime = new Date().getTime() - this.lastRenderStart;
   }
 
   loadPipeline(id: string, vertexShader: string, fragmentShader: string, pipelineDesc: GPURenderPipelineDescriptor): GPURenderPipeline {
@@ -328,7 +334,7 @@ class Gfx3Manager {
     return new UniformGroup(this.device, layout);
   }
 
-  createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement): Gfx3Texture {
+  createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement, is8bit:boolean = false): Gfx3Texture {
     if (!bitmap) {
       const canvas = document.createElement('canvas');
       canvas.getContext('2d');
@@ -339,7 +345,7 @@ class Gfx3Manager {
 
     const gpuTexture = this.device.createTexture({
       size: [bitmap.width, bitmap.height],
-      format: 'rgba8unorm',
+      format: is8bit?"r8unorm":'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
     });
 

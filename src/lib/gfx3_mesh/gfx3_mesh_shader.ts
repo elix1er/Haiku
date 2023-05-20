@@ -1,4 +1,5 @@
 export const SHADER_VERTEX_ATTR_COUNT = 14;
+export const SHADER_UNIFORM_ATTR_COUNT = 1;
 
 export const PIPELINE_DESC: any = {
   label: 'Mesh pipeline',
@@ -61,9 +62,13 @@ export const PIPELINE_DESC: any = {
 };
 
 export const VERTEX_SHADER = `
-@group(1) @binding(0) var<uniform> MVPC_MATRIX: mat4x4<f32>;
-@group(1) @binding(1) var<uniform> NORM_MATRIX: mat3x3<f32>;
-@group(1) @binding(2) var<uniform> M_MATRIX: mat4x4<f32>;
+struct ModelMatrix {
+  MVPC_MATRIX: mat4x4<f32>,
+  M_MATRIX: mat4x4<f32>,
+  NORM_MATRIX: mat3x3<f32>,
+}
+
+@group(1) @binding(0) var<uniform> modelMatrix: ModelMatrix;
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
@@ -83,12 +88,12 @@ fn main(
   @location(4) binormal: vec3<f32>
 ) -> VertexOutput {
   var output: VertexOutput;
-  output.Position = MVPC_MATRIX * position;
-  output.FragPos = vec4(M_MATRIX * position).xyz;
+  output.Position = modelMatrix.MVPC_MATRIX * position;
+  output.FragPos = vec4(modelMatrix.M_MATRIX * position).xyz;
   output.FragUV = uv;
-  output.FragNormal = NORM_MATRIX * normal;
-  output.FragTangent = NORM_MATRIX * tangent;
-  output.FragBinormal = NORM_MATRIX * binormal;
+  output.FragNormal = modelMatrix.NORM_MATRIX * normal;
+  output.FragTangent = modelMatrix.NORM_MATRIX * tangent;
+  output.FragBinormal = modelMatrix.NORM_MATRIX * binormal;
   return output;
 }`;
 
@@ -98,7 +103,8 @@ struct MaterialParams {
   HAS_TEXTURE: f32,
   HAS_LIGHTNING: f32,
   HAS_NORMAL_MAP: f32,
-  HAS_ENV_MAP: f32
+  HAS_ENV_MAP: f32,
+  HAS_ROUGH_MAP: f32
 }
 
 @group(0) @binding(0) var<uniform> CAMERA_POS: vec3<f32>;
@@ -117,7 +123,7 @@ struct MaterialParams {
 @group(2) @binding(4) var Sampler: sampler;
 @group(2) @binding(5) var Texture: texture_2d<f32>;
 
-@group(2) @binding(6) var NormSampler: sampler;
+@group(2) @binding(6) var RoughTexture: texture_2d<f32>;
 @group(2) @binding(7) var NormTexture: texture_2d<f32>;
 
 @group(2) @binding(8) var EnvMapSampler: sampler;
@@ -136,96 +142,92 @@ fn main(
   @location(4) FragBinormal: vec3<f32>
 ) -> @location(0) vec4<f32> {
   var normal: vec3<f32> = normalize(FragNormal);
-  var outputColor = vec4(0.0, 0.0, 0.0, 1.0);
+  var outputColor = vec3(0.0, 0.0, 0.0);
   var texel: vec4<f32>;
-  var a = MAT_AMBIANT_COLOR;
+  var rougness : f32;
 
-  var c = POINT_LIGHT0_COLOR;
-  var d = DIR_LIGHT_COLOR;
-
-
-  if (MAT_PARAMS.HAS_TEXTURE == 1.0){
+  if (MAT_PARAMS.HAS_TEXTURE > 0.5){
     texel = textureSample(Texture, Sampler, FragUV);
   }else{
     texel = vec4(1.0, 1.0, 1.0, 1.0);
   }
 
-  if(MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
+  if(MAT_PARAMS.HAS_NORMAL_MAP > 0.5)
   {
-    var normalMap:vec4<f32> = textureSample(NormTexture, NormSampler, FragUV);
+    var normalMap:vec4<f32> = textureSample(NormTexture, Sampler, FragUV);
     normal = normalize(normalize(FragTangent) * normalMap.x + normalize(FragBinormal) * normalMap.y + normal * normalMap.z);
   }
 
-  
-  if (MAT_PARAMS.HAS_LIGHTNING == 0.0) {
-    outputColor = texel * MAT_DIFFUSE_COLOR;
+  if (MAT_PARAMS.HAS_ROUGH_MAP > 0.5){
+    rougness = MAT_SPECULAR.a * textureSample(RoughTexture, Sampler, FragUV).r;
+  }else{
+    rougness = MAT_SPECULAR.a;
+  }
+
+  if (MAT_PARAMS.HAS_LIGHTNING < 0.5) {
+    outputColor = texel.rgb * MAT_DIFFUSE_COLOR.rgb;
   }else{
     
-    if (DIR_LIGHT.w == 1.0)
+    if (DIR_LIGHT.w > 0.5)
     {
-      outputColor += CalcDirLight(DIR_LIGHT.xyz, DIR_LIGHT_COLOR, normal, FragPos, texel);
+      outputColor += CalcDirLight(DIR_LIGHT.xyz, DIR_LIGHT_COLOR, normal, FragPos, texel.rgb, rougness);
     }
 
-    if (POINT_LIGHT0.w == 1.0)
+    if (POINT_LIGHT0.w > 0.5)
     {
-      outputColor += CalcPointLight(POINT_LIGHT0.xyz, POINT_LIGHT0_COLOR, normal, FragPos, texel);;
+      outputColor += CalcPointLight(POINT_LIGHT0.xyz, POINT_LIGHT0_COLOR, normal, FragPos, texel.rgb, rougness);
     }
 
-    if (POINT_LIGHT1.w == 1.0)
+    if (POINT_LIGHT1.w > 0.5)
     {
-      outputColor += CalcPointLight(POINT_LIGHT1.xyz, POINT_LIGHT1_COLOR,  normal, FragPos, texel);
+      outputColor += CalcPointLight(POINT_LIGHT1.xyz, POINT_LIGHT1_COLOR,  normal, FragPos, texel.rgb, rougness);
     }
 
-    outputColor +=  MAT_AMBIANT_COLOR;
+    outputColor +=  MAT_AMBIANT_COLOR.rgb;
   }
   
   
-  if(MAT_PARAMS.HAS_ENV_MAP != 0.0)
+  if(MAT_PARAMS.HAS_ENV_MAP > 0.0)
   {
     var viewDir = normalize(CAMERA_POS - FragPos);
     var rvec = normalize(reflect(viewDir, normal));
 
-    if(MAT_PARAMS.HAS_ENV_MAP == 2.0){
+    if(MAT_PARAMS.HAS_ENV_MAP > 1.5){
 
       var uv = vec2<f32>(atan2( rvec.z, rvec.x ) * 0.15915494309189535 + 0.5, asin( clamp( rvec.y, - 1.0, 1.0 ) ) * 0.3183098861837907 + 0.5);
-      outputColor += textureSample(EnvMapTexture2, EnvMapSampler2, uv) * 0.2;
+      outputColor += textureSample(EnvMapTexture2, EnvMapSampler2, uv).rgb * 0.2;
 
     }else{
-      outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z));
+      outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z)).rgb;
     }
   }
 
-  if (MAT_PARAMS.OPACITY != 1.0)
-  {
-    outputColor.a *= MAT_PARAMS.OPACITY;
-  }
-
-  return outputColor;
+  return vec4(outputColor, texel.a * MAT_DIFFUSE_COLOR.a * MAT_PARAMS.OPACITY);
 }
 
 // *****************************************************************************************************************
 // UTILS
 // *****************************************************************************************************************
 
-fn CalcDirLight(lightDir: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, fragPos: vec3<f32>, texel: vec4<f32>) -> vec4<f32>
+fn CalcDirLight(lightDir: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, fragPos: vec3<f32>, texel: vec3<f32>, rougness: f32) -> vec3<f32>
 {
 
-    var diffuseColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
-    var specularColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
+    var diffuseColor: vec3<f32> = vec3(0.0, 0.0, 0.0);
+    var specularColor: vec3<f32> = vec3(0.0, 0.0, 0.0);
 
     var reverseLightDir = normalize(-lightDir);
     var diffuseFactor = max(dot(normal, reverseLightDir), 0.0);
 
     if (diffuseFactor > 0.0)
     {
-      diffuseColor = (MAT_DIFFUSE_COLOR * texel + lightColor) * diffuseFactor;
-      if(MAT_SPECULAR.a>0)
+      diffuseColor = (MAT_DIFFUSE_COLOR.rgb * texel * lightColor.rgb) * diffuseFactor;
+      if(rougness>0)
       {
         var reflectDir = reflect(-reverseLightDir, normal);
         var viewDir = normalize(CAMERA_POS - fragPos);
         var specularFactor = max(dot(viewDir, reflectDir), 0.0);
         if (specularFactor > 0.0) {
-          specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a) ;
+          specularColor = MAT_SPECULAR.rgb * pow(specularFactor, rougness) ;
         }
       }
     }
@@ -233,34 +235,31 @@ fn CalcDirLight(lightDir: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, f
   return diffuseColor + specularColor;
 }
 
-fn CalcPointLight(lightPos: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, fragPos: vec3<f32>, texel: vec4<f32>) -> vec4<f32>
+fn CalcPointLight(lightPos: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, fragPos: vec3<f32>, texel: vec3<f32>, rougness: f32) -> vec3<f32>
 {
 
-  var diffuseColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
-  var specularColor: vec4<f32> = vec4(0.0, 0.0, 0.0, 1.0);
+  var diffuseColor: vec3<f32> = vec3(0.0, 0.0, 0.0);
+  var specularColor: vec3<f32> = vec3(0.0, 0.0, 0.0);
   var reverseLightDir = normalize(lightPos - fragPos);
   var diffuseFactor = max(dot(normal, reverseLightDir), 0.0);
   var dist = distance(lightPos, fragPos);
 
-  diffuseFactor *= 10.0/(dist)  ;
+  diffuseFactor *= 10.0/(dist*dist*lightColor.a)  ;
 
   if (diffuseFactor > 0.0)
   {
-    diffuseColor =(MAT_DIFFUSE_COLOR * texel + lightColor) * diffuseFactor;
+    diffuseColor =(MAT_DIFFUSE_COLOR.rgb * texel * lightColor.rgb) * diffuseFactor;
     
-    if(MAT_SPECULAR.a>0)
+    if(rougness>0)
     {
       var reflectDir = reflect(-reverseLightDir, normal);
       var viewDir = normalize(CAMERA_POS - fragPos);
       var specularFactor = max(dot(viewDir, reflectDir), 0.0);
       if (specularFactor > 0.0) {
-        specularColor = MAT_SPECULAR * pow(specularFactor, MAT_SPECULAR.a);
+        specularColor = MAT_SPECULAR.rgb * pow(specularFactor, rougness);
       }
     }
   }
-
-
-
   return diffuseColor + specularColor;
 }
 `;

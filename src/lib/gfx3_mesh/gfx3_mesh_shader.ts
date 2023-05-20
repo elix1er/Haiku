@@ -227,7 +227,7 @@ fn CalcDirLight(lightDir: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>, f
   if (diffuseFactor > 0.0)
   {
     diffuseColor = (MAT_DIFFUSE_COLOR.rgb * texel * lightColor.rgb) * diffuseFactor;
-    if(rougness>0)
+    if(rougness > 0)
     {
       var reflectDir = reflect(-reverseLightDir, normal);
       var viewDir = normalize(CAMERA_POS - fragPos);
@@ -256,7 +256,7 @@ fn CalcPointLight(lightPos: vec3<f32>, lightColor: vec4<f32>, normal: vec3<f32>,
   {
     diffuseColor =(MAT_DIFFUSE_COLOR.rgb * texel * lightColor.rgb) * diffuseFactor;
     
-    if(rougness>0)
+    if(rougness > 0)
     {
       var reflectDir = reflect(-reverseLightDir, normal);
       var viewDir = normalize(CAMERA_POS - fragPos);

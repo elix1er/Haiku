@@ -151,7 +151,7 @@ class Gfx3Manager {
     this.vertexSubBuffers = [];
     this.vertexSubBuffersSize = 0;
     this.views = [];
-    this.currentView = this.createView();
+    this.currentView = new Gfx3View();
     this.lastRenderStart = 0;
     this.lastRenderTime = 0;
   }
@@ -192,6 +192,7 @@ class Gfx3Manager {
     const devicePixelRatio = window.devicePixelRatio || 1;
     this.canvas.width = this.canvas.clientWidth * devicePixelRatio;
     this.canvas.height = this.canvas.clientHeight * devicePixelRatio;
+    this.currentView = this.createView();
 
     this.depthTexture = this.device.createTexture({
       size: [this.canvas.width, this.canvas.height],

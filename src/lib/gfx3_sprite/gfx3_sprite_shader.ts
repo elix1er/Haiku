@@ -1,5 +1,4 @@
 export const SHADER_VERTEX_ATTR_COUNT = 5;
-export const SHADER_UNIFORM_ATTR_COUNT = 2;
 
 export const PIPELINE_DESC: any = {
   label: 'Sprite pipeline',
@@ -50,7 +49,7 @@ export const PIPELINE_DESC: any = {
 };
 
 export const VERTEX_SHADER = `
-@group(0) @binding(0) var<uniform> mvpcMatrix: mat4x4<f32>;
+@group(0) @binding(0) var<uniform> MVPC_MATRIX: mat4x4<f32>;
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
@@ -63,20 +62,20 @@ fn main(
   @location(1) uv : vec2<f32>
 ) -> VertexOutput {
   var output : VertexOutput;
-  output.Position = mvpcMatrix * position;
+  output.Position = MVPC_MATRIX * position;
   output.fragUV = uv;
   return output;
 }`;
 
 export const FRAGMENT_SHADER = `
-@group(1) @binding(0) var Sampler: sampler;
-@group(1) @binding(1) var Texture: texture_2d<f32>;
+@group(0) @binding(1) var SAMPLER: sampler;
+@group(0) @binding(2) var TEXTURE: texture_2d<f32>;
 
 @fragment
 fn main(
   @location(0) fragUV: vec2<f32>
 ) -> @location(0) vec4<f32> {
-  var textureColor:vec4<f32> = (textureSample(Texture, Sampler, fragUV));
+  var textureColor:vec4<f32> = (textureSample(TEXTURE, SAMPLER, fragUV));
   if (textureColor.a == 0)
   {
     discard;

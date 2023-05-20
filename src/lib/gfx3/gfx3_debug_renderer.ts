@@ -1,6 +1,6 @@
-import { gfx3Manager, UniformGroup, MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT } from '../gfx3/gfx3_manager';
+import { gfx3Manager, UniformGroup } from '../gfx3/gfx3_manager';
 import { UT } from '../core/utils';
-import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_UNIFORM_ATTR_COUNT, SHADER_VERTEX_ATTR_COUNT } from './gfx3_debug_shader';
+import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_VERTEX_ATTR_COUNT } from './gfx3_debug_shader';
 
 interface Command {
   vertices: Float32Array;
@@ -12,7 +12,7 @@ class Gfx3DebugRenderer {
   pipeline: GPURenderPipeline;
   device: GPUDevice;
   vertexBuffer: GPUBuffer;
-  uniformGroup: UniformGroup;
+  uniformBuffer: UniformGroup;
   vertexCount: number;
   commands: Array<Command>;
   showDebug: boolean;
@@ -21,10 +21,14 @@ class Gfx3DebugRenderer {
     this.pipeline = gfx3Manager.loadPipeline('DEBUG_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
     this.device = gfx3Manager.getDevice();
     this.vertexBuffer = this.device.createBuffer({ size: 0, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC });
-    this.uniformGroup = gfx3Manager.createUniformGroup(16 * 4);
+
     this.vertexCount = 0;
     this.commands = [];
     this.showDebug = true;
+
+    this.uniformBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
+    this.uniformBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
+    this.uniformBuffer.allocate(1);
   }
 
   render(): void {
@@ -32,6 +36,7 @@ class Gfx3DebugRenderer {
       return;
     }
 
+    const currentView = gfx3Manager.getCurrentView();
     const passEncoder = gfx3Manager.getPassEncoder();
     passEncoder.setPipeline(this.pipeline);
 
@@ -39,15 +44,18 @@ class Gfx3DebugRenderer {
     this.vertexBuffer.destroy();
     this.vertexBuffer = this.device.createBuffer({ size: this.vertexCount * SHADER_VERTEX_ATTR_COUNT * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC });
 
-    gfx3Manager.destroyUniformGroup(this.uniformGroup);
-    this.uniformGroup = gfx3Manager.createUniformGroup(this.commands.length * SHADER_UNIFORM_ATTR_COUNT * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
+    if (this.uniformBuffer.getSize() < this.commands.length) {
+      this.uniformBuffer.allocate(this.commands.length);
+    }
+
+    const vpcMatrix = currentView.getViewProjectionClipMatrix();
+    const mvpcMatrix = UT.MAT4_CREATE();
 
     for (const cmd of this.commands) {
-      const mvpcMatrix = UT.MAT4_MULTIPLY(gfx3Manager.getCurrentViewProjectionMatrix(), cmd.matrix);
-      gfx3Manager.writeUniformGroup(this.uniformGroup, 0, new Float32Array(mvpcMatrix));
-      this.device.queue.writeBuffer(this.vertexBuffer, vertexBufferOffset, cmd.vertices);
+      UT.MAT4_MULTIPLY(vpcMatrix, cmd.matrix, mvpcMatrix);
+      this.uniformBuffer.write(0, mvpcMatrix);
 
-      passEncoder.setBindGroup(0, gfx3Manager.createBindGroup({ layout: this.pipeline.getBindGroupLayout(0), entries: this.uniformGroup.entries }));      
+      this.device.queue.writeBuffer(this.vertexBuffer, vertexBufferOffset, cmd.vertices);
       passEncoder.setVertexBuffer(0, this.vertexBuffer, vertexBufferOffset, cmd.vertices.byteLength);
       passEncoder.draw(cmd.vertexCount);
       vertexBufferOffset += cmd.vertices.byteLength;

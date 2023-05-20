@@ -8,35 +8,25 @@ type MaterialOptions = {
   ambiant?: vec4_buf,
   specular?: vec4_buf,
   diffuse?: vec4_buf,
-  emissive?: vec3_buf,
-  specularity?: number,
   lightning?: boolean,
   texture?: Gfx3Texture,
   normalMap?: Gfx3Texture,
-  normalIntensity?: number,
   envMap?: Gfx3Texture,
   envMapEq?: Gfx3Texture,
-  emissiveMap?: Gfx3Texture,
-  emissiveIntensity?: number;
   roughnessMap?: Gfx3Texture;
 };
 
 class Gfx3Material {
   opacity: number;
   ambiant: vec4_buf;
-  emissive: vec3_buf;
-  specularity: number;
   specular: vec4_buf;
   diffuse: vec4_buf;
   lightning: boolean;
   texture: Gfx3Texture | null;
   normalMap: Gfx3Texture | null;
-  emissiveMap: Gfx3Texture | null;
-  emissiveIntensity: number;
   roughnessMap: Gfx3Texture | null;
   envMap: Gfx3Texture | null;
   envMapEq: Gfx3Texture | null;
-  normalIntensity: number;
   buffer: UniformGroup;
   changed: boolean;
 
@@ -45,17 +35,12 @@ class Gfx3Material {
     this.ambiant = options.ambiant ?? UT.VEC4_CREATE(0.05, 0.05, 0.05, 1);
     this.specular = options.specular ?? UT.VEC4_CREATE(0.0, 0.0, 0.0, 0.0);
     this.diffuse = options.diffuse ?? UT.VEC4_CREATE(1.0, 1.0, 1.0, 1.0);
-    this.emissive = options.emissive ?? UT.VEC4_CREATE(0.0, 0.0, 0.0);
-    this.specularity = 1.0;
-    this.normalIntensity = 1.0;
     this.lightning = options.lightning ?? false;
     this.texture = options.texture ?? null;
     this.normalMap = options.normalMap ?? null;
     this.envMap = options.envMap ?? null;
     this.envMapEq = options.envMapEq ?? null;
-    this.emissiveMap = options.emissiveMap ?? null;
     this.roughnessMap = options.roughnessMap ?? null;
-    this.emissiveIntensity = 1.0;
     this.buffer = gfx3MeshRenderer.createMaterialBuffer();
     this.changed = true;
   }

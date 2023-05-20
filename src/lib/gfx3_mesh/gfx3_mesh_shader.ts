@@ -62,13 +62,13 @@ export const PIPELINE_DESC: any = {
 };
 
 export const VERTEX_SHADER = `
-struct ModelMatrix {
+struct MeshMatrices {
   MVPC_MATRIX: mat4x4<f32>,
   M_MATRIX: mat4x4<f32>,
   NORM_MATRIX: mat3x3<f32>,
 }
 
-@group(1) @binding(0) var<uniform> modelMatrix: ModelMatrix;
+@group(1) @binding(0) var<uniform> MESH_MATRICES: MeshMatrices;
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
@@ -88,12 +88,12 @@ fn main(
   @location(4) binormal: vec3<f32>
 ) -> VertexOutput {
   var output: VertexOutput;
-  output.Position = modelMatrix.MVPC_MATRIX * position;
-  output.FragPos = vec4(modelMatrix.M_MATRIX * position).xyz;
+  output.Position = MESH_MATRICES.MVPC_MATRIX * position;
+  output.FragPos = vec4(MESH_MATRICES.M_MATRIX * position).xyz;
   output.FragUV = uv;
-  output.FragNormal = modelMatrix.NORM_MATRIX * normal;
-  output.FragTangent = modelMatrix.NORM_MATRIX * tangent;
-  output.FragBinormal = modelMatrix.NORM_MATRIX * binormal;
+  output.FragNormal = MESH_MATRICES.NORM_MATRIX * normal;
+  output.FragTangent = MESH_MATRICES.NORM_MATRIX * tangent;
+  output.FragBinormal = MESH_MATRICES.NORM_MATRIX * binormal;
   return output;
 }`;
 

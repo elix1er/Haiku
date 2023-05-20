@@ -62,10 +62,9 @@ class Gfx3MeshShapeCylinder extends Gfx3Mesh {
       indices.push(i3, i1, this.nsegs * 2);
       indices.push(i2, i4, this.nsegs * 2 + 1);
     }
+
     this.build(vertices, texcoords, indices, uvscale);
   }
-
-
 }
 
 export { Gfx3MeshShapeCylinder };

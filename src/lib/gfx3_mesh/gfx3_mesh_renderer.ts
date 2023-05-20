@@ -41,7 +41,7 @@ class Gfx3MeshRenderer {
     this.worldBuffer.allocate(1);
 
     this.meshBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(1));
-    this.meshBuffer.addDatasetInput(0, UT.MAT4_SIZE * 3, 'MODEL_MATRIX');
+    this.meshBuffer.addDatasetInput(0, UT.MAT4_SIZE * 3, 'MESH_MATRICES');
     this.meshBuffer.allocate(1);
 
     this.pointLight0 = UT.VEC4_CREATE();
@@ -70,35 +70,51 @@ class Gfx3MeshRenderer {
     this.worldBuffer.endWrite();
     passEncoder.setBindGroup(0, this.worldBuffer.getBindGroup(0));
 
-    const vpcMatrix = currentView.getViewProjectionClipMatrix();
-
     if (this.meshBuffer.getSize() < this.meshCommands.length) {
       this.meshBuffer.allocate(this.meshCommands.length);
     }
 
-    const totalMatrix = new Float32Array(16 * 3);
+    const vpcMatrix = currentView.getViewProjectionClipMatrix();
+    const matricesData = new Float32Array(16 * 3);
 
     this.meshBuffer.beginWrite();
 
     for (let i = 0; i < this.meshCommands.length; i++) {
       const command = this.meshCommands[i];
       const mMatrix = command.matrix ? command.matrix : command.mesh.getTransformMatrix();
-      totalMatrix[32+0]=mMatrix[0];totalMatrix[32+1]=mMatrix[1];totalMatrix[32+2]=mMatrix[2];
-      totalMatrix[32+4]=mMatrix[4];totalMatrix[32+5]=mMatrix[5];totalMatrix[32+6]=mMatrix[6];
-      totalMatrix[32+8]=mMatrix[8];totalMatrix[32+9]=mMatrix[9];totalMatrix[32+10]=mMatrix[10];
-      UT.MAT4_MULTIPLY(vpcMatrix, mMatrix, totalMatrix);
-      for(let n=0;n<16;n++){ totalMatrix[n + 16] = mMatrix[n]; }
 
-      this.meshBuffer.write(0, totalMatrix);
-
+      UT.MAT4_MULTIPLY(vpcMatrix, mMatrix, matricesData);
+      matricesData[16 + 0] = mMatrix[0];
+      matricesData[16 + 1] = mMatrix[1];
+      matricesData[16 + 2] = mMatrix[2];
+      matricesData[16 + 3] = mMatrix[3];
+      matricesData[16 + 4] = mMatrix[4];
+      matricesData[16 + 5] = mMatrix[5];
+      matricesData[16 + 6] = mMatrix[6];
+      matricesData[16 + 7] = mMatrix[7];
+      matricesData[16 + 8] = mMatrix[8];
+      matricesData[16 + 9] = mMatrix[9];
+      matricesData[16 + 10] = mMatrix[10];
+      matricesData[16 + 11] = mMatrix[11];
+      matricesData[16 + 12] = mMatrix[12];
+      matricesData[16 + 13] = mMatrix[13];
+      matricesData[16 + 14] = mMatrix[14];
+      matricesData[16 + 15] = mMatrix[15];
+      matricesData[32 + 0] = mMatrix[0];
+      matricesData[32 + 1] = mMatrix[1];
+      matricesData[32 + 2] = mMatrix[2];
+      matricesData[32 + 4] = mMatrix[4];
+      matricesData[32 + 5] = mMatrix[5];
+      matricesData[32 + 6] = mMatrix[6];
+      matricesData[32 + 8] = mMatrix[8];
+      matricesData[32 + 9] = mMatrix[9];
+      matricesData[32 + 10] = mMatrix[10];
+      this.meshBuffer.write(0, matricesData);
       passEncoder.setBindGroup(1, this.meshBuffer.getBindGroup(i));
 
       const material = command.mesh.getMaterial();
       const materialBuffer = material.getBuffer();
-
-      if(material.changed)
-        material.draw();
-
+      material.render();
       passEncoder.setBindGroup(2, materialBuffer.getBindGroup(0));
 
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), command.mesh.getVertexSubBufferOffset(), command.mesh.getVertexSubBufferSize());
@@ -158,13 +174,6 @@ class Gfx3MeshRenderer {
     }
   }
 
-  enableDirLight(direction: vec3): void {
-    this.dirLight[0] = direction[0];
-    this.dirLight[1] = direction[1];
-    this.dirLight[2] = direction[2];
-    this.dirLight[3] = 1;
-  }
-
   setPointLightColor(index: number, r: number, g: number, b: number): void {
     if (index == 0) {
       this.pointLight0Color[0] = r;
@@ -176,6 +185,13 @@ class Gfx3MeshRenderer {
       this.pointLight1Color[1] = g;
       this.pointLight1Color[2] = b;
     }
+  }
+
+  enableDirLight(direction: vec3): void {
+    this.dirLight[0] = direction[0];
+    this.dirLight[1] = direction[1];
+    this.dirLight[2] = direction[2];
+    this.dirLight[3] = 1;
   }
 
   setDirLightColor(r: number, g: number, b: number): void {

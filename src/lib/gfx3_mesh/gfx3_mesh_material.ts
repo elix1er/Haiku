@@ -64,7 +64,11 @@ class Gfx3Material {
     gfx3MeshRenderer.destroyMaterialBuffer(this.buffer);
   }
 
-  draw(): void {
+  render(): void {
+    if (!this.changed) {
+      return;
+    }
+
     const params = UT.VEC6_CREATE();
     params[0] = this.opacity;
     params[1] = this.texture ? 1 : 0;
@@ -97,6 +101,58 @@ class Gfx3Material {
 
   setOpacity(opacity: number): void {
     this.opacity = opacity;
+    this.changed = true;
+  }
+
+  setAmbiant(r: number, g: number, b: number): void {
+    this.ambiant[0] = r;
+    this.ambiant[1] = g;
+    this.ambiant[2] = b;
+    this.changed = true;
+  }
+
+  setSpecular(r: number, g: number, b: number, specularity: number): void {
+    this.specular[0] = r;
+    this.specular[1] = g;
+    this.specular[2] = b;
+    this.specular[3] = specularity;
+    this.changed = true;
+  }
+
+  setDiffuse(r: number, g: number, b: number): void {
+    this.diffuse[0] = r;
+    this.diffuse[1] = g;
+    this.diffuse[2] = b;
+    this.changed = true;
+  }
+
+  setLightning(lightning: boolean): void {
+    this.lightning = lightning;
+    this.changed = true;
+  }
+
+  setTexture(texture: Gfx3Texture): void {
+    this.texture = texture;
+    this.changed = true;
+  }
+
+  setNormalMap(normalMap: Gfx3Texture): void {
+    this.normalMap = normalMap;
+    this.changed = true;
+  }
+
+  setRoughnessMap(roughnessMap: Gfx3Texture): void {
+    this.roughnessMap = roughnessMap;
+    this.changed = true;
+  }
+
+  setEnvMap(envMap: Gfx3Texture): void {
+    this.envMap = envMap;
+    this.changed = true;
+  }
+
+  setEnvMapEq(envMapEq: Gfx3Texture): void {
+    this.envMapEq = envMapEq;
     this.changed = true;
   }
 

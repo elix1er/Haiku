@@ -97,15 +97,9 @@ class PerfScreen extends Screen {
   }
 
   update(ts) {
-    this.obj.material.specular[0] = (Math.sin(this.colFac) + 1.0) * 0.5;
-    this.obj.material.specular[1] = (Math.cos(this.colFac) + 1.0) * 0.5;
-    this.obj.material.specular[2] = 0;
-
-    this.obj.material.diffuse[0] = 0;
-    this.obj.material.diffuse[1] = (Math.sin(this.colFac) + 1.0) * 0.5;
-    this.obj.material.diffuse[2] = (Math.cos(this.colFac) + 1.0) * 0.5;
-    this.obj.material.lightning = true;
-    this.obj.material.changed = true;
+    this.obj.mat.setSpecular((Math.sin(this.colFac) + 1.0) * 0.5, (Math.cos(this.colFac) + 1.0) * 0.5, 0);
+    this.obj.mat.setDiffuse(0, (Math.sin(this.colFac) + 1.0) * 0.5, (Math.cos(this.colFac) + 1.0) * 0.5)
+    this.obj.mat.setLightning(true);
 
     const r = Math.PI * 2 * 4 / this.transformations.length;
     let n = 0;

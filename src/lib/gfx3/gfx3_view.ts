@@ -242,9 +242,9 @@ class Gfx3View {
 
   getScreenNormalizedPosition(x: number, y: number, z: number): vec2 {
     const matrix = UT.MAT4_IDENTITY();
-    UT.MAT4_MULTIPLY(matrix, this.getClipMatrix());
-    UT.MAT4_MULTIPLY(matrix, this.getProjectionMatrix());
-    UT.MAT4_MULTIPLY(matrix, this.getCameraViewMatrix());
+    UT.MAT4_MULTIPLY(matrix, this.getClipMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getProjectionMatrix(), matrix);
+    UT.MAT4_MULTIPLY(matrix, this.getCameraViewMatrix(), matrix);
 
     const pos = UT.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
     return [pos[0] / pos[3], pos[1] / pos[3]];

@@ -11,10 +11,10 @@ import { Camera } from './camera';
 // ---------------------------------------------------------------------------------------
 
 const PLAYER_WIDTH = 1;
-const PLAYER_HEIGHT = 2;
+const PLAYER_HEIGHT = 1.3;
 const PLAYER_SIZE = [PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_WIDTH];
 
-const SPEED_MAX = 2;
+const SPEED_MAX = 3;
 const ACCEL_RATE = 1;
 
 const GRAVITY_RATE = 1;

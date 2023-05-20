@@ -132,13 +132,15 @@ class BattleAreaFighter extends Gfx3Transformable {
 
   DRAW_TOAST(text, color, ms) {
     return new Promise(resolve => {
-      let toast = document.createElement('div');
+      const toast = document.createElement('div');
       toast.className = 'BattleAreaFighter-toast';
       toast.textContent = text;
       toast.style.color = color;
 
-      let pos = this.mesh.getPosition();
-      let screenPos = gfx3Manager.getScreenPosition(0, pos[0], pos[1] + 0.8, pos[2]);
+      const pos = this.mesh.getPosition();
+      const currentView = gfx3Manager.getCurrentView();
+      const screenPos = currentView.getScreenPosition(0, pos[0], pos[1] + 0.8, pos[2]);
+
       toast.style.top = screenPos[1] + 'px';
       toast.style.left = screenPos[0] + 'px';
       uiManager.addNode(toast);

@@ -15,8 +15,6 @@ class Gfx3SpriteRenderer {
     this.defaultTexture = gfx3Manager.createTextureFromBitmap();
     this.uniformBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
     this.uniformBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
-    this.uniformBuffer.addSamplerInput(1, this.defaultTexture.gpuSampler);
-    this.uniformBuffer.addTextureInput(2, this.defaultTexture.gpuTexture);
     this.sprites = [];
   }
 
@@ -35,34 +33,50 @@ class Gfx3SpriteRenderer {
     const vpcMatrix = currentView.getViewProjectionClipMatrix();
     const mvpcMatrix = UT.MAT4_CREATE();
 
-    for (const sprite of this.sprites) {
+    this.uniformBuffer.beginWrite();
+
+    for (let i = 0; i < this.sprites.length; i++) {
+      const sprite = this.sprites[i];
       if (sprite.getBillboardMode()) {
         const mvMatrix = UT.MAT4_MULTIPLY(viewMatrix, sprite.getTransformMatrix());
         UT.MAT4_MULTIPLY(mvMatrix, cameraMatrix, mvMatrix);
         UT.MAT4_MULTIPLY(mvMatrix, UT.MAT4_TRANSLATE(viewMatrix[12], viewMatrix[13], viewMatrix[14]), mvMatrix);
         UT.MAT4_MULTIPLY(pcMatrix, mvMatrix, mvpcMatrix);
-        this.uniformBuffer.write(0, mvpcMatrix);
-        passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(0));
       }
       else {
         UT.MAT4_MULTIPLY(vpcMatrix, sprite.getTransformMatrix(), mvpcMatrix);
-        this.uniformBuffer.write(0, mvpcMatrix);
-        passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(0));
       }
 
-      const texture = sprite.getTexture();
-      const textureBinding = gfx3Manager.createTextureBinding(this.pipeline, texture.gpuSampler, texture.gpuTexture, 1);
+      this.uniformBuffer.write(0, mvpcMatrix);
+      passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(i));
 
-      passEncoder.setBindGroup(1, gfx3Manager.createBindGroup(textureBinding));
+      const texture = sprite.getTexture();
+      passEncoder.setBindGroup(1, texture.bindGroup);
+
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), sprite.getVertexSubBufferOffset(), sprite.getVertexSubBufferSize());
       passEncoder.draw(sprite.getVertexCount());
     }
 
+    this.uniformBuffer.endWrite();
     this.sprites = [];
   }
 
   drawSprite(sprite: Gfx3Sprite): void {
     this.sprites.push(sprite);
+  }
+
+  createTextureBinding(sampler: GPUSampler, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): GPUBindGroup {
+    const device = gfx3Manager.getDevice();
+    return device.createBindGroup({
+      layout: this.pipeline.getBindGroupLayout(1),
+      entries: [{
+        binding: 0,
+        resource: sampler
+      }, {
+        binding: 1,
+        resource: texture.createView(createViewDescriptor)
+      }]
+    });
   }
 }
 

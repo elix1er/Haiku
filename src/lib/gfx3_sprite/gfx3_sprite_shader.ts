@@ -68,8 +68,8 @@ fn main(
 }`;
 
 export const FRAGMENT_SHADER = `
-@group(0) @binding(1) var SAMPLER: sampler;
-@group(0) @binding(2) var TEXTURE: texture_2d<f32>;
+@group(1) @binding(0) var SAMPLER: sampler;
+@group(1) @binding(1) var TEXTURE: texture_2d<f32>;
 
 @fragment
 fn main(

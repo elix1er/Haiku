@@ -36,9 +36,9 @@ class GameManager {
 
     gfx3Manager.beginRender();
     // gfx3SkyboxRenderer.render();
-    // gfx3DebugRenderer.render();
+    gfx3DebugRenderer.render();
     gfx3MeshRenderer.render();
-    // gfx3SpriteRenderer.render();
+    gfx3SpriteRenderer.render();
     gfx3ParticlesRenderer.render();
     gfx3Manager.endRender();
 

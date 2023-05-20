@@ -51,15 +51,22 @@ class Gfx3DebugRenderer {
     const vpcMatrix = currentView.getViewProjectionClipMatrix();
     const mvpcMatrix = UT.MAT4_CREATE();
 
-    for (const cmd of this.commands) {
+    this.uniformBuffer.beginWrite();
+
+    for (let i = 0; i < this.commands.length; i++) {
+      const cmd = this.commands[i];
+      
       UT.MAT4_MULTIPLY(vpcMatrix, cmd.matrix, mvpcMatrix);
       this.uniformBuffer.write(0, mvpcMatrix);
+      passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(i));
 
       this.device.queue.writeBuffer(this.vertexBuffer, vertexBufferOffset, cmd.vertices);
       passEncoder.setVertexBuffer(0, this.vertexBuffer, vertexBufferOffset, cmd.vertices.byteLength);
       passEncoder.draw(cmd.vertexCount);
       vertexBufferOffset += cmd.vertices.byteLength;
     }
+
+    this.uniformBuffer.endWrite();
 
     this.commands = [];
     this.vertexCount = 0;

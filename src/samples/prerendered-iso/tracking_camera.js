@@ -31,7 +31,7 @@ class TrackingCamera {
 
     let clipOffset = this.view.getClipOffset();
     let targetWorldPosition = this.target.getPosition();
-    let targetScreenPosition = gfx3Manager.getScreenNormalizedPosition(0, targetWorldPosition[0], targetWorldPosition[1], targetWorldPosition[2]);
+    let targetScreenPosition = this.view.getScreenNormalizedPosition(0, targetWorldPosition[0], targetWorldPosition[1], targetWorldPosition[2]);
 
     this.view.setClipOffset(
       UT.CLAMP(targetScreenPosition[0] + clipOffset[0], this.minClipOffset[0], this.maxClipOffset[0]),

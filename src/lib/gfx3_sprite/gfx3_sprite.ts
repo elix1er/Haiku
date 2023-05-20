@@ -36,7 +36,8 @@ class Gfx3Sprite extends Gfx3Drawable {
   }
 
   setTexture(texture: Gfx3Texture): void {
-    this.texture = texture;
+    texture.bindGroup = gfx3SpriteRenderer.createTextureBinding(texture.gpuSampler, texture.gpuTexture);
+    this.texture = texture;    
   }
 
   getTexture(): Gfx3Texture {

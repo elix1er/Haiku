@@ -65,12 +65,13 @@ class Gfx3Material {
   }
 
   draw(): void {
-    const params = UT.VEC5_CREATE();
+    const params = UT.VEC6_CREATE();
     params[0] = this.opacity;
     params[1] = this.texture ? 1 : 0;
     params[2] = this.lightning ? 1 : 0;
     params[3] = this.normalMap ? 1 : 0;
     params[4] = this.envMap ? 1 : this.envMapEq ? 2 : 0;
+    params[5] = this.roughnessMap ? 1 :0;
 
     this.buffer.beginWrite();
     this.buffer.write(0, this.ambiant);
@@ -84,7 +85,7 @@ class Gfx3Material {
 
     this.buffer.setSamplerEntry(0, 4, this.texture ? this.texture.gpuSampler : defaultTexture.gpuSampler);
     this.buffer.setTextureEntry(0, 5, this.texture ? this.texture.gpuTexture : defaultTexture.gpuTexture);
-    this.buffer.setSamplerEntry(0, 6, this.normalMap ? this.normalMap.gpuSampler : defaultTexture.gpuSampler);
+    this.buffer.setTextureEntry(0, 6, this.roughnessMap ? this.roughnessMap.gpuTexture : defaultTexture.gpuTexture);
     this.buffer.setTextureEntry(0, 7, this.normalMap ? this.normalMap.gpuTexture : defaultTexture.gpuTexture);
     this.buffer.setSamplerEntry(0, 8, this.envMap ? this.envMap.gpuSampler : defaultEnvMap.gpuSampler);
     this.buffer.setTextureEntry(0, 9, this.envMap ? this.envMap.gpuTexture : defaultEnvMap.gpuTexture, { dimension: 'cube' });

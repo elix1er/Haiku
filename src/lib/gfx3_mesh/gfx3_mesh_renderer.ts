@@ -118,10 +118,10 @@ class Gfx3MeshRenderer {
     buffer.addDatasetInput(0, UT.VEC4_SIZE, 'MAT_AMBIANT_COLOR');
     buffer.addDatasetInput(1, UT.VEC4_SIZE, 'MAT_DIFFUSE_COLOR');
     buffer.addDatasetInput(2, UT.VEC4_SIZE, 'MAT_SPECULAR');
-    buffer.addDatasetInput(3, UT.VEC5_SIZE, 'MAT_PARAMS');
+    buffer.addDatasetInput(3, UT.VEC6_SIZE, 'MAT_PARAMS');
     buffer.addSamplerInput(4, this.defaultTexture.gpuSampler);
     buffer.addTextureInput(5, this.defaultTexture.gpuTexture);
-    buffer.addSamplerInput(6, this.defaultTexture.gpuSampler);
+    buffer.addTextureInput(6, this.defaultTexture.gpuTexture);
     buffer.addTextureInput(7, this.defaultTexture.gpuTexture);
     buffer.addSamplerInput(8, this.defaultEnvMap.gpuSampler);
     buffer.addTextureInput(9, this.defaultEnvMap.gpuTexture, { dimension: 'cube' });

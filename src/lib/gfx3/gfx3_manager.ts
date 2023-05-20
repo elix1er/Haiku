@@ -334,7 +334,7 @@ class Gfx3Manager {
     return new UniformGroup(this.device, layout);
   }
 
-  createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement): Gfx3Texture {
+  createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement, is8bit:boolean = false): Gfx3Texture {
     if (!bitmap) {
       const canvas = document.createElement('canvas');
       canvas.getContext('2d');
@@ -345,7 +345,7 @@ class Gfx3Manager {
 
     const gpuTexture = this.device.createTexture({
       size: [bitmap.width, bitmap.height],
-      format: 'rgba8unorm',
+      format: is8bit?"r8unorm":'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
     });
 

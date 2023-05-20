@@ -61,8 +61,9 @@ class MainScreen extends Screen {
     this.obj = new Gfx3MeshShapeCylinder(2, 5, 24, [1, 1]);
     this.obj.setMaterial(new Gfx3Material({
       lightning: true,
-      texture: await gfx3TextureManager.loadTexture('./samples/perf/color-map.jpg'),
-      normalMap: await gfx3TextureManager.loadTexture('./samples/perf/normal-map.png'),
+      texture: await gfx3TextureManager.loadTexture('./samples/perf/color_map.jpg'),
+      normalMap: await gfx3TextureManager.loadTexture('./samples/perf/normal_map_opengl.jpg'),
+      roughnessMap: await gfx3TextureManager.loadTexture8bit('./samples/perf/roughness_map.jpg'),
       envMapEq: await gfx3TextureManager.loadTexture('./samples/perf/skybox.jpg'),
       specular: UT.VEC4_CREATE(1, 0, 0, 32)
     }));
@@ -125,6 +126,11 @@ class MainScreen extends Screen {
 
   draw() {
     gfx3MeshRenderer.enableDirLight(this.lightDir);
+    gfx3MeshRenderer.dirLightColor[0] = 0.8;
+    gfx3MeshRenderer.dirLightColor[1] = 0.6;
+    gfx3MeshRenderer.dirLightColor[2] = 0.4;
+
+    
 
     this.skySphere.draw();
 

@@ -22,6 +22,18 @@ class Gfx3TextureManager {
     return texture;
   }
 
+  async loadTexture8bit(path: string): Promise<Gfx3Texture> {
+    if (this.textures.has(path)) {
+      return this.textures.get(path)!;
+    }
+    const res = await fetch(path);
+    const img = await res.blob();
+    const bitmap = await createImageBitmap(img);
+    const texture = gfx3Manager.createTextureFromBitmap(bitmap, true);
+    this.textures.set(path, texture);
+    return texture;
+  }
+
   async loadCubemapTexture(path: string, extension: string): Promise<Gfx3Texture> {
     if (this.textures.has(path)) {
       return this.textures.get(path)!;

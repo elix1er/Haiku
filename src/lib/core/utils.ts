@@ -17,6 +17,7 @@ class UT {
   static VEC3_DOWN: vec3 = [0, -1, 0];
   static VEC4_SIZE = 16;
   static VEC5_SIZE = 20;
+  static VEC6_SIZE = 24;
   static MAT3_SIZE = 36;
 
   static FAIL(message: string) {
@@ -455,6 +456,18 @@ class UT {
     out[4] = v;
     return out;
   }
+
+  static VEC6_CREATE(x: number = 0, y: number = 0, z: number = 0, w: number = 0, v: number = 0, u: number = 0): vec5_buf {
+    const out = new Float32Array(6);
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = w;
+    out[4] = v;
+    out[5] = u;
+    return out;
+  }
+
 
   /**************************************************************************/
   /* MAT3 */

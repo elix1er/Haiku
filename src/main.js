@@ -6,14 +6,10 @@ import { gfx3SkyboxRenderer } from './lib/gfx3_skybox/gfx3_skybox_renderer';
 import { gfx3ParticlesRenderer } from './lib/gfx3_particules/gfx3_particles_renderer';   
 import { gfx2Manager } from './lib/gfx2/gfx2_manager';
 import { screenManager } from './lib/screen/screen_manager';
-import { MainScreen } from './samples/pool/main_screen';
 import { uiManager } from './lib/ui/ui_manager';
-/*
-
 // ---------------------------------------------------------------------------------------
 import { BootScreen } from './samples/boot/boot_screen';
 // ---------------------------------------------------------------------------------------
-*/
 
 class GameManager {
   constructor() {
@@ -52,4 +48,4 @@ class GameManager {
 
 export const gameManager = new GameManager();
 gameManager.startup();
-screenManager.requestSetScreen(new MainScreen());
+screenManager.requestSetScreen(new BootScreen());

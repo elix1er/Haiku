@@ -27,7 +27,7 @@ import { uiManager } from '../../lib/ui/ui_manager';
 import { MenuAxis } from '../../lib/ui_menu/ui_menu';
 import { UIMenuListView } from '../../lib/ui_menu_list_view/ui_menu_list_view';
 import { eventManager } from '../../lib/core/event_manager';
-import { PlayScreen } from './main_screen';
+
 import { TrackSelect } from './games_screen';
 
 import { screenManager } from '../../lib/screen/screen_manager';
@@ -492,7 +492,6 @@ class MainScreen extends Screen {
     uiManager.addWidget(this.playBtn, 'position:absolute; left:70%; top:45px; height:50px;');
 
     this.playBtn.getNode().addEventListener('click', function(){
-      //screenManager.requestSetScreen(new PlayScreen(), { });
       screenManager.requestSetScreen(new TrackSelect(), { });
       
     })

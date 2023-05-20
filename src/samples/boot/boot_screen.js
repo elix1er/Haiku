@@ -15,6 +15,9 @@ import { CheckerScreen } from '../checker/checker_screen';
 import { CCGScreen } from '../ccg/ccg_screen';
 import { FPSScreen } from '../fps/fps_screen';
 import { RPGScreen } from '../rpg/rpg_screen';
+// import { CCScreen } from '../crazy-cars/cc_screen';
+import { PerfScreen } from '../perf/perf_screen';
+import { PoolScreen } from '../pool/pool_screen';
 // ---------------------------------------------------------------------------------------
 
 class BootScreen extends Screen {
@@ -35,6 +38,9 @@ class BootScreen extends Screen {
     this.uiMenu.add('8', 'CCG Demo');
     this.uiMenu.add('9', 'FPS Demo');
     this.uiMenu.add('10', 'RPG Demo');
+    this.uiMenu.add('11', 'Crazy Car Demo');
+    this.uiMenu.add('12', 'Perf Demo');
+    this.uiMenu.add('13', 'Pool Demo');
     uiManager.addWidget(this.uiMenu, 'position:absolute; top:50%; left:50%; width:60%; transform:translate(-50%,-50%);');
 
     eventManager.subscribe(this.uiMenu, 'E_ITEM_SELECTED', this, this.handleMenuItemSelected);
@@ -78,6 +84,15 @@ class BootScreen extends Screen {
     }
     else if (data.id == 10) {
       screenManager.requestSetScreen(new RPGScreen());
+    }
+    else if (data.id == 11) {
+      // screenManager.requestSetScreen(new CCScreen());
+    }
+    else if (data.id == 12) {
+      screenManager.requestSetScreen(new PerfScreen());
+    }
+    else if (data.id == 13) {
+      screenManager.requestSetScreen(new PoolScreen());
     }
   }
 }

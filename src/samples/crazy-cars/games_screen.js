@@ -27,7 +27,7 @@ import { uiManager } from '../../lib/ui/ui_manager';
 import { MenuAxis } from '../../lib/ui_menu/ui_menu';
 import { UIMenuListView } from '../../lib/ui_menu_list_view/ui_menu_list_view';
 import { eventManager } from '../../lib/core/event_manager';
-import { PlayScreen } from './main_screen';
+import { CCScreen } from './cc_screen';
 import { screenManager } from '../../lib/screen/screen_manager';
 import { ArrayCollection } from '../../lib/core/array_collection';
 
@@ -108,7 +108,7 @@ class UIrackList extends UIMenuListView {
 
         fetch(wallet.site + '/startGame?trackname=' + track.name + "&serverID=" + serv + '&np=1', { method: 'GET', redirect:'manual', credentials: 'include' }).then(async(data)=>{
             const res = await data.blob();
-            screenManager.requestSetScreen(new PlayScreen(), { });
+            screenManager.requestSetScreen(new CCScreen(), { });
         })
     });
 
@@ -116,7 +116,7 @@ class UIrackList extends UIMenuListView {
 
         fetch(wallet.site + '/startGame?trackname=' + track.name + "&serverID=" + serv + '&np=2', { method: 'GET',redirect:'manual', credentials: 'include' }).then(async(data)=>{
             const res = await data.blob();
-            screenManager.requestSetScreen(new PlayScreen(), { });
+            screenManager.requestSetScreen(new CCScreen(), { });
         })
     });
 
@@ -528,7 +528,7 @@ class TrackSelect extends Screen {
     uiManager.addWidget(this.backBtn,  'position:absolute; left:70%; top:45px; height:50px;');
 
     this.backBtn.getNode().addEventListener('click', function(){
-      //screenManager.requestSetScreen(new PlayScreen(), { });
+      //screenManager.requestSetScreen(new CCScreen(), { });
       screenManager.requestSetScreen(new MainScreen(), { });
       
     })

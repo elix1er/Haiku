@@ -11,8 +11,8 @@ import { Gfx3Skybox } from '../../lib/gfx3_skybox/gfx3_skybox';
 import { gfx3Manager } from '../../lib/gfx3/gfx3_manager';
 import { gfx2Manager } from '../../lib/gfx2/gfx2_manager';
 import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
-import { Gfx3Cylinder } from '../../lib/gfx3_mesh/gfx3_cylinder';
-import { Gfx3Sphere } from '../../lib/gfx3_mesh/gfx3_sphere';
+import { Gfx3MeshShapeCylinder } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_cylinder';
+import { Gfx3MeshShapeSphere } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_sphere';
 
 import { CircuitRace, initWallet } from './cc.js';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -38,7 +38,7 @@ class BackBtn extends UIWidget {
 }
 
 
-class PlayScreen extends Screen {
+class CCScreen extends Screen {
   constructor() {
     super();
 
@@ -362,7 +362,7 @@ class PlayScreen extends Screen {
       for (let n = 0; n < track.woodDefs.length; n++) {
 
         const wood = track.addWoods(track.woodDefs[n].ptIdx, track.woodDefs[n].num, track.woodDefs[n].width, track.woodDefs[n].radius, track.woodDefs[n].mass, track.woodDefs[n].offset);
-        wood.mesh = new Gfx3Cylinder(wood.radius, wood.width * 2, 24, UT.VEC2_CREATE(1, 1));
+        wood.mesh = new Gfx3MeshShapeCylinder(wood.radius, wood.width * 2, 24, UT.VEC2_CREATE(1, 1));
         wood.mesh.setMaterial(this.woodMaterial);
 
         for(let o of wood.objects)
@@ -445,7 +445,7 @@ class PlayScreen extends Screen {
           turret.shotMesh=new Gfx3MeshObj();
           await turret.shotMesh.loadFromFile(this.site+"/assets/mesh/" + turret.shotModel + ".obj", this.site+"/assets/mesh/" + turret.shotModel + ".mtl");
         }else{
-          turret.shotMesh=new Gfx3Sphere(1,8,8, UT.VEC2_CREATE(1,1));
+          turret.shotMesh=new Gfx3MeshShapeSphere(1,8,8, UT.VEC2_CREATE(1,1));
         }
 
         for(let s of turret.main)
@@ -480,7 +480,7 @@ class PlayScreen extends Screen {
     await this.world.loadTrack(data.trackname, this.site);
 
     this.world.track.skyTexture = await gfx3TextureManager.loadTexture(this.site + "/assets/skybox/"+this.world.track.skyBoxImg);
-    this.skySphere = new Gfx3Sphere(300, 8, 8, UT.VEC2_CREATE(1,1));
+    this.skySphere = new Gfx3MeshShapeSphere(300, 8, 8, UT.VEC2_CREATE(1,1));
     this.skySphere.material.texture = this.world.track.skyTexture;
 
     const texture = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/wood.jpg");
@@ -638,7 +638,7 @@ class PlayScreen extends Screen {
     uiManager.addWidget(this.backBtn, 'position:absolute; left:90%; top:90%; height:50px;');
 
     this.backBtn.getNode().addEventListener('click', function(){
-      //screenManager.requestSetScreen(new PlayScreen(), { });
+      //screenManager.requestSetScreen(new CCScreen(), { });
       screenManager.requestSetScreen(new TrackSelect(), { });
       
     })
@@ -1460,4 +1460,4 @@ class PlayScreen extends Screen {
   }
 }
 
-export { PlayScreen };
+export { CCScreen };

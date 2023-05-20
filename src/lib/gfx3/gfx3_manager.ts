@@ -137,7 +137,6 @@ class Gfx3Manager {
   lastRenderStart: number;
   lastRenderTime: number;
 
-
   constructor() {
     this.adapter = {} as GPUAdapter;
     this.device = {} as GPUDevice;
@@ -240,34 +239,34 @@ class Gfx3Manager {
   }
 
   endDrawing() {
-    if (this.vertexSubBuffersSize > 0) {
-      if (this.vertexSubBuffersSize != this.vertexBuffer.size) {
-        this.vertexBuffer.destroy();
-        this.vertexBuffer = this.device.createBuffer({ size: this.vertexSubBuffersSize, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
-
-        for (const sub of this.vertexSubBuffers) {
-          this.device.queue.writeBuffer(this.vertexBuffer, sub.offset, sub.vertices);
-          sub.changed = false;
-        }
-
-        return;
-      }
+    if (this.vertexSubBuffersSize > 0 && this.vertexSubBuffersSize != this.vertexBuffer.size) {
+      this.vertexBuffer.destroy();
+      this.vertexBuffer = this.device.createBuffer({ size: this.vertexSubBuffersSize, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
 
       for (const sub of this.vertexSubBuffers) {
-        if (sub.changed) {
-          this.device.queue.writeBuffer(this.vertexBuffer, sub.offset, sub.vertices);
-          sub.changed = false;
-        }
+        this.device.queue.writeBuffer(this.vertexBuffer, sub.offset, sub.vertices);
+        sub.changed = false;
+      }
+
+      return;
+    }
+
+    for (const sub of this.vertexSubBuffers) {
+      if (sub.changed) {
+        this.device.queue.writeBuffer(this.vertexBuffer, sub.offset, sub.vertices);
+        sub.changed = false;
       }
     }
   }
 
-  beginRender(): void { this.lastRenderStart = new Date().getTime();}
+  beginRender(): void {
+    this.lastRenderStart = Date.now();
+  }
 
   endRender(): void {
     this.passEncoder.end();
     this.device.queue.submit([this.commandEncoder.finish()]);
-    this.lastRenderTime = new Date().getTime() - this.lastRenderStart;
+    this.lastRenderTime = Date.now() - this.lastRenderStart;
   }
 
   loadPipeline(id: string, vertexShader: string, fragmentShader: string, pipelineDesc: GPURenderPipelineDescriptor): GPURenderPipeline {
@@ -452,6 +451,10 @@ class Gfx3Manager {
 
   getVertexBuffer(): GPUBuffer {
     return this.vertexBuffer;
+  }
+
+  getLastRenderTime() {
+    return this.lastRenderTime;
   }
 
   handleWindowResize(): void {

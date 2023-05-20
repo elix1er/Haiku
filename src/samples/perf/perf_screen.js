@@ -1,10 +1,10 @@
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
+import { gfx3Manager } from '../../lib/gfx3/gfx3_manager';
+import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
 import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
 import { Gfx3Skybox } from '../../lib/gfx3_skybox/gfx3_skybox';
-import { gfx3Manager } from '../../lib/gfx3/gfx3_manager';
-import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
 import { SHADER_VERTEX_ATTR_COUNT } from '../../lib/gfx3_mesh/gfx3_mesh_shader';
 import { Gfx3MeshShapeCylinder } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_cylinder';
 import { Gfx3MeshShapeSphere } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_sphere';
@@ -25,7 +25,7 @@ class Transform {
   }
 }
 
-class MainScreen extends Screen {
+class PerfScreen extends Screen {
   constructor() {
     super();
     this.camera = new Gfx3Camera(0);
@@ -126,11 +126,7 @@ class MainScreen extends Screen {
 
   draw() {
     gfx3MeshRenderer.enableDirLight(this.lightDir);
-    gfx3MeshRenderer.dirLightColor[0] = 0.8;
-    gfx3MeshRenderer.dirLightColor[1] = 0.6;
-    gfx3MeshRenderer.dirLightColor[2] = 0.4;
-
-    
+    gfx3MeshRenderer.setDirLightColor(0.8, 0.6, 0.4);
 
     this.skySphere.draw();
 
@@ -143,10 +139,8 @@ class MainScreen extends Screen {
       }
     }
 
-    // document.getElementById('mode').innerHTML = this.mode;
-    // document.getElementById('bind1').innerHTML = gfx3MeshRenderer.binds;
-     document.getElementById('time').innerHTML = parseInt(gfx3Manager.lastRenderTime );
-     document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.lastRenderTime)).toFixed(2);
+    document.getElementById('time').innerHTML = parseInt(gfx3Manager.getLastRenderTime());
+    document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.getLastRenderTime())).toFixed(2);
   }
 
   handleKeyUp(e) {
@@ -178,7 +172,7 @@ class MainScreen extends Screen {
   }
 }
 
-export { MainScreen };
+export { PerfScreen };
 
 // -------------------------------------------------------------------------------------------
 // HELPFUL

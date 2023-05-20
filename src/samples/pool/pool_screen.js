@@ -15,7 +15,7 @@ import { Gfx3MeshPool } from './gfx3_mesh_pool';
 // ---------------------------------------------------------------------------------------
 const CAMERA_SPEED = 0.1;
 
-class MainScreen extends Screen {
+class PoolScreen extends Screen {
   constructor() {
     super();
 
@@ -318,4 +318,4 @@ class MainScreen extends Screen {
   }
 }
 
-export { MainScreen };
+export { PoolScreen };

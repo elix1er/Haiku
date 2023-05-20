@@ -4,7 +4,7 @@ import { inputManager } from '../../lib/input/input_manager';
 import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
-import { Gfx3MeshNav } from '../../lib/gfx3_mesh_nav/gfx3_mesh_nav';
+import { Gfx3MeshNav } from '../../lib/gfx3_mesh/gfx3_mesh_nav';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
 // ---------------------------------------------------------------------------------------
 import { Camera } from './camera';

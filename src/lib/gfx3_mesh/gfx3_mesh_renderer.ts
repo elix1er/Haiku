@@ -165,6 +165,25 @@ class Gfx3MeshRenderer {
     this.dirLight[3] = 1;
   }
 
+  setPointLightColor(index: number, r: number, g: number, b: number): void {
+    if (index == 0) {
+      this.pointLight0Color[0] = r;
+      this.pointLight0Color[1] = g;
+      this.pointLight0Color[2] = b;
+    }
+    else if (index == 1) {
+      this.pointLight1Color[0] = r;
+      this.pointLight1Color[1] = g;
+      this.pointLight1Color[2] = b;
+    }
+  }
+
+  setDirLightColor(r: number, g: number, b: number): void {
+    this.dirLightColor[0] = r;
+    this.dirLightColor[1] = g;
+    this.dirLightColor[2] = b;
+  }
+
   getDefaultTexture(): Gfx3Texture {
     return this.defaultTexture;
   }

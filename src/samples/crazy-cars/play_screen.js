@@ -1491,9 +1491,7 @@ class PlayScreen extends Screen {
               this.world.cars[n].contacts[i].object = this.contactPool.newObject(0.1, UT.VEC3_CREATE(0.5,0.1,0.1), 1)
               if(this.world.cars[n].contacts[i].object)
               {
-                this.world.cars[n].contacts[i].object.mesh.position[0]=this.world.cars[n].contacts[i].pos.x;
-                this.world.cars[n].contacts[i].object.mesh.position[1]=this.world.cars[n].contacts[i].pos.y;
-                this.world.cars[n].contacts[i].object.mesh.position[2]=this.world.cars[n].contacts[i].pos.z;
+                this.world.cars[n].contacts[i].object.mesh.setPosition(this.world.cars[n].contacts[i].pos.x, this.world.cars[n].contacts[i].pos.y, this.world.cars[n].contacts[i].pos.z);
               }
             }
 
@@ -1512,11 +1510,14 @@ class PlayScreen extends Screen {
             else {
                 this.world.cars[n].contacts[i].object.mesh.material.diffuse[0] = 1.0;
                 this.world.cars[n].contacts[i].object.mesh.material.diffuse[1] = dt / 500.0;
-                this.world.cars[n].contacts[i].object.mesh.material.update = true;
+                this.world.cars[n].contacts[i].object.mesh.material.changed = true;
   
-                this.world.cars[n].contacts[i].object.mesh.scale[0] = 1.0 - dt /500;
-                this.world.cars[n].contacts[i].object.mesh.scale[1] = 1.0 - dt /500;
-                this.world.cars[n].contacts[i].object.mesh.scale[2] = 1.0 - dt /500;
+                this.world.cars[n].contacts[i].object.mesh.setScale(1.0 - dt /500, 1.0 - dt /500, 1.0 - dt /500);
+                /*
+                this.world.cars[n].contacts[i].object.mesh.scale[0] = ;
+                this.world.cars[n].contacts[i].object.mesh.scale[1] = ;
+                this.world.cars[n].contacts[i].object.mesh.scale[2] = ;
+                */
                 i++;
             }
         }
@@ -1538,11 +1539,15 @@ class PlayScreen extends Screen {
 
                 if(this.world.cars[n].skidPlanes[i].object)
                 {
+                  /*
                   this.world.cars[n].skidPlanes[i].object.mesh.rotation[0] = Math.atan2(this.world.cars[n].skidPlanes[i].normal.x , this.world.cars[n].skidPlanes[i].normal.y);
                   this.world.cars[n].skidPlanes[i].object.mesh.rotation[1] = Math.acos(this.world.cars[n].skidPlanes[i].normal.z);
+                  */
                   
+                  this.world.cars[n].skidPlanes[i].object.mesh.setRotation(Math.atan2(this.world.cars[n].skidPlanes[i].normal.x , this.world.cars[n].skidPlanes[i].normal.y), Math.acos(this.world.cars[n].skidPlanes[i].normal.z), 0);
+                  this.world.cars[n].skidPlanes[i].object.mesh.setPosition(this.world.cars[n].skidPlanes[i].pos[0], this.world.cars[n].skidPlanes[i].pos[1], this.world.cars[n].skidPlanes[i].pos[2])
                   //this.world.cars[n].skidPlanes[i].object.mesh.lookAt(this.world.cars[n].skidPlanes[i].normal.x, this.world.cars[n].skidPlanes[i].normal.y, this.world.cars[n].skidPlanes[i].normal.z);
-                  UT.VEC3_SET(this.world.cars[n].skidPlanes[i].object.mesh.position, this.world.cars[n].skidPlanes[i].pos[0], this.world.cars[n].skidPlanes[i].pos[1], this.world.cars[n].skidPlanes[i].pos[2]);
+                  //UT.VEC3_SET(this.world.cars[n].skidPlanes[i].object.mesh.position, this.world.cars[n].skidPlanes[i].pos[0], this.world.cars[n].skidPlanes[i].pos[1], this.world.cars[n].skidPlanes[i].pos[2]);
                 }
             }
             
@@ -1569,8 +1574,10 @@ class PlayScreen extends Screen {
 
           nitro.obj = this.nitroPool.newObject((d + 1.0) / 3, [0.5,0.5,0.5], 1);
 
-          nitro.obj.mesh.scale = UT.VEC3_CREATE(nitro.obj.mesh.scale[0], nitro.obj.mesh.scale[1], nitro.obj.mesh.scale[2]);
-          nitro.obj.mesh.position = UT.VEC3_ADD(InPlace.QUAT_MULTIPLY_BY_VEC3([this.world.cars[n].quat.x,this.world.cars[n].quat.y, this.world.cars[n].quat.z, this.world.cars[n].quat.w], UT.VEC3_CREATE(0, 0, -2.8)), [this.world.cars[n].pos.x,this.world.cars[n].pos.y,this.world.cars[n].pos.z]);
+          nitro.obj.mesh.setScale(nitro.obj.mesh.scale[0], nitro.obj.mesh.scale[1], nitro.obj.mesh.scale[2]);
+
+          const p = UT.VEC3_ADD(InPlace.QUAT_MULTIPLY_BY_VEC3([this.world.cars[n].quat.x,this.world.cars[n].quat.y, this.world.cars[n].quat.z, this.world.cars[n].quat.w], UT.VEC3_CREATE(0, 0, -2.8)), [this.world.cars[n].pos.x,this.world.cars[n].pos.y,this.world.cars[n].pos.z]);
+          nitro.obj.mesh.setPosition(p[0], p[1], p[2]);
 
           nitro.start = now;
           
@@ -1594,13 +1601,10 @@ class PlayScreen extends Screen {
               
                 //nitro.obj.mesh.material.opacity = 1.0 - mdt *0.005;
                 nitro.obj.mesh.material.diffuse[0] = Math.max(0.5, 1.0 - mdt * 0.05);
-                nitro.obj.mesh.material.update=true;
+                nitro.obj.mesh.material.changed=true;
 
-                nitro.obj.mesh.scale[0] = 1.0 - mdt * 0.005;
-                nitro.obj.mesh.scale[1] = 1.0 - mdt * 0.005;
-                nitro.obj.mesh.scale[2] = 1.0 - mdt * 0.005;
-                
-                nitro.obj.mesh.position[1] += ts * 0.0108;
+                nitro.obj.mesh.setScale(1.0 - mdt * 0.005, 1.0 - mdt * 0.005, 1.0 - mdt * 0.005);
+                nitro.obj.mesh.translate(0, ts * 0.0108, 0);
               
                 i++;
             }
@@ -1664,13 +1668,12 @@ class PlayScreen extends Screen {
     if (this.roadWall)
       this.roadWall.update(ts);
 
-
     if(this.skySphere)
     {
-      this.skySphere.position[0] = this.camera.position[0];
-      this.skySphere.position[1] = this.camera.position[1];
-      this.skySphere.position[2] = this.camera.position[2];
+      this.skySphere.setPosition(this.camera.position[0], this.camera.position[1], this.camera.position[2]);
+      this.skySphere.update(ts);
     }
+      
 
   }
 

@@ -49,8 +49,8 @@ class Gfx3MeshPool{
           m.mesh.material.diffuse[1] = color[1];
           m.mesh.material.diffuse[2] = color[2];
           m.mesh.material.opacity = opacity;
-  
-          UT.VEC3_SET(m.mesh.position, 0, 0, 0);
+
+          m.mesh.setPosition(0, 0, 0);
   
           m.mesh.material.changed = true;
   

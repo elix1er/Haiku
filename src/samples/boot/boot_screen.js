@@ -15,7 +15,7 @@ import { CheckerScreen } from '../checker/checker_screen';
 import { CCGScreen } from '../ccg/ccg_screen';
 import { FPSScreen } from '../fps/fps_screen';
 import { RPGScreen } from '../rpg/rpg_screen';
- import { CCScreen } from '../crazy-cars/select_screen';
+// import { CCScreen } from '../crazy-cars/select_screen';
 import { PerfScreen } from '../perf/perf_screen';
 import { PoolScreen } from '../pool/pool_screen';
 // ---------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ class BootScreen extends Screen {
       screenManager.requestSetScreen(new RPGScreen());
     }
     else if (data.id == 11) {
-       screenManager.requestSetScreen(new CCScreen());
+      //  screenManager.requestSetScreen(new CCScreen());
     }
     else if (data.id == 12) {
       screenManager.requestSetScreen(new PerfScreen());

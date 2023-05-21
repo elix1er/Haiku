@@ -132,9 +132,6 @@ class PerfScreen extends Screen {
         gfx3MeshRenderer.drawMesh(this.obj, t.m);
       }
     }
-
-    document.getElementById('time').innerHTML = parseInt(gfx3Manager.getLastRenderTime());
-    document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.getLastRenderTime())).toFixed(2);
   }
 
   handleKeyUp(e) {

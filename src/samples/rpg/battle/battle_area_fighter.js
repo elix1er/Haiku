@@ -139,7 +139,7 @@ class BattleAreaFighter extends Gfx3Transformable {
 
       const pos = this.mesh.getPosition();
       const currentView = gfx3Manager.getCurrentView();
-      const screenPos = currentView.getScreenPosition(0, pos[0], pos[1] + 0.8, pos[2]);
+      const screenPos = currentView.getScreenPosition(pos[0], pos[1] + 0.8, pos[2]);
 
       toast.style.top = screenPos[1] + 'px';
       toast.style.left = screenPos[0] + 'px';

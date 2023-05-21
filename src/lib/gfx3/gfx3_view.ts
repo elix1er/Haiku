@@ -230,13 +230,13 @@ class Gfx3View {
     UT.MAT4_MULTIPLY(matrix, this.getCameraViewMatrix(), matrix);
 
     const pos = UT.MAT4_MULTIPLY_BY_VEC4(matrix, [x, y, z, 1]);
-    const viewportRealWidth = (this.screenSize[0] * this.viewport.widthFactor) / window.devicePixelRatio;
-    const viewportRealHeight = (this.screenSize[1] * this.viewport.heightFactor) / window.devicePixelRatio;
+    const viewportClientWidth = (this.screenSize[0] * this.viewport.widthFactor) / window.devicePixelRatio;
+    const viewportClientHeight = (this.screenSize[1] * this.viewport.heightFactor) / window.devicePixelRatio;
 
     pos[0] = pos[0] / pos[3];
     pos[1] = pos[1] / pos[3];
-    pos[0] = ((pos[0] + 1.0) * viewportRealWidth) / (2.0);
-    pos[1] = viewportRealHeight - ((pos[1] + 1.0) * viewportRealHeight) / (2.0);
+    pos[0] = ((pos[0] + 1.0) * viewportClientWidth) / (2.0);
+    pos[1] = viewportClientHeight - ((pos[1] + 1.0) * viewportClientHeight) / (2.0);
     return [pos[0], pos[1]];
   }
 

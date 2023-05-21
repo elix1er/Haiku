@@ -358,7 +358,7 @@ class Gfx3Manager {
       addressModeV: 'repeat'
     });
 
-    return { gpuTexture: gpuTexture, gpuSampler: gpuSampler };
+    return { gpuTexture: gpuTexture, gpuSampler: gpuSampler, bindGroup: null };
   }
 
   createCubeMapFromBitmap(bitmaps?: Array<ImageBitmap | HTMLCanvasElement>): Gfx3Texture {
@@ -396,7 +396,7 @@ class Gfx3Manager {
       minFilter: 'linear'
     });
 
-    return { gpuTexture: cubemapTexture, gpuSampler: gpuSampler };
+    return { gpuTexture: cubemapTexture, gpuSampler: gpuSampler, bindGroup: null };
   }
 
   getWidth(): number {

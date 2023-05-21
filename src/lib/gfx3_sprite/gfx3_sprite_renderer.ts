@@ -51,7 +51,7 @@ class Gfx3SpriteRenderer {
       passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(i));
 
       const texture = sprite.getTexture();
-      passEncoder.setBindGroup(1, texture.bindGroup);
+      passEncoder.setBindGroup(1, texture.bindGroup!);
 
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), sprite.getVertexSubBufferOffset(), sprite.getVertexSubBufferSize());
       passEncoder.draw(sprite.getVertexCount());

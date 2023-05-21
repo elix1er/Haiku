@@ -5,13 +5,14 @@
 ![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.0-blue)
 
 **WebStationX** is a typescript 2D/3D video game engine based on WebGPU.   
-The idea behind WebStationX is simple: provide a simple and pragmatic development kit from ui to rendering.  
+We provide a simple, pragmatic and lightweight development kit to build web games.  
 Our priority is to eliminate black boxes and giving a maximum control to the user.  
-Important note: This engine comes with a dozen diverse and varied examples.
+Important note: This engine comes with a dozen of diverse and varied examples.
 
 ## General features
 - 👾 2D - Sprite, animated tilemap
 - 🧊 3D - Debug shapes, light, static mesh, animated mesh, material, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover
+- 💁 Format - Obj
 - 💥 VFX - Phong, normal-map, env-map
 - 🎮 Input - Action mapper for keyboard and gamepad
 - 🚔 Pathfinder - A* for 2D & 3D
@@ -19,7 +20,7 @@ Important note: This engine comes with a dozen diverse and varied examples.
 - 📜 Scripts - Write game behaviors
 - 🔊 Sound - Sound manager built on the Web Audio API
 - 🌳 Tree - Binary Space Partion for 2D & 3D
-- 🎨 UI - Component architecture very efficient to keep project clean and scalable
+- 🎨 UI - Component architecture to keep project clean and scalable
 
 ## Getting started
 You need to install [nodejs](https://nodejs.org/en/download/). 
@@ -68,11 +69,10 @@ If you have a suggestion that would make this better, please fork the repo and c
 > *As WebGPU is not released, please enable `chrome://flags/#enable-unsafe-webgpu` or `edge://flags/#enable-unsafe-webgpu`*
 
 ## First todo-list
-- Texture Scroll UV (Owner: Me, Delay: 1/2 weeks)
-- Texture Frames (JSM/JAM) (Owner: me, Delay: 3 weeks)
+- Texture Scroll UV (Owner: Me, Delay: 1 month)
+- Texture Frames (JSM/JAM) (Owner: me, Delay: 1 month)
 - Vertex Light (Owner: me, Delay: N/A)
 - Possible optimization on Gfx3Camera (Owner: me, Delay: N/A)
-- Particules system (Owner: Antoine, Delay: 1 month)
 
 ## Fun todo-list
 - Transform a-star in a generic way (2D & 3D)

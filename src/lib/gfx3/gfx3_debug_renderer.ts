@@ -24,7 +24,7 @@ class Gfx3DebugRenderer {
 
     this.vertexCount = 0;
     this.commands = [];
-    this.showDebug = true;
+    this.showDebug = false;
 
     this.uniformBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
     this.uniformBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');

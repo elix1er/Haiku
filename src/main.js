@@ -29,9 +29,9 @@ class GameManager {
     screenManager.update(ts);
 
     gfx3Manager.beginDrawing(0);
-    // gfx2Manager.beginDrawing();
+    gfx2Manager.beginDrawing();
     screenManager.draw();
-    // gfx2Manager.endDrawing();
+    gfx2Manager.endDrawing();
     gfx3Manager.endDrawing();
 
     gfx3Manager.beginRender();
@@ -41,6 +41,9 @@ class GameManager {
     gfx3SpriteRenderer.render();
     gfx3ParticlesRenderer.render();
     gfx3Manager.endRender();
+
+    document.getElementById('time').innerHTML = parseInt(gfx3Manager.getLastRenderTime());
+    document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.getLastRenderTime())).toFixed(2);
 
     requestAnimationFrame(timeStamp => this.run(timeStamp));
   }

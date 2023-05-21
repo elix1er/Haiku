@@ -6,13 +6,15 @@ import { inputManager } from '../../lib/input/input_manager';
 import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
-import { Gfx3MeshObj } from '../../lib/gfx3_mesh/gfx3_obj';
+import { Gfx3MeshObj } from '../../lib/gfx3_mesh/gfx3_mesh_obj';
 import { Gfx3Skybox } from '../../lib/gfx3_skybox/gfx3_skybox';
 import { gfx3Manager } from '../../lib/gfx3/gfx3_manager';
 import { gfx2Manager } from '../../lib/gfx2/gfx2_manager';
 import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
-import { Gfx3Cylinder } from '../../lib/gfx3_mesh/gfx3_cylinder';
-import { Gfx3Sphere } from '../../lib/gfx3_mesh/gfx3_sphere';
+import { Gfx3MeshShapeCylinder } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_cylinder';
+import { Gfx3MeshShapeSphere } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_sphere';
+
+
 
 import { CircuitRace, initWallet } from './cc.js';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -32,6 +34,9 @@ import { TrackSelect } from './games_screen';
 
 import { screenManager } from '../../lib/screen/screen_manager';
 import { ArrayCollection } from '../../lib/core/array_collection';
+
+import { InPlace } from './inplace';
+import {UIPaginedMenuListView } from './ui_pagined_listview'
 
 // ---------------------------------------------------------------------------------------
 const CAMERA_SPEED = 0.1;
@@ -66,87 +71,6 @@ class UIAccount extends UIWidget {
 }
 
 
-class UICarList extends UIMenuListView {
-  constructor(nPages) {
-    super({axis : MenuAxis.X});
-
-    this.myWidgets = [];
-    this.nItemPerPages = nPages;
-
-    this.nextPageIcon = new UISprite();
-    this.prevPageIcon = new UISprite();
-    this.pageCntText = new UIText();
-
-    const self=this;
-
-    this.nextPageIcon.node.addEventListener('click' , function(){ self.nextPage(); })
-    this.prevPageIcon.node.addEventListener('click' , function(){ self.prevPage(); })
-
-    uiManager.addWidget(this.pageCntText, 'position:absolute; top:360px; left:40%; right:0; height:40px; width:100px;z-index:1;');
-
-    this.nextPageIcon.loadTexture("/samples/crazy-cars/ar.png").then(() => {
-      uiManager.addWidget(this.nextPageIcon, 'position:absolute; top:390px; left:95%; right:0; height:220px; width:20px;background-size: contain;z-index:1;');
-    });
-        
-    this.prevPageIcon.loadTexture("/samples/crazy-cars/al.png").then(() => {
-      uiManager.addWidget(this.prevPageIcon, 'position:absolute; top:390px; left:2%; right:0; height:220px; width:20px;background-size: contain;z-index:1;');
-    });
-
-    
-    
-  }
-
-  addItem(item, enabled = true, index = -1) {
-    let widget = new UICar();
-    widget.setItem(item);
-    this.myWidgets.push(widget);
-
-    /*this.addWidget(widget, enabled, index);*/
-  }
-
-  setPageForItem(n)
-  {
-    const page = Math.floor(n/this.nItemPerPages);
-    if(page != this.curPage)
-      this.setPage(page);
-  }
-
-  nextPage(){
-    this.setPage(this.curPage+1)
-  }
-  prevPage(){
-
-    if(this.curPage<=0)
-      return;
-
-    this.setPage(this.curPage-1);
-  }
-  
-
-
-  setPage(n) {
-
-    this.clear();
-
-    const npages = Math.floor(this.myWidgets.length/ this.nItemPerPages)
-    this.curPage = (n < npages) ? n : npages;
-    
-    this.prevPageIcon.node.style.opacity = (this.curPage ==0)?0.5:1.0;
-    this.nextPageIcon.node.style.opacity = (this.curPage >= npages )?0.5:1.0;
-    this.pageCntText.setText((this.curPage+1)+ ' / ' + (npages+1));
-
-    const firstItem = this.curPage * this.nItemPerPages ;
-    const lastItem = Math.min(firstItem + this.nItemPerPages, this.myWidgets.length );
-
-    for(let i = firstItem; i < lastItem; i++)
-    {
-      this.addWidget(this.myWidgets[i], true, i);
-    }
-  }
-
-  myWidgets;
-}
-
 class UICar extends UIWidget {
 
   constructor() {
@@ -157,9 +81,11 @@ class UICar extends UIWidget {
           <h5 class="car-name"></h5>
         </div>
         <div class="car-item-body">
-          <img class="nft-image" src="">
-          <img class="nft-mounted" src="">
-          <img class="nft-mounted" src="">
+          <img class="nft-image" src="#">
+          <div style="padding-left:20px">
+            <img class="nft-mounted-tire" src="#">
+            <img class="nft-mounted-engine" src="#">
+          </div>
           <div class="damage-bar">
             <div class="damage-bar-inner" id="damages-1099511627776" style="width: 100%;"></div>
           </div>
@@ -187,7 +113,26 @@ class UICar extends UIWidget {
       this.node.querySelector('.store-icon').src = this.car.type == 1 ? wallet.site+'/assets/img/atomichub.png' : wallet.site+'/assets/img/simplemarket.svg';
       this.node.querySelector('.car-name').textContent = this.car.name;
       this.node.querySelector('.nft-image').src = wallet.site + '/assets/nfts/' + img;
-    
+
+      
+
+      if(this.car.suspension)
+      {
+        const timg = wallet.getAssetImage(this.car.suspension, 'tires');
+        this.node.querySelector('.nft-mounted-tire').src = wallet.site + '/assets/nfts/' + timg;
+      }
+      else
+        this.node.querySelector('.nft-mounted-tire').src = wallet.site + '/assets/img/notire.png' ;
+
+      if(this.car.motor)
+      {
+        const mimg = wallet.getAssetImage(this.car.motor, 'motors');
+        this.node.querySelector('.nft-mounted-engine').src = wallet.site + '/assets/nfts/' + mimg;
+      }
+      else
+        this.node.querySelector('.nft-mounted-engine').src = wallet.site + '/assets/img/nomotor.png';
+
+      
     } else {
       this.node.querySelector('.store-icon').src = '#';
       this.node.querySelector('.car-name').textContent = '--';
@@ -198,18 +143,33 @@ class UICar extends UIWidget {
 }
 
 
+class UICarList extends UIPaginedMenuListView {
+  constructor(nPages) {
+    super(nPages);
+    
+  }
+
+  addItem(item, enabled = true, index = -1) {
+    let widget = new UICar();
+    widget.setItem(item);
+    this.myWidgets.push(widget);
+  }
+}
 
 
-class MainScreen extends Screen {
+class CCScreen extends Screen {
   constructor() {
     super();
 
 
     this.camera = new Gfx3Camera(0);
+
+
     this.skybox = new Gfx3Skybox();
 
     this.playBtn = new PlayBtn();
     this.carList = new UICarList(4);
+    this.AccountUI = new UIAccount();
 
     this.cameraAngle = 0;
 
@@ -239,7 +199,7 @@ class MainScreen extends Screen {
     gfx3Manager.views[0].setPerspectiveFovy(0.8);
     
 
-    this.lightDir = UT.VEC3_CREATE(0, -1, 0.2);
+    this.lightDir = UT.VEC3_CREATE(0, -1, -1.0);
 
     this.selectedServer = 0;
     this.trackName = 'circuit 003';
@@ -269,10 +229,10 @@ class MainScreen extends Screen {
     };
     this.pressed = {};
 
-    gfx3MeshRenderer.binds = 1;
-
     this.digitsTex=[];
     this.digits=[];
+
+    
   }
 
   
@@ -281,30 +241,26 @@ class MainScreen extends Screen {
   {
     //const angles = UT.QUAT_TO_EULER(UT.VEC4_CREATE(quat.x, quat.y, quat.z, quat.w), "YXZ");
 
-    UT.VEC3_SET(obj.wpos, obj.pos.x, obj.pos.y, obj.pos.z);
+    
+    UT.MAT4_TRANSLATE(obj.pos.x, obj.pos.y, obj.pos.z, obj.matrix);
 
-    UT.MAT4_TRANSLATE_N(obj.wpos[0], obj.wpos[1], obj.wpos[2], obj.matrix);
-
-    if(obj.quat&&obj.wquat)
+    if(obj.quat)
     {
-      UT.VEC4_SET(obj.wquat, obj.quat.x, obj.quat.y, obj.quat.z, obj.quat.w);
-
       obj.nmatrix = UT.MAT4_IDENTITY();
-      UT.MAT4_MULTIPLY_BY_QUAT_N(obj.nmatrix, obj.wquat);
-      UT.MAT4_MULTIPLY_N(obj.matrix, obj.nmatrix);
+      InPlace.MAT4_MULTIPLY_BY_QUAT(obj.nmatrix, obj.quat.x, obj.quat.y, obj.quat.z, obj.quat.w);
+      UT.MAT4_MULTIPLY(obj.matrix, obj.nmatrix, obj.matrix);
     }
 
-    if(obj.wscale && obj.scale)
+    if(obj.scale)
     {
-      UT.VEC3_SET(obj.wscale, obj.scale.x, obj.scale.y, obj.scale.z);
-      UT.MAT4_SCALE_N(obj.matrix, obj.wscale[0], obj.wscale[1], obj.wscale[2]);
-      UT.MAT4_SCALE_N(obj.nmatrix, obj.wscale[0], obj.wscale[1], obj.wscale[2]);
+      InPlace.MAT4_SCALE(obj.matrix, obj.scale.x, obj.scale.y, obj.scale.z);
+      InPlace.MAT4_SCALE(obj.nmatrix, obj.scale.x, obj.scale.y, obj.scale.z);
     }
 
     if(parent != null)
     {
-        UT.MAT4_MULTIPLY_NO(parent, obj.matrix, obj.matrix);
-        UT.MAT4_MULTIPLY_NO(parentNorm, obj.nmatrix, obj.nmatrix);
+      UT.MAT4_MULTIPLY(parent, obj.matrix, obj.matrix);
+      UT.MAT4_MULTIPLY(parentNorm, obj.nmatrix, obj.nmatrix);
     }
   }
 
@@ -313,7 +269,7 @@ class MainScreen extends Screen {
 
   async loadPod() {
 
-    this.podMesh = new Gfx3Cylinder(3, 2, 64,UT.VEC2_CREATE(1,1));
+    this.podMesh = new Gfx3MeshShapeCylinder(3, 2, 64,UT.VEC2_CREATE(1,1));
     const podTex = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/tiles_0042_color_1k.jpg");
     const podNormals = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/tiles_0042_normal_opengl_1k.png");
     this.podMat = new Gfx3Material({texture:podTex, normalMap:podNormals, lightning:true});
@@ -344,12 +300,6 @@ class MainScreen extends Screen {
     car.chassisLength = bbox.max[2] - bbox.min[2];
 
     car.center = UT.VEC3_CREATE(bbox.min[0] + car.chassisWidth / 2, bbox.min[1] + car.chassisHeight / 2, bbox.min[2] + car.chassisLength / 2);
-
-
-    car.wpos = UT.VEC3_CREATE(0,0,0);
-    car.wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
-    car.wquat = UT.VEC4_CREATE(0,0,0,1.0);
-    car.wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
     car.matrix = UT.MAT4_IDENTITY();
 
     this.getObjMat(car);
@@ -357,11 +307,6 @@ class MainScreen extends Screen {
     car.updateWheels();
 
     for (let n = 0; n < 4; n++) {
-
-      car.wheels[n].wpos = UT.VEC3_CREATE(0,0,0);
-      car.wheels[n].wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
-      car.wheels[n].wquat = UT.VEC4_CREATE(0,0,0,1.0);
-      car.wheels[n].wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
       car.wheels[n].matrix = UT.MAT4_IDENTITY();
       car.wheels[n].nmatrix = UT.MAT4_IDENTITY();
 
@@ -378,13 +323,7 @@ class MainScreen extends Screen {
     this.getObjMat(car);
 
     for (let i = 0; i < car.wheels.length; i++) {
-
-        car.wheels[i].wpos = UT.VEC3_CREATE(0,0,0);
-        car.wheels[i].wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
-        car.wheels[i].wquat = UT.VEC4_CREATE(0,0,0,1.0);
-        car.wheels[i].wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
         car.wheels[i].matrix = UT.MAT4_IDENTITY();
-
         this.getObjMat(car.wheels[i]);
     }
     
@@ -398,6 +337,14 @@ class MainScreen extends Screen {
   {
     const self=this;
     this.carImgs = [];
+
+    if(this.wallet.myAccount == null)
+    {
+      this.carList.clear();
+      this.carList.setPage(0);
+      return;
+    }
+
     this.wallet.getAssets(['cars']).then(()=>{
 
       const a = new ArrayCollection();
@@ -421,6 +368,14 @@ class MainScreen extends Screen {
   onLogin()
   {
     this.updateCarList();
+  }
+
+  onLogout()
+  {
+    this.carList.myWidgets=[];
+    this.updateCarList();
+    this.setCar(1,-1);
+
   }
 
   async setCar(id,type)
@@ -457,8 +412,8 @@ class MainScreen extends Screen {
     const self = this;
     this.playBtn.setVisible(false);
 
-    fetch(this.site + '/selectCar?carid='+a[1]+'&type='+a[2]+'&to=none', { method: 'GET', credentials: 'include' }).then(async(ab)=>{
-      const b = await ab.blob();
+    fetch(this.site + '/selectCar?carid='+a[1]+'&type='+a[2]+'&to=none', { method: 'GET', credentials: 'include' , cache: "no-store"}).then(async(ab)=>{
+      const b = await ab.text();
       self.setCar(parseInt(a[1]), parseInt(a[2]));
       this.playBtn.setVisible(true);
     });
@@ -468,7 +423,6 @@ class MainScreen extends Screen {
 
     const self=this;
 
-    this.AccountUI = new UIAccount();
     uiManager.addWidget(this.AccountUI, 'position:absolute; top:0; left:0; right:0; height:50px;');
 
     this.wallet = await initWallet(this.site);
@@ -476,14 +430,15 @@ class MainScreen extends Screen {
     this.wallet.world = this.world;
 
     this.wallet.onLogin = function(){self.onLogin()};
+    this.wallet.onLogout = function(){self.onLogout()};
+
     window.wallet = this.wallet;
 
     if(!this.wallet.myAccount)
-        await fetch(this.site + '/selectCar?carid=1&type=-1&to=none', { method: 'GET', credentials: 'include' });
-
-    await fetch(this.site + '/startGame?trackname=' + this.trackName + "&serverID=" + this.selectedServer + '&np=1', { method: 'GET', credentials: 'include' });
-
-
+    {
+        const a = await fetch(this.site + '/selectCar?carid=1&type=-1&to=none', { method: 'GET', credentials: 'include', cache: "no-store" });
+        const b = await a.blob();
+    }
 
     this.selectedCar = new UISprite();
     await this.selectedCar.loadTexture(this.site + "/assets/nfts/car2.png");
@@ -492,17 +447,16 @@ class MainScreen extends Screen {
     uiManager.addWidget(this.playBtn, 'position:absolute; left:70%; top:45px; height:50px;');
 
     this.playBtn.getNode().addEventListener('click', function(){
+      //screenManager.requestSetScreen(new PlayScreen(), { });
       screenManager.requestSetScreen(new TrackSelect(), { });
       
     })
 
-    const response = await fetch(this.site + '/myGame', { method: 'GET', credentials: 'include' });
+    const response = await fetch(this.site + '/myCar', { method: 'GET', credentials: 'include' , cache: "no-store" });
     const data = await response.json();
     if (data.error) {
       return;
     }
-
-    
 
     eventManager.subscribe(this.carList, 'E_ITEM_FOCUSED', this, this.handleCarFocused);
     eventManager.subscribe(this.carList, 'E_ITEM_SELECTED', this, this.handleCarSelected);
@@ -519,12 +473,13 @@ class MainScreen extends Screen {
     
     
     this.skyTexture = await gfx3TextureManager.loadTexture(this.site + "/assets/skybox/lobby.jpg");
-    this.skySphere = new Gfx3Sphere(300, 8, 8, UT.VEC2_CREATE(1,1));
+    this.skySphere = new Gfx3MeshShapeSphere(300, 8, 8, UT.VEC2_CREATE(1,1));
     this.skySphere.material.texture = this.skyTexture;
 
-    await this.loadPod();
+    //gfx3MeshRenderer.setShadowSourceProj(600, 200);
 
-    await this.setCar(data.carid, data.cartype);
+    await this.loadPod();
+    await this.setCar(data.result.id, data.result.type);
 
     
 
@@ -537,7 +492,40 @@ class MainScreen extends Screen {
 
   }
 
+  delCar(car)
+  {
+    if(car.ChassisMesh)
+    {
+      car.ChassisMesh.destroy();
+      car.ChassisMesh = null;
+    }
+
+    if(car.tireMesh)
+    {
+      car.tireMesh.destroy();
+      car.tireMesh = null;
+    }
+  }
+
   onExit() {
+
+    if(this.world.myCar)
+    {
+      this.delCar(this.world.myCar);
+      this.world.myCar=null;
+    }
+      
+    if(this.podMesh)
+    {
+      this.podMesh.delete();
+      this.podMesh = null;
+    }
+
+    if(this.skySphere)
+    {
+      this.skySphere.delete();
+      this.skySphere=null;
+    }
 
     uiManager.removeWidget(this.carList.nextPageIcon);
     uiManager.removeWidget(this.carList.prevPageIcon);
@@ -558,8 +546,8 @@ class MainScreen extends Screen {
     document.removeEventListener('mouseup', this.handleMouseUpCb);
     document.removeEventListener('mousemove', this.handleMouseMoveCb);
 
-    document.addEventListener('keydown', this.handleKeyDownCb);
-    document.addEventListener('keyup', this.handleKeyUpCb);
+    document.removeEventListener('keydown', this.handleKeyDownCb);
+    document.removeEventListener('keyup', this.handleKeyUpCb);
 
   }
 
@@ -568,32 +556,31 @@ class MainScreen extends Screen {
   update(ts) {
     const now = new Date().getTime();
 
+    //gfx3MeshRenderer.enableShadowSource(UT.VEC3_CREATE(0,20,10), UT.VEC3_CREATE(0, 0, 0));
+    
+
    
     if (this.world.myCar) {
 
-        const m = UT.MAT4_IDENTITY();
-        const nm =  UT.MAT4_IDENTITY();
-        UT.MAT4_MULTIPLY_BY_QUAT_N(nm, this.world.myCar.wquat);
-        UT.MAT4_MULTIPLY_N(nm,UT.MAT4_ROTATE_Y(this.a));
-        this.world.myCar.nmatrix = nm;
+        this.world.myCar.matrix = UT.MAT4_IDENTITY();
+        this.world.myCar.nmatrix =  UT.MAT4_IDENTITY();
+        InPlace.MAT4_MULTIPLY_BY_QUAT(this.world.myCar.nmatrix, this.world.myCar.quat.x, this.world.myCar.quat.y, this.world.myCar.quat.z, this.world.myCar.quat.w);
+        InPlace.MAT4_ROTATE_Y(this.world.myCar.nmatrix, this.a);
 
-        UT.MAT4_TRANSLATE_N(this.world.myCar.wpos[0], this.world.myCar.wpos[1], this.world.myCar.wpos[2], m);
-        UT.MAT4_MULTIPLY_N(m,this.world.myCar.nmatrix);
+        UT.MAT4_TRANSLATE(this.world.myCar.pos.x, this.world.myCar.pos.y, this.world.myCar.pos.z, this.world.myCar.matrix);
+        UT.MAT4_MULTIPLY(this.world.myCar.matrix,this.world.myCar.nmatrix, this.world.myCar.matrix);
 
-        this.world.myCar.matrix = m;
-        
         this.world.myCar.updateWheels();
 
         for (let n = 0; n < 4; n++) {
             
-            this.world.myCar.wheels[n].wpos = UT.VEC3_CREATE(0,0,0);
-            this.world.myCar.wheels[n].wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
-            this.world.myCar.wheels[n].wquat = UT.VEC4_CREATE(0,0,0,1.0);
-            this.world.myCar.wheels[n].wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
             this.world.myCar.wheels[n].matrix = UT.MAT4_IDENTITY();
             this.world.myCar.wheels[n].nmatrix = UT.MAT4_IDENTITY();
       
             this.getObjMat(this.world.myCar.wheels[n], this.world.myCar.matrix, this.world.myCar.nmatrix);
+
+            if(this.world.myCar.wheels[n].pos.x>0)
+                InPlace.MAT4_ROTATE_Y(this.world.myCar.wheels[n].matrix, Math.PI)              ;
         }
 
         if (this.world.myCar.ChassisMesh) {
@@ -623,9 +610,12 @@ class MainScreen extends Screen {
     this.camera.lookAt(0,0,0);
 
     this.a+=ts / 1000.0;
-    this.skySphere.position[0] = this.camera.position[0];
-    this.skySphere.position[1] = this.camera.position[1];
-    this.skySphere.position[2] = this.camera.position[2];
+    if(this.skySphere)
+    {
+      this.skySphere.position[0] = this.camera.position[0];
+      this.skySphere.position[1] = this.camera.position[1];
+      this.skySphere.position[2] = this.camera.position[2];
+    }
   }
 
 
@@ -634,32 +624,37 @@ class MainScreen extends Screen {
 
     gfx3MeshRenderer.enableDirLight(this.lightDir);
 
-    gfx3MeshRenderer.dirLightColor= UT.VEC4_CREATE(0.2, 0,  0.2, 0.0);
+    gfx3MeshRenderer.dirLightColor= UT.VEC4_CREATE(0.6, 0.6,  0.6, 1.0);
+
+    /*
     gfx3MeshRenderer.pointLight0Color= UT.VEC4_CREATE(0.0, 0.0, 0.02, 2.0);
     gfx3MeshRenderer.pointLight1Color= UT.VEC4_CREATE(0.02, 0.02, 0.00, 2.0);
 
     gfx3MeshRenderer.enablePointLight(UT.VEC4_CREATE(-1,1,0), 0);
     gfx3MeshRenderer.enablePointLight(UT.VEC4_CREATE(1,1,0), 1);
+    */
 
+    
     if (this.world.myCar) {
       
         if (this.world.myCar.ChassisMesh) {
           for (const obj of this.world.myCar.ChassisMesh) {
-            gfx3MeshRenderer.drawMesh(obj[1], this.world.myCar.matrix, this.world.myCar.nmatrix);
+            gfx3MeshRenderer.drawMesh(obj[1], this.world.myCar.matrix);
           }
-          const ofs = UT.QUAT_MULTIPLY_BY_VEC3(this.world.myCar.wquat, UT.VEC3_CREATE(-this.world.myCar.chassisWidth /2, 0, this.world.myCar.chassisLength + 0.2 ));
-          const p=UT.VEC3_CREATE(this.world.myCar.wpos[0] + ofs[0] , this.world.myCar.wpos[1] + 2, this.world.myCar.wpos[2]+ ofs[2]);
+          const ofs = InPlace.QUAT_MULTIPLY_BY_VEC3([this.world.myCar.quat.x, this.world.myCar.quat.y, this.world.myCar.quat.z, this.world.myCar.quat.w], UT.VEC3_CREATE(-this.world.myCar.chassisWidth /2, 0, this.world.myCar.chassisLength + 0.2 ));
+          const p=UT.VEC3_CREATE(this.world.myCar.pos.x + ofs[0] , this.world.myCar.pos.y + 2, this.world.myCar.pos.z+ ofs[2]);
           
         }
   
         if (this.world.myCar.tireMesh) {
           for (let w of this.world.myCar.wheels) {
             for (const obj of this.world.myCar.tireMesh) {
-              gfx3MeshRenderer.drawMesh(obj[1], w.matrix, w.nmatrix);
+              gfx3MeshRenderer.drawMesh(obj[1], w.matrix);
             }
           }
         }
     }
+    
 
     if(this.podMesh)
     {
@@ -676,6 +671,16 @@ class MainScreen extends Screen {
 
   handleKeyUp(e) {
 
+    /*
+    if(e.code === 'KeyS')
+    {
+      if(gfx3Manager.enableShadowPass)
+        gfx3Manager.enableShadowPass = false;
+      else
+        gfx3Manager.enableShadowPass = true;
+    }
+    */
+      
   }
 
   handleKeyDown(e) {
@@ -711,4 +716,4 @@ class MainScreen extends Screen {
   }
 }
 
-export { MainScreen };
+export { CCScreen };

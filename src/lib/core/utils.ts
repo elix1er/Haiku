@@ -438,7 +438,7 @@ class UT {
     out[0] = parseFloat(a[0]);
     out[1] = parseFloat(a[1]);
     out[2] = parseFloat(a[2]);
-    out[3] = parseFloat(a[3]);
+    out[3] = 1.0;
     return out;
   }
 

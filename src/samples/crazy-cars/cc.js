@@ -137,7 +137,7 @@ class Car {
         this.remainingTime = -1;
         this.carDef = carDef;
         this.id = id;
-        this.maxdmg = carDef.maxdmg;
+        this.maxdmg = carDef.maxdmg ? carDef.maxdmg : 0;
 
     }
     addContact(p, dmg, now) {
@@ -167,8 +167,8 @@ class Car {
         this.wheelAxisHeightFront = -0.1;
 
         this.wheels[0]={ isFront: true, pos: { x:  -this.wheelHalfTrackFront, y:  + this.wheelAxisHeightFront, z:  + this.wheelAxisFrontPosition },quat: {x:this.quat.x,y:this.quat.y,z:this.quat.z,w:this.quat.w},radius: this.wheelRadiusFront, width: this.wheelWidthFront , scale : {x: 1,y:1,z:1}};
-        this.wheels[1]={ isFront: true, pos: { x:  + this.wheelHalfTrackFront, y:  + this.wheelAxisHeightFront, z:  + this.wheelAxisFrontPosition }, quat: {x:this.quat.x,y:this.quat.y,z:this.quat.z,w:this.quat.w},radius: this.wheelRadiusFront, width: this.wheelWidthFront , scale : {x:-1,y:1,z:1}};
-        this.wheels[2]={ isFront: false, pos: { x:  + this.wheelHalfTrackBack, y:  + this.wheelAxisHeightBack, z:  + this.wheelAxisPositionBack },   quat: {x:this.quat.x,y:this.quat.y,z:this.quat.z,w:this.quat.w},radius: this.wheelRadiusBack, width: this.wheelWidthBack   , scale : {x:-1,y:1,z:1}};
+        this.wheels[1]={ isFront: true, pos: { x:  + this.wheelHalfTrackFront, y:  + this.wheelAxisHeightFront, z:  + this.wheelAxisFrontPosition }, quat: {x:this.quat.x,y:this.quat.y,z:this.quat.z,w:this.quat.w},radius: this.wheelRadiusFront, width: this.wheelWidthFront , scale : {x:1,y:1,z:1}};
+        this.wheels[2]={ isFront: false, pos: { x:  + this.wheelHalfTrackBack, y:  + this.wheelAxisHeightBack, z:  + this.wheelAxisPositionBack },   quat: {x:this.quat.x,y:this.quat.y,z:this.quat.z,w:this.quat.w},radius: this.wheelRadiusBack, width: this.wheelWidthBack   , scale : {x:1,y:1,z:1}};
         this.wheels[3]={ isFront: false, pos: { x:  - this.wheelHalfTrackBack, y:  + this.wheelAxisHeightBack, z:  + this.wheelAxisPositionBack },  quat: {x:this.quat.x,y:this.quat.y,z:this.quat.z,w:this.quat.w},radius: this.wheelRadiusBack, width: this.wheelWidthBack   , scale : {x: 1,y:1,z:1}};
 
 
@@ -1615,6 +1615,17 @@ class CircuitRace {
 
             for (let i = 0; i < 4; i++) {
 
+                if (this.lastBufferTime !== null) {
+                    this.dataDelta.cars[n].wheels[i].pos.x = buffer[curOfs] - this.lastCarData.cars[n].wheels[i].pos.x;
+                    this.dataDelta.cars[n].wheels[i].pos.y = buffer[curOfs + 1] - this.lastCarData.cars[n].wheels[i].pos.y;
+                    this.dataDelta.cars[n].wheels[i].pos.z = buffer[curOfs + 2] - this.lastCarData.cars[n].wheels[i].pos.z;
+
+                    this.dataDelta.cars[n].wheels[i].quat.x = buffer[curOfs + 3] - this.lastCarData.cars[n].wheels[i].quat.x;
+                    this.dataDelta.cars[n].wheels[i].quat.y = buffer[curOfs + 4] - this.lastCarData.cars[n].wheels[i].quat.y;
+                    this.dataDelta.cars[n].wheels[i].quat.z = buffer[curOfs + 5] - this.lastCarData.cars[n].wheels[i].quat.z;
+                    this.dataDelta.cars[n].wheels[i].quat.w = buffer[curOfs + 6] - this.lastCarData.cars[n].wheels[i].quat.w;
+                }
+
                 this.lastCarData.cars[n].wheels[i].pos.x = buffer[curOfs++];
                 this.lastCarData.cars[n].wheels[i].pos.y = buffer[curOfs++];
                 this.lastCarData.cars[n].wheels[i].pos.z = buffer[curOfs++];
@@ -1623,6 +1634,7 @@ class CircuitRace {
                 this.lastCarData.cars[n].wheels[i].quat.y = buffer[curOfs++];
                 this.lastCarData.cars[n].wheels[i].quat.z = buffer[curOfs++];
                 this.lastCarData.cars[n].wheels[i].quat.w = buffer[curOfs++];
+
 
                 this.lastCarData.cars[n].wheels[i].skidding = buffer[curOfs++];
 
@@ -2878,10 +2890,12 @@ class EngineMain {
 
             car.wheels[n].mesh = (car.tireMesh === null) ? this.createWheelMesh(car.wheels[n].radius, car.wheels[n].width) : car.tireMesh.clone();
 
+            /*
             if (car.wheels[n].pos.x < 0)
                 car.wheels[n].mesh.scale.x = 1;
             else
                 car.wheels[n].mesh.scale.x = -1;
+            */
 
             car.wheels[n].mesh.position.x = car.wheels[n].pos.x;
             car.wheels[n].mesh.position.y = car.wheels[n].pos.y;
@@ -4441,6 +4455,19 @@ class Wallet {
     async getBalance() {
         const b=document.getElementById('my-balance');
         const sb=document.getElementById('my-steel-balance');
+
+        if(this.myAccount === null)
+        {
+            if(b)b.style.display = 'none';
+            if(sb)sb.style.display = 'none';
+            return;
+        }
+        else
+        {
+            if(b)b.style.display = 'inline-block';
+            if(sb)sb.style.display = 'inline-block';
+        }
+
         var req = {
             json: true,                             // Get the response as json
             code: "eosio.token",                   // Contract that we target
@@ -4657,13 +4684,8 @@ class Wallet {
         const net =document.getElementById('my-network');
         const a = document.getElementById('navbar-account');
 
-        /* jquery */
-        if (this.network == 'testnet')
-            if(net)net.checked = true;
-        else
-        if(net)net.checked = false;
-        
-
+        if(net)net.checked = (this.network == 'testnet') ? true : false;
+       
         if (this.myAccount !== null) {
 
             var h5 = document.createElement('h5');
@@ -4677,19 +4699,7 @@ class Wallet {
 
             if(a)a.innerHTML='';
             if(a)a.append(lnk);
-            if(a)a.innerHTML+='<button onclick=" fetch(\''+url+'\', { method: \'GET\', credentials: \'include\' }).then( async() => { await wallet.logout(); wallet.updatePage(); }); ">logout</a>';
-           
-
-            /* jquery 
-            $('#navbar-account').html('');
-            $('#navbar-account').append(lnk);
-            */
-
-
-            /* jquery 
-            $('#account').popover({ html: true, content: '<a href="/logout" onclick=" wallet.logout(); ">logout</a>' });
-            */
-
+            if(a)a.innerHTML+='<button onclick=" fetch(\''+url+'\', { method: \'GET\', credentials: \'include\' , cache : \'no-store\' }).then( async(a) => { const b=await a.blob(); await wallet.logout(); wallet.updatePage(); if(wallet.onLogout)wallet.onLogout() }); ">logout</a>';
 
         } else {
 
@@ -5859,6 +5869,12 @@ class Wallet {
 
     async getNitros() {
 
+        if(this.myAccount === null)
+        {
+            document.getElementById('nitros').innerHTML = 'no nitros';
+            return;
+        }
+
         const uid = this.serName(this.myAccount);
 
         var req = {
@@ -5873,15 +5889,15 @@ class Wallet {
         const nitro = await this.wax.rpc.get_table_rows(req);
 
         if ((nitro.rows.length === 0) || (nitro.rows[0].owner !== this.myAccount)) {
-            $('#nitros').html('no nitros');
+            document.getElementById('nitros').innerHTML = 'no nitros';
             return 0;
         }
-        $('#nitros').html('x' + nitro.rows[0].num);
+        document.getElementById('nitros').innerHTML = 'x' + nitro.rows[0].num;
     }
 
     async getDamage(icar, update) {
         const self = this;
-        $('#init-damage').html('');
+        document.getElementById('init-damage').innerHTML = ''
 
         if (!icar.DMG) {
 
@@ -5901,8 +5917,8 @@ class Wallet {
 
                 const initbtn = this.getInitDmgBtn(icar);
 
-                $('#init-damage').html('');
-                $('#init-damage').append(initbtn);
+                document.getElementById('init-damage').innerHTML='';
+                document.getElementById('init-damage').append(initbtn);
 
                 return 0;
             }
@@ -5918,7 +5934,7 @@ class Wallet {
         const fullTimeTxt = getTimeTxt(fullTime);
 
         const curlife = icar.maxdmg - curdmg;
-        $('#init-damage').html(curlife + ' / ' + icar.maxdmg + ' ' + fullTimeTxt);
+        document.getElementById('init-damage').innerHTML= curlife + ' / ' + icar.maxdmg + ' ' + fullTimeTxt;
 
         if (update > 0) {
             this.dmgTimer = setTimeout(function () { self.getDamage(icar, update); }, 1000);

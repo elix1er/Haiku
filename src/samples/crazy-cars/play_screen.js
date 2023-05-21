@@ -1,29 +1,40 @@
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
-import { gfx2TextureManager } from '../../lib/gfx2/gfx2_texture_manager';
+
 
 import { gfx3DebugRenderer } from '../../lib/gfx3/gfx3_debug_renderer';
 import { inputManager } from '../../lib/input/input_manager';
 import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
+
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
-import { Gfx3MeshObj } from '../../lib/gfx3_mesh/gfx3_obj';
-import { Gfx3Skybox } from '../../lib/gfx3_skybox/gfx3_skybox';
 import { gfx3Manager } from '../../lib/gfx3/gfx3_manager';
-import { gfx2Manager } from '../../lib/gfx2/gfx2_manager';
+import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
+import { Gfx3Mesh } from '../../lib/gfx3_mesh/gfx3_mesh';
+import { Gfx3MeshObj } from '../../lib/gfx3_mesh/gfx3_mesh_obj';
 import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
 import { Gfx3MeshShapeCylinder } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_cylinder';
 import { Gfx3MeshShapeSphere } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_sphere';
 
-import { CircuitRace, initWallet } from './cc.js';
-import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
-import { Gfx3Mesh } from '../../lib/gfx3_mesh/gfx3_mesh';
-import { UISprite } from '../../lib/ui_sprite/ui_sprite';
-import { UIText } from '../../lib/ui_text/ui_text';
-import { Gfx2SpriteJAS } from '../../lib/gfx2_sprite/gfx2_sprite_jas'
-import { TrackSelect } from './games_screen';
 import { uiManager } from '../../lib/ui/ui_manager';
 import { UIWidget } from '../../lib/ui/ui_widget';
+import { UISprite } from '../../lib/ui_sprite/ui_sprite';
+import { UIText } from '../../lib/ui_text/ui_text';
+
+import { gfx2Manager } from '../../lib/gfx2/gfx2_manager';
+import { gfx2TextureManager } from '../../lib/gfx2/gfx2_texture_manager';
+import { Gfx2SpriteJAS } from '../../lib/gfx2_sprite/gfx2_sprite_jas'
+
+import { InPlace } from './inplace';
+
+import { CircuitRace, initWallet } from './cc.js';
+
 import { screenManager } from '../../lib/screen/screen_manager';
+import { TrackSelect } from './games_screen';
+
+import { Gfx3MeshPool } from './gfx3_mesh_pool';
+
+
+
 // ---------------------------------------------------------------------------------------
 const CAMERA_SPEED = 0.1;
 
@@ -38,13 +49,15 @@ class BackBtn extends UIWidget {
 }
 
 
-class CCScreen extends Screen {
+
+
+class PlayScreen extends Screen {
   constructor() {
     super();
 
 
     this.camera = new Gfx3Camera(0);
-    this.skybox = new Gfx3Skybox();
+    
 
     this.camera.setPosition(0,10,0);
 
@@ -54,12 +67,6 @@ class CCScreen extends Screen {
 
     this.camera_fov = 100;
 
-    this.handleMouseDownCb = this.handleMouseDown.bind(this);
-    this.handleMouseUpCb = this.handleMouseUp.bind(this);
-    this.handleMouseMoveCb = this.handleMouseMove.bind(this);
-
-    this.handleKeyDownCb = this.handleKeyDown.bind(this);
-    this.handleKeyUpCb = this.handleKeyUp.bind(this);
 
     this.site = 'https://crazy-cars.io';
     //this.site = 'http://localhost';
@@ -83,6 +90,17 @@ class CCScreen extends Screen {
     this.webSocket = null;
     this.intro = 0;
     this.mode = 0;
+    this.introCount = 0;
+
+    this.nitroSphere = new Gfx3MeshShapeSphere(0.5, 8,8, UT.VEC2_CREATE(1,1));
+    this.contactSphere = new Gfx3MeshShapeSphere(0.1, 8,8, UT.VEC2_CREATE(1,1));
+    this.skidMesh = new Gfx3MeshShapeCylinder(0.2, 0.1, 4, UT.VEC2_CREATE(1,1));
+
+    this.nitroPool = new Gfx3MeshPool(this.nitroSphere, 50);
+    this.contactPool= new Gfx3MeshPool(this.contactSphere, 100);
+ 
+
+    
 
     this.keysActions = {
       "KeyW": 'acceleration',
@@ -98,14 +116,15 @@ class CCScreen extends Screen {
     };
     this.pressed = {};
 
-    gfx3MeshRenderer.binds = 1;
+    
 
     this.digitsTex=[];
     this.digits=[];
 
-    gfx2Manager.cameraPosition;
 
     this.centerText = new UIText('margin:auto');
+    this.messageText = new UIText('margin:auto');
+    this.userAccount= new UIText('margin:auto');
     
     this.steelIcon = new UISprite();
     this.userBonus = new UIText();
@@ -117,6 +136,10 @@ class CCScreen extends Screen {
     this.raceLaps = new UIText();
 
     this.backBtn = new BackBtn();
+
+    this.rpm = [];
+    this.nitros = [];
+    this.dmg = [];
 
 
 
@@ -138,8 +161,14 @@ class CCScreen extends Screen {
 
       for(let n=nnc;n<3;n++)
       {
-          const nm = parseInt(text[n-nnc]);
-          this.digits[n].setTexture(this.digitsTex[nm]);
+          if(text[n-nnc]>= '0' && text[n-nnc] <= '9')
+          {
+            const nm = parseInt(text[n-nnc]);
+            this.digits[n].setTexture(this.digitsTex[nm]);
+          }else{
+            this.digits[n].setTexture(this.digitsTex[0]);
+          }
+
       }
   }
   async loadDigitFont()
@@ -153,18 +182,115 @@ class CCScreen extends Screen {
       
       for(let n=0;n<3;n++)
       {
+        const w = this.digitsTex[0].width;
+        const h = this.digitsTex[0].height;
+
         this.digits[n] = new Gfx2SpriteJAS();
         this.digits[n].setTexture(this.digitsTex[0]);
-        this.digits[n].position[0] = -300 + n*40;//-90;
-        this.digits[n].position[1] = 200;// -45;
+        this.digits[n].position[0] = n*50 - 250; 
+        this.digits[n].position[1] = 100;
         this.digits[n].position[2] = 0;
-        this.digits[n].animations[0] = { name: '', frames: [{x: 0,y: 0,width: 100,height: 100}], frameDuration: 100000 };
+        this.digits[n].animations[0] = { name: '', frames: [{x: 0.0,y: 0.0, width: w, height: h}], frameDuration: 100000 };
         this.digits[n].currentAnimation=this.digits[0].animations[0];
-        this.digits[n].width = 100;
-        this.digits[n].height = 100;
-      
+        this.digits[n].width = w;
+        this.digits[n].height = h;
       }
-      
+  }
+
+
+  async loadUI()
+  {
+    
+    this.dmg0 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/dmg_ui.png");
+    this.dmg1 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/dmg_ui2.png");
+
+    this.rpm0 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/engine_s.png");
+    this.rpm1 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/engine2_s.png");
+
+    this.nitro0 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/nitro_ui_.png");
+    this.nitro1 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/nitro_ui2_s.png");
+    this.nitro2 = await gfx2TextureManager.loadTexture(this.site + "/assets/textures/nitro_ui3_s.png");
+
+    this.dmg[0] = new Gfx2SpriteJAS();
+    this.dmg[0].setTexture(this.dmg0);
+    this.dmg[0].position[0] = 200;//-90;
+    this.dmg[0].position[1] = -100;// -45;
+    this.dmg[0].position[2] = 0;
+    this.dmg[0].width = this.dmg0.width;
+    this.dmg[0].height = this.dmg0.height;
+
+    this.dmg[0].animations[0] = { name: '', frames: [{x: 0.0, y: 0, width: this.dmg[0].width, height: this.dmg[0].height}], frameDuration: 100000 };
+    this.dmg[0].currentAnimation = this.dmg[0].animations[0];
+
+    this.dmg[1] = new Gfx2SpriteJAS();
+    this.dmg[1].setTexture(this.dmg1);
+    this.dmg[1].position[0] = 200;//-90;
+    this.dmg[1].position[1] = -100;// -45;
+    this.dmg[1].position[2] = 0;
+    this.dmg[1].width = this.dmg1.width;
+    this.dmg[1].height = this.dmg1.height;
+
+    this.dmg[1].animations[0] = { name: '', frames: [{x: 0.0, y: 0, width: this.dmg[1].width, height: this.dmg[1].height}], frameDuration: 100000 };
+    this.dmg[1].currentAnimation = this.dmg[1].animations[0];
+    
+
+    this.rpm[0] = new Gfx2SpriteJAS();
+    this.rpm[0].setTexture(this.rpm0);
+    this.rpm[0].position[0] = -250;//-90;
+    this.rpm[0].position[1] = 170;// -45;
+    this.rpm[0].position[2] = 0;
+    this.rpm[0].width = this.rpm0.width;
+    this.rpm[0].height = this.rpm0.height;
+
+    this.rpm[0].animations[0] = { name: '', frames: [{x: 0.0, y: 0, width: this.rpm[0].width, height: this.rpm[0].height}], frameDuration: 100000 };
+    this.rpm[0].currentAnimation = this.rpm[0].animations[0];
+
+    this.rpm[1] = new Gfx2SpriteJAS();
+    this.rpm[1].setTexture(this.rpm1);
+    this.rpm[1].position[0] = -250;//-90;
+    this.rpm[1].position[1] = 170;// -45;
+    this.rpm[1].position[2] = 0;
+    this.rpm[1].width = this.rpm1.width;
+    this.rpm[1].height = this.rpm1.height;
+
+    this.rpm[1].animations[0] = { name: '', frames: [{x: 0, y: 0, width: this.rpm[1].width, height: this.rpm[1].height}], frameDuration: 100000 };
+    this.rpm[1].currentAnimation = this.rpm[1].animations[0];
+
+    this.nitros[0] = new Gfx2SpriteJAS();
+    this.nitros[0].setTexture(this.nitro0);
+    this.nitros[0].position[0] = -250;//-90;
+    this.nitros[0].position[1] = 220;// -45;
+    this.nitros[0].position[2] = 0;
+    this.nitros[0].width = this.nitro0.width;
+    this.nitros[0].height = this.nitro0.height;
+
+    this.nitros[0].animations[0] = { name: '', frames: [{x: 0.0, y: 0.0, width: this.nitros[0].width, height: this.nitros[0].height}], frameDuration: 100000 };
+    this.nitros[0].currentAnimation = this.nitros[0].animations[0];
+
+    this.nitros[1] = new Gfx2SpriteJAS();
+    this.nitros[1].setTexture(this.nitro1);
+    this.nitros[1].position[0] = -250;//-90;
+    this.nitros[1].position[1] = 220;// -45;
+    this.nitros[1].position[2] = 0;
+    this.nitros[1].width = this.nitro1.width;
+    this.nitros[1].height = this.nitro1.height;
+
+    this.nitros[1].animations[0] = { name: '', frames: [{x: 0, y: 0, width: this.nitros[1].width, height: this.nitros[1].height}], frameDuration: 100000 };
+    this.nitros[1].currentAnimation = this.nitros[1].animations[0];
+
+
+    this.nitros[2] = new Gfx2SpriteJAS();
+    this.nitros[2].setTexture(this.nitro2);
+    this.nitros[2].position[0] = -250;//-90;
+    this.nitros[2].position[1] = 220;// -45;
+    this.nitros[2].position[2] = 0;
+    this.nitros[2].width = this.nitro2.width;
+    this.nitros[2].height = this.nitro2.height;
+
+    this.nitros[2].animations[0] = { name: '', frames: [{x: 0, y: 0, width: this.nitros[2].width, height: this.nitros[2].height}], frameDuration: 100000 };2
+    this.nitros[2].currentAnimation = this.nitros[2].animations[0];
+
+    await this.loadDigitFont();
 
   }
 
@@ -174,13 +300,13 @@ class CCScreen extends Screen {
     this.startLine = new Gfx3MeshObj();
     await this.startLine.loadFromFile(this.site + "/assets/mesh/" + startname + ".obj", this.site + "/assets/mesh/" + startname + ".mtl");
 
-    const angles = UT.QUAT_TO_EULER(UT.VEC4_CREATE(track.trackPoints[track.startPts].rot.x, track.trackPoints[track.startPts].rot.y, track.trackPoints[track.startPts].rot.z, track.trackPoints[track.startPts].rot.w), "YXZ");
-    angles[1] = -angles[1];
-
+    const anglesA = UT.QUATERNION_TO_EULER({x : track.trackPoints[track.startPts].rot.x, y: track.trackPoints[track.startPts].rot.y, z: track.trackPoints[track.startPts].rot.z, w: track.trackPoints[track.startPts].rot.w});
+    const euler =[anglesA.yaw, anglesA.pitch, anglesA.roll];
+    //angles[1] -= Math.PI /2;
 
     for (let obj of this.startLine) {
       obj[1].setPosition(track.trackPoints[0].pos.x, track.trackPoints[0].pos.y, track.trackPoints[0].pos.z);
-      obj[1].setRotation(angles[0], angles[1], angles[2]);
+      obj[1].setRotation(euler[0], euler[1], euler[2]);
     }
 
   }
@@ -223,8 +349,6 @@ class CCScreen extends Screen {
       
 
       if ((name.startsWith('Wheel')) || (name.startsWith('Crystal')) || (name.startsWith('buddha')) || (name.startsWith('fire-start'))) {
-
-        
         obj[1].centerVtx();
       }
 
@@ -249,7 +373,7 @@ class CCScreen extends Screen {
 
 
     if (track.roadRought) {
-      this.roadMaT.roughnessMap = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/" + track.roadRought)
+      this.roadMaT.roughnessMap = await gfx3TextureManager.loadTexture8bit(this.site + "/assets/textures/" + track.roadRought)
     }
 
     if (track.roadEmm) {
@@ -257,6 +381,8 @@ class CCScreen extends Screen {
       this.roadMaT.emissive = UT.VEC3_CREATE(0.4,0.4,0.4);
       this.roadMaT.emissiveIntensity = 1.0;
     }
+
+    this.roadMaT.update = true;
 
     const arrowTex = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/arrows.png");
     const arrowsNormals = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/arrows_n.png");
@@ -269,6 +395,8 @@ class CCScreen extends Screen {
     this.roadObj = new Gfx3Mesh();
     this.roadObj.setMaterial(this.roadMaT);
     this.roadObj.build(track.positions, track.texcoords, track.indices, UT.VEC2_CREATE(track.roadTexScale.x * 0.4, track.roadTexScale.y ));
+
+    this.roadBuffer = new Float32Array(this.roadObj.vertices);
 
     this.roadWall = new Gfx3Mesh();
     this.roadWall.setMaterial(this.arrowMat);
@@ -314,10 +442,7 @@ class CCScreen extends Screen {
 
     car.updateWheels();
 
-    car.wpos = UT.VEC3_CREATE(0,0,0);
-    car.wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
-    car.wquat = UT.VEC4_CREATE(0,0,0,1.0);
-    car.wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
+    
     car.matrix = UT.MAT4_IDENTITY();
 
 
@@ -325,10 +450,6 @@ class CCScreen extends Screen {
 
     for (let n = 0; n < 4; n++) {
 
-      car.wheels[n].wpos = UT.VEC3_CREATE(0,0,0);
-      car.wheels[n].wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
-      car.wheels[n].wquat = UT.VEC4_CREATE(0,0,0,1.0);
-      car.wheels[n].wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
       car.wheels[n].matrix = UT.MAT4_IDENTITY();
 
       this.getObjMat(car.wheels[n]);
@@ -337,6 +458,69 @@ class CCScreen extends Screen {
     car.massVehicle = car.carDef.massVehicle;
 
   }
+  async delTrack(track) {
+
+    if (track.bonusObject) 
+      track.bonusObject.destroy();
+    
+    if (track.jumperObject) 
+      track.jumperObject.destroy();
+    
+    if (track.wallObject) 
+      track.wallObject.destroy();
+
+    track.bonusObject  = null;
+    track.jumperObject  = null;
+    track.wallObject = null;
+
+    //track.wallMesh.destroy();
+    //track.wallMesh=null;
+
+    track.terrain.mesh.destroy();
+    track.terrain.mesh = null;
+
+    if(this.skySphere)
+    {
+      this.skySphere.delete();
+      this.skySphere=null;
+    }
+    
+
+    for (let wood of track.woods) {
+        wood.mesh.delete();
+        /*this.woodMaterial.destroy();*/
+    }
+
+    for (let turret of track.turrets) {
+        turret.main.destroy();
+
+      if((turret.shotModel)&&(turret.shotModel.length>0))
+        turret.shotMesh.destroy();
+      else
+        turret.shotMesh.delete();
+    }
+
+    
+    /*
+    if ((track.springDefs) && (track.springDefs.length > 0)) {
+      for (let n = 0; n < track.springDefs.length; n++) {
+        track.addSpring(track.springDefs[n].ptIdx, track.springDefs[n].offset, track.springDefs[n].eqPts, track.springDefs[n].eqA, track.springDefs[n].mass, track.springDefs[n].size, track.springDefs[n].stiffness, track.springDefs[n].damping, track.springDefs[n].initPts, track.springDefs[n].initA, track.springDefs[n].limit, track.springDefs[n].limitA, track.springDefs[n].shape);
+      }
+    }
+
+    if ((track.ropeDefs) && (track.ropeDefs.length > 0)) {
+      for (let n = 0; n < track.ropeDefs.length; n++) {
+        track.addRope(track.ropeDefs[n].ptIdx, track.ropeDefs[n].offset, track.ropeDefs[n].eqPts, track.ropeDefs[n].eqA, track.ropeDefs[n].mass, track.ropeDefs[n].size, track.ropeDefs[n].softness, track.ropeDefs[n].damping, track.ropeDefs[n].motorforce, track.ropeDefs[n].bounce, track.ropeDefs[n].initPts, track.ropeDefs[n].initA, track.ropeDefs[n].limit, track.ropeDefs[n].limitA, track.ropeDefs[n].shape);
+      }
+    }
+    */
+
+    track.trackPoints = [];
+    track.woods = [];
+    track.bonuses = [];
+    track.jumpers = [];
+    track.turrets = [];
+ }
 
 
   async addTrack(track) {
@@ -345,16 +529,12 @@ class CCScreen extends Screen {
 
     for(let w of track.walls)
     {
-      w.wpos = UT.VEC3_CREATE(w.pos.x, w.pos.y, w.pos.z);
-      w.wquat = UT.VEC4_CREATE(w.quat.x, w.quat.y, w.quat.z, w.quat.w);
-      w.wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
-      w.wangles = UT.VEC3_CREATE(w.eul.x, w.eul.y , w.eul.z);
       w.matrix = UT.MAT4_IDENTITY();
       this.getObjMat(w);
       mats.push(w.matrix);
     }
 
-    track.wallMesh = track.wallObject.dupe(mats);
+    //track.wallMesh = track.wallObject.dupe(mats);
 
 
     if ((track.woodDefs) && (track.woodDefs.length > 0)) {
@@ -367,11 +547,6 @@ class CCScreen extends Screen {
 
         for(let o of wood.objects)
         {
-          o.wpos = UT.VEC3_CREATE(o.pos.x,o.pos.y,o.pos.z);
-          o.wquat = UT.VEC4_CREATE(o.quat.x,o.quat.y,o.quat.z,o.quat.w);
-          o.wscale = UT.VEC3_CREATE(1.0,1.0,1.0);
-          
-          o.wangles = UT.VEC3_CREATE(0.0,0.0,0.0);
           o.matrix = UT.MAT4_IDENTITY();
         }
       }
@@ -394,9 +569,6 @@ class CCScreen extends Screen {
     if ((track.bonusDefs) && (track.bonusDefs.length > 0)) {
       for (let n = 0; n < track.bonusDefs.length; n++) {
         const bonus = track.addBonus(track.bonusDefs[n].ptIdx, track.bonusDefs[n].type, track.bonusDefs[n].time, track.bonusDefs[n].offset, track.bonusDefs[n].scale);
-        bonus.wpos = UT.VEC4_CREATE(bonus.pos.x, bonus.pos.y, bonus.pos.z, 1.0);
-        bonus.wangles = UT.VEC3_CREATE(bonus.angles.x, bonus.angles.y, bonus.angles.z);
-        bonus.wscale = UT.VEC3_CREATE(bonus.scale.x, bonus.scale.y, bonus.scale.z);
         bonus.matrix = UT.MAT4_IDENTITY();
       }
     }
@@ -404,9 +576,6 @@ class CCScreen extends Screen {
     for (let n = 0; n < track.loopings.length; n++) {
       for (let i = 0; i < track.loopings[n].bonuses.length; i++) {
         const bonus = track.addBonus(track.loopings[n].bonuses[i].ptIdx, track.loopings[n].bonuses[i].type, track.loopings[n].bonuses[i].time, track.loopings[n].bonuses[i].offset, track.loopings[n].bonuses[i].scale);
-        bonus.wpos = UT.VEC4_CREATE(bonus.pos.x, bonus.pos.y, bonus.pos.z, 1.0);
-        bonus.wangles = UT.VEC3_CREATE(bonus.angles.x, bonus.angles.y, bonus.angles.z);
-        bonus.wscale = UT.VEC3_CREATE(bonus.scale[0], bonus.scale[1], bonus.scale[2]);
         bonus.matrix = UT.MAT4_IDENTITY();
       }
     }
@@ -415,18 +584,14 @@ class CCScreen extends Screen {
 
       for (let n = 0; n < track.jumpersDefs.length; n++) {
         const jumper = track.addJumper(track.jumpersDefs[n].ptIdx, track.jumpersDefs[n].offset, track.jumpersDefs[n].angle, track.jumpersDefs[n].size);
-        jumper.wangles = UT.VEC3_CREATE(jumper.angles.x, jumper.angles.y, jumper.angles.z);
-        jumper.wpos = UT.VEC4_CREATE(jumper.pos.x, jumper.pos.y, jumper.pos.z, 1.0);
-        jumper.wquat = UT.VEC4_CREATE(jumper.rot.x, jumper.rot.y, jumper.rot.z, jumper.rot.w);
-        jumper.wscale = UT.VEC3_CREATE(jumper.size.x, jumper.size.y, jumper.size.z);
         jumper.matrix = UT.MAT4_IDENTITY();
 
-        UT.MAT4_TRANSLATE_N(jumper.wpos[0], jumper.wpos[1], jumper.wpos[2], jumper.matrix);
-        UT.MAT4_MULTIPLY_BY_QUAT_N(jumper.matrix, jumper.wquat);
-        UT.MAT4_SCALE_N(jumper.matrix, jumper.wscale[0], jumper.wscale[1], jumper.wscale[2]);
+        UT.MAT4_TRANSLATE(jumper.pos.x, jumper.pos.y, jumper.pos.z, jumper.matrix);
+        InPlace.MAT4_MULTIPLY_BY_QUAT(jumper.matrix, jumper.rot.x, jumper.rot.y, jumper.rot.z, jumper.rot.w);
+        InPlace.MAT4_SCALE(jumper.matrix, jumper.size.x, jumper.size.y, jumper.size.z);
 
         jumper.nmatrix=UT.MAT4_IDENTITY();
-        UT.MAT4_MULTIPLY_BY_QUAT_N(jumper.nmatrix, jumper.wquat);
+        InPlace.MAT4_MULTIPLY_BY_QUAT(jumper.nmatrix, jumper.rot.x, jumper.rot.y, jumper.rot.z, jumper.rot.w);
   
       }
     }
@@ -446,6 +611,7 @@ class CCScreen extends Screen {
           await turret.shotMesh.loadFromFile(this.site+"/assets/mesh/" + turret.shotModel + ".obj", this.site+"/assets/mesh/" + turret.shotModel + ".mtl");
         }else{
           turret.shotMesh=new Gfx3MeshShapeSphere(1,8,8, UT.VEC2_CREATE(1,1));
+          turret.shotMesh.material.lightning = true;
         }
 
         for(let s of turret.main)
@@ -475,9 +641,36 @@ class CCScreen extends Screen {
     }
   }
 
+  findRoadIntersect(track, o)
+  {
+    const dir = UT.VEC3_CREATE(0,-1,0);
+    const inter = UT.VEC3_CREATE(0,0,0);
+
+    for(let i=0;i<this.roadBuffer.length;i+= 14 * 3 )
+    {
+      const v1 = this.roadBuffer.subarray(i + 14 * 0, i + 14 * 0 + 3);
+      const v2 = this.roadBuffer.subarray(i + 14 * 1, i + 14 * 1 + 3);
+      const v3 = this.roadBuffer.subarray(i + 14 * 2, i + 14 * 2 + 3);
+      if(UT.RAY_TRIANGLE(o, dir, v1, v2, v3, false, inter))
+      {
+        return inter;
+      }
+    }
+
+    return null;
+
+
+  }
+
   async loadGame(data)
   {
     await this.world.loadTrack(data.trackname, this.site);
+
+    this.skidMesh.material.texture = await gfx3TextureManager.loadTexture(this.site + "/assets/textures/skid.png");
+    this.skidMesh.material.lightning = true;
+    this.skidMesh.material.update = true;
+
+    this.skidPool= new Gfx3MeshPool(this.skidMesh, 100);
 
     this.world.track.skyTexture = await gfx3TextureManager.loadTexture(this.site + "/assets/skybox/"+this.world.track.skyBoxImg);
     this.skySphere = new Gfx3MeshShapeSphere(300, 8, 8, UT.VEC2_CREATE(1,1));
@@ -508,13 +701,34 @@ class CCScreen extends Screen {
 
     this.world.track.startPts = 0;
 
-    const carDef = await this.wallet.getCar(data.carid, data.cartype);
-    this.world.myCar = await this.world.createCar(carDef);
-    await this.loadCar(this.world.myCar);
-    this.world.cars.push(this.world.myCar);
-
     await this.createTrack();
     await this.addTrack(this.world.track);
+
+    if(data.np == 1)
+    {
+      const carDef = await this.wallet.getCar(data.carid, data.cartype);
+      this.world.myCar = await this.world.createCar(carDef);
+      await this.loadCar(this.world.myCar);
+      this.world.cars.push(this.world.myCar);
+    }else{
+      const carDef = await this.wallet.getCar(data.carid, data.cartype, data.account);
+      const car1 = await this.world.createCar(carDef);
+      await this.loadCar(car1);
+      this.world.cars.push(car1);
+
+      const response = await fetch(this.site + '/waitPlayer', { method: 'GET', credentials: 'include', cache: "no-store" });
+      const player = await response.json();
+
+      const carDef2 = await this.wallet.getCar(player.carid, player.cartype, player.account);
+      const car2 = await this.world.createCar(carDef2);
+      await this.loadCar(car2);
+      this.world.cars.push(car2);
+
+      if(!data.amhost)
+        this.world.myCar = car2;
+      else
+        this.world.myCar = car1;
+    }
 
     for (const obj of this.world.myCar.ChassisMesh) {
       obj[1].material.envMapEq = this.world.track.skyTexture;
@@ -532,7 +746,10 @@ class CCScreen extends Screen {
       this.webSocket.binaryType = "arraybuffer";
     }
     catch (e) {
-      alert('unable to connect server ' + serverPath + ' ' + e.message);
+      self.wallet.newAlert('unable to connect server ' + serverPath + ' ' + e.message);
+      self.gameMessage = 'server connection error';
+      self.messageText.setText(self.gameMessage);
+      self.messageText.setVisible(true);
       return;
     }
 
@@ -544,6 +761,9 @@ class CCScreen extends Screen {
       self.gameMessage = 'server connection error';
       self.wallet.newAlert("server connection error");
       self.webSocket.close();
+
+      self.messageText.setText(self.gameMessage);
+      self.messageText.setVisible(true);
     }
 
     this.webSocket.onopen = function (event) {
@@ -563,6 +783,9 @@ class CCScreen extends Screen {
           }
           catch (e) {
             self.wallet.newAlert('unable to parse message data ' + e.message);
+
+            self.messageText.setText('unable to parse message data ' + e.message);
+            self.messageText.setVisible(true);
             return;
           }
 
@@ -570,27 +793,31 @@ class CCScreen extends Screen {
             self.gameStat = 2;
             self.gameMessage = obj.data;
             self.webSocket.close();
+
+
+            self.messageText.setText(self.gameMessage);
+            self.messageText.setVisible(true);
+
           } else if (obj.msg == "finished") {
             self.gameStat = 3;
             self.gameMessage = obj.data;
             self.webSocket.close();
 
-            self.centerText.setText(self.gameMessage);
-            self.centerText.setVisible(true);
+            self.messageText.setText(self.gameMessage);
+            self.messageText.setVisible(true);
 
           } else if (obj.msg == "wait") {
-            self.centerText.setText('waiting for player');
-            self.centerText.setVisible(true);
+            self.messageText.setText('waiting for player');
+            self.messageText.setVisible(true);
           } else if (obj.msg == "error") {
-            self.centerText.setText("error : " + obj.data);
-            self.centerText.setVisible(true);
+            self.messageText.setText("error : " + obj.data);
+            self.messageText.setVisible(true);
 
           } else if (obj.msg == "queued") {
-            self.centerText.setText('server full, waiting for ' + obj.data + ' instance to finish');
-            self.centerText.setVisible(true);
-
-            self.wallet.newAlert('server full, waiting for ' + obj.data + ' instance to finish');
+            self.messageText.setText('server full, waiting for ' + obj.data + ' instance to finish');
+            self.messageText.setVisible(true);
           } else if (obj.msg == "ready") {
+            self.messageText.setVisible(false);
             self.gameStat = 1;
           }
         } else {
@@ -616,16 +843,35 @@ class CCScreen extends Screen {
 
   async onEnter() {
 
+
+    this.hiddenObjects = [];
+    gfx3Manager.views[0].setPerspectiveFar(700);
+    gfx3Manager.views[0].setPerspectiveNear(0.1);
+
+    this.lightDir = UT.VEC3_CREATE(0, -1, 0.2);
+
+    this.selectedServer = 0;
+    this.trackName = 'circuit 003';
+
+    this.camMode = 1;
+    this.lastCamAngle = null;
+    
+    this.gameStat = 0;
+    this.gameMessage = '';
+    this.webSocket = null;
+    this.intro = 0;
+    this.introCount = 0;
+    this.mode = 0;
+    
+    this.digitsTex=[];
+    this.digits=[];
+    this.pressed = {};
+
     this.wallet = await initWallet(this.site);
     this.wallet.engine = this;
     this.wallet.world = this.world;
 
-    /*
-    await fetch(this.site + '/selectCar?carid=1&type=-1&to=start', { method: 'GET', credentials: 'include' });
-    await fetch(this.site + '/startGame?trackname=' + this.trackName + "&serverID=" + this.selectedServer + '&np=1', { method: 'GET', credentials: 'include' });
-    */
-
-    const response = await fetch(this.site + '/myGame', { method: 'GET', credentials: 'include' });
+    const response = await fetch(this.site + '/myGame', { method: 'GET', credentials: 'include', cache: "no-store" });
     const data = await response.json();
     if (data.error) {
       alert(data.error);
@@ -638,27 +884,31 @@ class CCScreen extends Screen {
     uiManager.addWidget(this.backBtn, 'position:absolute; left:90%; top:90%; height:50px;');
 
     this.backBtn.getNode().addEventListener('click', function(){
-      //screenManager.requestSetScreen(new CCScreen(), { });
       screenManager.requestSetScreen(new TrackSelect(), { });
-      
     })
 
+    await this.loadUI();
 
-    this.loadDigitFont();
+
     
-    uiManager.addWidget(this.steelIcon, 'position:absolute; top:0; left:0; right:0; height:50px;background-size: contain;');
-    uiManager.addWidget(this.userBonus, 'position:absolute; top:0; left:80px; right:0; height:50px');
-    uiManager.addWidget(this.BonusMultiplier, 'position:absolute; top:0; left:50%; right:0; height:50px');
+    uiManager.addWidget(this.userAccount, 'position:absolute; top:0; left:0px; right:0; width:64px; height:50px;width:150px;');
+    uiManager.addWidget(this.steelIcon, 'position:absolute; top:0; left:160px; right:0; width:64px; height:50px;background-size: contain;');
+    uiManager.addWidget(this.userBonus, 'position:absolute; top:0; left:220px; right:0; height:50px; width:100px');
+    uiManager.addWidget(this.BonusMultiplier, 'position:absolute; top:0; left:320px; right:0; height:50px; width:100px');
 
-    uiManager.addWidget(this.nitroIcon, 'position:absolute; top:50px; left:0; right:0; height:50px; width:64px;    background-size: contain;');
-    uiManager.addWidget(this.nitroTxt, 'position:absolute; top:50px; left:80px; right:0; height:50px');
+    uiManager.addWidget(this.nitroIcon, 'position:absolute; top:0; left: 440px; right:0; height:50px; width:64px; background-size: contain;');
+    uiManager.addWidget(this.nitroTxt, 'position:absolute; top:0; left: 500px; right:0; height:50px; width:100px');
 
-    uiManager.addWidget(this.raceTime, 'position:absolute; top:100px; left:0; right:0; height:50px;width:50%');
-    uiManager.addWidget(this.raceLaps, 'position:absolute; top:100px; left:50%; right:0; height:50px');
+    uiManager.addWidget(this.raceTime, 'position:absolute; top:50px; left:0; right:0; height:50px;width:50%');
+    uiManager.addWidget(this.raceLaps, 'position:absolute; top:50px; left:50%; right:0; height:50px;width:50%');
+
+    uiManager.addWidget(this.messageText, 'position:absolute; top:100px; left:0; right:0; height:50px;width:100%; font-size:14px;color:red;display:flex-grid;');
 
     uiManager.addWidget(this.centerText, 'position:absolute; top:50%; left:25%; right:0; height:250px;width:50%; font-size:72px;display:flex-grid;');
 
     
+    
+    this.messageText.setVisible(false);
 
     this.userBonus.setText('x0');
     this.BonusMultiplier.setText('x0');
@@ -666,25 +916,31 @@ class CCScreen extends Screen {
     this.raceTime.setText('0 sec');
     this.raceLaps.setText('0/3');
     this.centerText.setText('wait');
+    this.userAccount.setText(this.wallet.myAccount);
 
-    this.wcamOfset = UT.VEC3_CREATE(0.0, 0.0, 0.0);
     this.wt = UT.VEC3_CREATE(0.0, 0.0, 0.0);
-    this.wcamDest = UT.VEC3_CREATE(0, 0.0, 0.0);
-    this.wfrontVec = UT.VEC3_CREATE(0, 0.0, 0.0);
     this.lastCamPos= UT.VEC3_CREATE(0, 0.0, 0.0);
-    this.camDest= UT.VEC3_CREATE(0, 0.0, 0.0);
-
     this.camOfset = UT.VEC3_CREATE(0, 2.5, -2.5);
     this.frontOfset = UT.VEC3_CREATE(0, 0, 5);
     this.frontOfset2 = UT.VEC3_CREATE(0, 1.3, 1.2);
     this.forwardVec = UT.VEC3_CREATE(0, 0, 1.0);
-
     this.tmpMat = UT.MAT4_IDENTITY();
-    await this.loadGame(data);
 
+    //gfx3MeshRenderer.setShadowSourceProj(600, 200);
+
+    await this.loadGame(data);
+   
     this.initGame(data.serverPath, data.sessh, data.amhost, -1);
 
     this.centerText.setText('press');
+
+    this.handleMouseDownCb = this.handleMouseDown.bind(this);
+    this.handleMouseUpCb = this.handleMouseUp.bind(this);
+    this.handleMouseMoveCb = this.handleMouseMove.bind(this);
+
+    this.handleKeyDownCb = this.handleKeyDown.bind(this);
+    this.handleKeyUpCb = this.handleKeyUp.bind(this);
+
 
     document.addEventListener('mousedown', this.handleMouseDownCb);
     document.addEventListener('mouseup', this.handleMouseUpCb);
@@ -692,12 +948,76 @@ class CCScreen extends Screen {
 
     document.addEventListener('keydown', this.handleKeyDownCb);
     document.addEventListener('keyup', this.handleKeyUpCb);
+  }
 
+  delCar(car)
+  {
+    if(car.ChassisMesh)
+    {
+      car.ChassisMesh.destroy();
+      car.ChassisMesh = null;
+    }
+
+    if(car.tireMesh)
+    {
+      car.tireMesh.destroy();
+      car.tireMesh = null;
+    }
   }
 
   onExit() {
 
+    if((this.webSocket)&&(this.webSocket.readyState == 1 ))
+      this.webSocket.close();
 
+    this.delTrack(this.world.track);
+
+    if(this.roadObj){
+      this.roadObj.delete();
+      this.roadObj=null;
+    }
+    
+    if(this.roadWall){
+      this.roadWall.delete();
+      this.roadWall=null;
+    }
+    if(this.startLine){
+      this.startLine.destroy();
+      this.startLine=null;
+    }
+
+    if(this.world.myCar)
+    {
+      this.delCar(this.world.myCar);
+      this.world.myCar= null;
+    }
+
+    this.nitroPool.delete();
+    this.contactPool.delete();
+    this.skidPool.delete();
+
+    /*
+    let d;
+    while(d=this.digits.pop()){ d.delete(); }
+    */
+       
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/dmg_ui.png");
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/dmg_ui2.png");
+
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/engine_s.png");
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/engine2_s.png");
+
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/nitro_ui_.png");
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/nitro_ui2_s.png");
+    gfx2TextureManager.deleteTexture(this.site + "/assets/textures/nitro_ui3_s.png");
+
+    for(let n=0; n< 10;n++)
+    {
+        gfx2TextureManager.deleteTexture(this.site + "/assets/fonts/"+n+".png");
+    }
+    
+    uiManager.removeWidget(this.userAccount);
+    uiManager.removeWidget(this.messageText);
     uiManager.removeWidget(this.centerText);
     uiManager.removeWidget(this.steelIcon);
     uiManager.removeWidget(this.userBonus);
@@ -713,8 +1033,8 @@ class CCScreen extends Screen {
     document.removeEventListener('mouseup', this.handleMouseUpCb);
     document.removeEventListener('mousemove', this.handleMouseMoveCb);
 
-    document.addEventListener('keydown', this.handleKeyDownCb);
-    document.addEventListener('keyup', this.handleKeyUpCb);
+    document.removeEventListener('keydown', this.handleKeyDownCb);
+    document.removeEventListener('keyup', this.handleKeyUpCb);
 
   }
 
@@ -724,21 +1044,15 @@ class CCScreen extends Screen {
   {
     //const angles = UT.QUAT_TO_EULER(UT.VEC4_CREATE(quat.x, quat.y, quat.z, quat.w), "YXZ");
 
-    UT.VEC3_SET(obj.wpos, obj.pos.x, obj.pos.y, obj.pos.z);
+    obj.matrix=UT.MAT4_IDENTITY();
+    
+    UT.MAT4_TRANSLATE( obj.pos.x, obj.pos.y, obj.pos.z, obj.matrix);
 
-    UT.MAT4_TRANSLATE_N(obj.wpos[0], obj.wpos[1], obj.wpos[2], obj.matrix);
+    if(obj.quat)
+      InPlace.MAT4_MULTIPLY_BY_QUAT(obj.matrix, obj.quat.x, obj.quat.y, obj.quat.z, obj.quat.w);
 
-    if(obj.quat&&obj.wquat)
-    {
-      UT.VEC4_SET(obj.wquat, obj.quat.x, obj.quat.y, obj.quat.z, obj.quat.w);
-      UT.MAT4_MULTIPLY_BY_QUAT_N(obj.matrix, obj.wquat);
-    }
-
-    if(obj.wscale && obj.scale)
-    {
-      UT.VEC3_SET(obj.wscale, obj.scale.x, obj.scale.y, obj.scale.z);
-      UT.MAT4_SCALE_N(obj.matrix, obj.wscale[0], obj.wscale[1], obj.wscale[2]);
-    }
+    if(obj.scale)
+      InPlace.MAT4_SCALE(obj.matrix,obj.scale.x, obj.scale.y, obj.scale.z);
   }
 
 
@@ -789,21 +1103,20 @@ class CCScreen extends Screen {
         obj.visible = true;
       }
 
-      UT.QUAT_MULTIPLY_BY_VEC3_N(myCar.wquat, this.camOfset, this.wcamOfset);
-      UT.QUAT_MULTIPLY_BY_VEC3_N(myCar.wquat, this.frontOfset, this.wt);
-      UT.VEC3_ADD_N(myCar.wpos, this.wcamOfset, this.camDest);
-
+      const wcamOfset = InPlace.QUAT_MULTIPLY_BY_VEC3([myCar.quat.x,myCar.quat.y, myCar.quat.z, myCar.quat.w], this.camOfset );
+      InPlace.QUAT_MULTIPLY_BY_VEC3([myCar.quat.x,myCar.quat.y, myCar.quat.z, myCar.quat.w], this.frontOfset, this.wt);
+      const camDest = UT.VEC3_ADD([myCar.pos.x, myCar.pos.y, myCar.pos.z], wcamOfset);
 
       switch (this.camMode) {
         case 1:
-          this.camera.setPosition(this.camDest[0], this.camDest[1], this.camDest[2]);
-          this.camera.lookAt(myCar.wpos[0], myCar.wpos[1], myCar.wpos[2]);
+          this.camera.setPosition(camDest[0], camDest[1], camDest[2]);
+          this.camera.lookAt(myCar.pos.x, myCar.pos.y, myCar.pos.z);
           this.lastCamAngle = null;
           break;
         case 2:
 
-          UT.QUAT_MULTIPLY_BY_VEC3_N(myCar.wquat, this.forwardVec , this.wfrontVec);
-          const carAngle = Math.atan2(this.wfrontVec[0], this.wfrontVec[2]) - Math.PI/2;
+        const wfrontVec = InPlace.QUAT_MULTIPLY_BY_VEC3([myCar.quat.x,myCar.quat.y, myCar.quat.z, myCar.quat.w], this.forwardVec);
+          const carAngle = Math.atan2(wfrontVec[0], wfrontVec[2]) - Math.PI/2;
           let curAngle = carAngle;
 
           if (this.lastCamAngle !== null) {
@@ -822,31 +1135,31 @@ class CCScreen extends Screen {
 
           //const camMove = camDiff.clone().multiplyScalar(dt * 3);
 
-          this.camera.setPosition(myCar.wpos[0] - Math.cos(curAngle) * d, myCar.wpos[1] + 2.5, myCar.wpos[2] + Math.sin(curAngle) * d);
+          this.camera.setPosition(myCar.pos.x - Math.cos(curAngle) * d, myCar.pos.y + 2.5, myCar.pos.z + Math.sin(curAngle) * d);
           this.camera.setRotation(0, -(curAngle-Math.PI/2), 0);
 
           this.lastCamAngle = curAngle;
           //this.camera.lookAt(p.x, p.y, p.z);
           break;
         case 3:
-          this.camera.setPosition(this.camDest[0], myCar.wpos[1] + 8, this.camDest[2]);
-          this.camera.lookAt(myCar.wpos[0] + this.wt[0], myCar.wpos[1] + this.wt[1], myCar.wpos[2] + this.wt[2]);
+          this.camera.setPosition(camDest[0], myCar.pos.y + 8, camDest[2]);
+          this.camera.lookAt(myCar.pos.x + this.wt[0], myCar.pos.y + this.wt[1], myCar.pos.z + this.wt[2]);
           this.lastCamAngle = null;
           break;
         case 4:
           //const frontOfset = new THREE.Vector3(0, 1.3, 1.2).applyQuaternion(q);
           //const frontOfset = new THREE.Vector3(0, 1.3, 1.2).applyMatrix4(m);
-          UT.QUAT_MULTIPLY_BY_VEC3_N(myCar.wquat, this.frontOfset2, this.wfrontVec);
+          const wfrontVec2 = InPlace.QUAT_MULTIPLY_BY_VEC3([myCar.quat.x,myCar.quat.y, myCar.quat.z, myCar.quat.w], this.frontOfset2);
           //= q,
-          this.camera.setPosition(myCar.wpos[0] + this.wfrontVec[0], myCar.wpos[1] + this.wfrontVec[1], myCar.wpos[2] + this.wfrontVec[2]);
-          this.camera.lookAt(myCar.wpos[0] + this.wt[0], myCar.wpos[1] + this.wt[1], myCar.wpos[2] + this.wt[2]);
+          this.camera.setPosition(myCar.pos.x + wfrontVec2[0], myCar.pos.y + wfrontVec2[1], myCar.pos.z + wfrontVec2[2]);
+          this.camera.lookAt(myCar.pos.x + this.wt[0], myCar.pos.y + this.wt[1], myCar.pos.z + this.wt[2]);
           this.lastCamAngle = null;
           break;
       }
 
     //}
 
-    UT.VEC3_SET(this.lastCamPos , myCar.wpos[0], myCar.wpos[1], myCar.wpos[2]);
+    UT.VEC3_SET(this.lastCamPos , myCar.pos.x, myCar.pos.y, myCar.pos.z);
 
     const fovDiff = this.targetFov - this.camera_fov;
     const fovMov = fovDiff / 20;
@@ -909,39 +1222,49 @@ class CCScreen extends Screen {
 
         for (let i = 0; i < cars[n].wheels.length; i++) {
 
+        if ((world.deltaTime !== null) && (delta < world.deltaTime)) {
+
+          mycar.wheels[i].pos.x = cars[n].wheels[i].pos.x + world.dataDelta.cars[n].wheels[i].pos.x * delta / world.deltaTime;
+          mycar.wheels[i].pos.y = cars[n].wheels[i].pos.y + world.dataDelta.cars[n].wheels[i].pos.y * delta / world.deltaTime;
+          mycar.wheels[i].pos.z  =cars[n].wheels[i].pos.z + world.dataDelta.cars[n].wheels[i].pos.z * delta / world.deltaTime;
+
+        } else {
           mycar.wheels[i].pos.x  = cars[n].wheels[i].pos.x;
           mycar.wheels[i].pos.y  = cars[n].wheels[i].pos.y;
           mycar.wheels[i].pos.z =  cars[n].wheels[i].pos.z;
+        }
 
-          mycar.wheels[i].quat.x = cars[n].wheels[i].quat.x;
-          mycar.wheels[i].quat.y = cars[n].wheels[i].quat.y;
-          mycar.wheels[i].quat.z = cars[n].wheels[i].quat.z;
-          mycar.wheels[i].quat.w = cars[n].wheels[i].quat.w;
+
+        mycar.wheels[i].quat.x = cars[n].wheels[i].quat.x;
+        mycar.wheels[i].quat.y = cars[n].wheels[i].quat.y;
+        mycar.wheels[i].quat.z = cars[n].wheels[i].quat.z;
+        mycar.wheels[i].quat.w = cars[n].wheels[i].quat.w;
           
-          this.getObjMat(mycar.wheels[i]);
+        this.getObjMat(mycar.wheels[i]);
 
-            /*
+        if(mycar.wheels[i].pos.x>0)
+          UT.MAT4_MULTIPLY(mycar.wheels[i].matrix, UT.MAT4_ROTATE_Y(Math.PI), mycar.wheels[i].matrix);        
+
+            
             const skid = 1.0 - cars[n].wheels[i].skidding;
 
             if (skid > 0.1) {
-                const pos = new THREE.Vector3(cars[n].wheels[i].pos.x, cars[n].wheels[i].pos.y, cars[n].wheels[i].pos.z);
-                const down = new THREE.Vector3(0, -1, 0);
+                
+                const pts = this.findRoadIntersect(this.world.track, UT.VEC3_CREATE(cars[n].wheels[i].pos.x, cars[n].wheels[i].pos.y, cars[n].wheels[i].pos.z));
+                if(pts)
+                {
+                  mycar.addSkidding(pts, cars[n].wheels[i].contactNormal, skid, time);
 
-                const rc = new THREE.Raycaster(pos, down, 0.0, 10.0);
-                const pts = rc.intersectObjects([world.track.roadObj]);
-
-                for (let p = 0; p < pts.length; p++) {
-
-                    mycar.addSkidding(pts[p].point, cars[n].wheels[i].contactNormal, skid, time);
-
-                    if ((time - world.lastScreech) > 0.1) {
-                        
-                        this.playAudio('screech', skid);
-                        world.lastScreech = time;
-                    }
+                  /*
+                  if ((time - world.lastScreech) > 0.1) {
+                          
+                    this.playAudio('screech', skid);
+                    world.lastScreech = time;
+                  }
+                  */
                 }
             }
-            */
+            
         }
 
         mycar.remainingTime = cars[n].remainingTime;
@@ -986,7 +1309,6 @@ class CCScreen extends Screen {
     }
 
     this.BonusMultiplier.setText('x ' + world.myCar.multiplier);
-    /*$('#user-bonus-multiplier').html('x ' + world.myCar.multiplier);*/
 
     if (woods.length > 0) {
         let c = 0;
@@ -1116,6 +1438,10 @@ class CCScreen extends Screen {
 
 
   update(ts) {
+
+
+    
+    
     const now = new Date().getTime();
 
     if (this.startLine) {
@@ -1151,10 +1477,163 @@ class CCScreen extends Screen {
       }
     }
 
-    
+    if((this.world.lastCarData)&&(this.world.lastCarData.cars.length >=this.world.cars.length))
+    {
+      for(let n=0;n<this.world.cars.length;n++)
+      {
+        let i = 0;
+
+        while (i < this.world.cars[n].contacts.length) {
+            const dt = now - this.world.cars[n].contacts[i].time;
+  
+            if (this.world.cars[n].contacts[i].object == null) {
+  
+              this.world.cars[n].contacts[i].object = this.contactPool.newObject(0.1, UT.VEC3_CREATE(0.5,0.1,0.1), 1)
+              if(this.world.cars[n].contacts[i].object)
+              {
+                this.world.cars[n].contacts[i].object.mesh.position[0]=this.world.cars[n].contacts[i].pos.x;
+                this.world.cars[n].contacts[i].object.mesh.position[1]=this.world.cars[n].contacts[i].pos.y;
+                this.world.cars[n].contacts[i].object.mesh.position[2]=this.world.cars[n].contacts[i].pos.z;
+              }
+            }
+
+            if(this.world.cars[n].contacts[i].object == null)
+            {
+              i++;
+              continue;
+            }
+              
+  
+            if (dt > 500) {
+  
+                this.contactPool.disposeObject(this.world.cars[n].contacts[i].object);
+                this.world.cars[n].contacts.splice(i, 1);
+            }
+            else {
+                this.world.cars[n].contacts[i].object.mesh.material.diffuse[0] = 1.0;
+                this.world.cars[n].contacts[i].object.mesh.material.diffuse[1] = dt / 500.0;
+                this.world.cars[n].contacts[i].object.mesh.material.update = true;
+  
+                this.world.cars[n].contacts[i].object.mesh.scale[0] = 1.0 - dt /500;
+                this.world.cars[n].contacts[i].object.mesh.scale[1] = 1.0 - dt /500;
+                this.world.cars[n].contacts[i].object.mesh.scale[2] = 1.0 - dt /500;
+                i++;
+            }
+        }
+
+
+
+        i = 0;
+        while (i < this.world.cars[n].skidPlanes.length) {
+            const dt = now - this.world.cars[n].skidPlanes[i].time;
+
+            if (this.world.cars[n].skidPlanes[i].object == null) {
+        
+              /*
+                this.world.cars[n].skidPlanes[i].mat = new THREE.MeshBasicMaterial({ map: engine.skidTex });
+                this.world.cars[n].skidPlanes[i].geom = engine.skidPlane.clone();
+                this.world.cars[n].skidPlanes[i].object =  new THREE.Mesh(this.world.cars[n].skidPlanes[i].geom, this.world.cars[n].skidPlanes[i].mat );
+              */
+                this.world.cars[n].skidPlanes[i].object = this.skidPool.newObject(1, [1,1,1], this.world.cars[n].skidPlanes[i].skid);
+
+                if(this.world.cars[n].skidPlanes[i].object)
+                {
+                  this.world.cars[n].skidPlanes[i].object.mesh.rotation[0] = Math.atan2(this.world.cars[n].skidPlanes[i].normal.x , this.world.cars[n].skidPlanes[i].normal.y);
+                  this.world.cars[n].skidPlanes[i].object.mesh.rotation[1] = Math.acos(this.world.cars[n].skidPlanes[i].normal.z);
+                  
+                  //this.world.cars[n].skidPlanes[i].object.mesh.lookAt(this.world.cars[n].skidPlanes[i].normal.x, this.world.cars[n].skidPlanes[i].normal.y, this.world.cars[n].skidPlanes[i].normal.z);
+                  UT.VEC3_SET(this.world.cars[n].skidPlanes[i].object.mesh.position, this.world.cars[n].skidPlanes[i].pos[0], this.world.cars[n].skidPlanes[i].pos[1], this.world.cars[n].skidPlanes[i].pos[2]);
+                }
+            }
+            
+
+            if(this.world.cars[n].skidPlanes[i].object == null)
+            {
+              i++;
+              continue;
+            }
+
+            if (dt > 5000) {
+                this.skidPool.disposeObject(this.world.cars[n].skidPlanes[i].object);
+                this.world.cars[n].skidPlanes.splice(n, 1);
+            } else {
+                i++;
+            }
+        }
+
+        
+        if (this.world.lastCarData.cars[n].nextNitro > 3000) {
+          const d = (5000 - this.world.lastCarData.cars[n].nextNitro) / 2000;
+
+          let nitro = {};
+
+          nitro.obj = this.nitroPool.newObject((d + 1.0) / 3, [0.5,0.5,0.5], 1);
+
+          nitro.obj.mesh.scale = UT.VEC3_CREATE(nitro.obj.mesh.scale[0], nitro.obj.mesh.scale[1], nitro.obj.mesh.scale[2]);
+          nitro.obj.mesh.position = UT.VEC3_ADD(InPlace.QUAT_MULTIPLY_BY_VEC3([this.world.cars[n].quat.x,this.world.cars[n].quat.y, this.world.cars[n].quat.z, this.world.cars[n].quat.w], UT.VEC3_CREATE(0, 0, -2.8)), [this.world.cars[n].pos.x,this.world.cars[n].pos.y,this.world.cars[n].pos.z]);
+
+          nitro.start = now;
+          
+          this.world.cars[n].nitroSpheres.push(nitro);
+          
+        }
+
+        
+        i = 0;
+
+        while (i < this.world.cars[n].nitroSpheres.length) {
+            const nitro = this.world.cars[n].nitroSpheres[i];
+            const mdt = now - nitro.start;
+
+            if (mdt > 200) {
+                
+                this.nitroPool.disposeObject(nitro.obj);
+                this.world.cars[n].nitroSpheres.splice(i, 1);
+            }
+            else {
+              
+                //nitro.obj.mesh.material.opacity = 1.0 - mdt *0.005;
+                nitro.obj.mesh.material.diffuse[0] = Math.max(0.5, 1.0 - mdt * 0.05);
+                nitro.obj.mesh.material.update=true;
+
+                nitro.obj.mesh.scale[0] = 1.0 - mdt * 0.005;
+                nitro.obj.mesh.scale[1] = 1.0 - mdt * 0.005;
+                nitro.obj.mesh.scale[2] = 1.0 - mdt * 0.005;
+                
+                nitro.obj.mesh.position[1] += ts * 0.0108;
+              
+                i++;
+            }
+
+        }
+        
+
+      }
+    }
+
     if (this.world.myCar) {
 
+      if ((this.world.myCar.nextNitro > 3000)&&(this.pressed['nitro'])) {
+
+        this.nitros[1].animations[0].frames[0].width = 0;
+        this.nitros[2].animations[0].frames[0].width = this.nitros[2].width * (5000 - this.world.myCar.nextNitro) / 2000;
+
+      }else{
+
+        const ratio = Math.max(this.world.myCar.nextNitro / 5000.0 ,0);
+        this.nitros[1].animations[0].frames[0].width = this.nitros[1].width * ratio;
+        this.nitros[1].animations[0].frames[0].x = this.nitros[1].width * (1.0 -ratio) * 0.5;
+        this.nitros[1].position[0] = -250 + this.nitros[1].width * (1.0 -ratio)* 0.5;
+
+        this.nitros[2].animations[0].frames[0].width = 0;
+      }
+
+      this.rpm[1].animations[0].frames[0].width = this.rpm[1].width * this.world.myCar.RPM / 8000.0;
+      this.dmg[1].animations[0].frames[0].height = this.dmg[1].height *  this.world.myCar.damage / this.world.myCar.carDef.maxdmg;
+     
       this.updateCars(this.world, now);
+
+      //gfx3MeshRenderer.enableShadowSource(UT.VEC3_CREATE(0,20,10), UT.VEC3_CREATE(this.world.myCar.pos.x, this.world.myCar.pos.y, this.world.myCar.pos.z));
     
       if (this.world.myCar.ChassisMesh) {
         
@@ -1175,6 +1654,8 @@ class CCScreen extends Screen {
         }
         this.updateCamera(this.world.myCar, null, null, [], ts);
       }
+    }else{
+      //gfx3MeshRenderer.enableShadowSource(UT.VEC3_CREATE(0,20,10), UT.VEC3_CREATE(0, 0, 0));
     }
     
     if (this.roadObj)
@@ -1207,22 +1688,24 @@ class CCScreen extends Screen {
       }
     }
 
+    /*
     if(this.mode == 0)
     {
+
       if(track.wallMesh)
       {
         for (const obj of track.wallMesh) {
           obj[1].draw();
         }  
       }
-    }else{
+    }else{*/
       for(let wall of track.walls)
       {
          for (const obj of track.wallObject) {
           gfx3MeshRenderer.drawMesh(obj[1], wall.matrix);
          }
       }
-    }
+    //}
 
     for (let n = 0; n < track.woods.length; n++) {
 
@@ -1246,7 +1729,7 @@ class CCScreen extends Screen {
     for (let n = 0; n < track.jumpers.length; n++) {
 
       for (const obj of track.jumperObject) {
-        gfx3MeshRenderer.drawMesh(obj[1], track.jumpers[n].matrix, track.jumpers[n].nmatrix);
+        gfx3MeshRenderer.drawMesh(obj[1], track.jumpers[n].matrix);
       }
     }
     
@@ -1264,7 +1747,7 @@ class CCScreen extends Screen {
 
         UT.VEC3_SET(p, track.turrets[n].shots[i].pos.x, track.turrets[n].shots[i].pos.y, track.turrets[n].shots[i].pos.z);
         UT.VEC3_SET(s, track.turrets[n].shots[i].scale.x, track.turrets[n].shots[i].scale.y, track.turrets[n].shots[i].scale.z);
-        UT.MAT4_TRANSFORM_N(p,a,s,track.turrets[n].shots[i].matrix)
+        InPlace.MAT4_TRANSFORM(p,a,s,track.turrets[n].shots[i].matrix)
 
         if(track.turrets[n].shotModel)
         {
@@ -1286,19 +1769,28 @@ class CCScreen extends Screen {
     {
       d.draw();
     }
+
+
+    this.rpm[0].draw();
+    this.rpm[1].draw();
+
+    this.nitros[0].draw();
+    this.nitros[1].draw();
+    this.nitros[2].draw();
+
+    this.dmg[0].draw();
+    this.dmg[1].draw();
   }
 
   draw() {
 
     gfx3MeshRenderer.enableDirLight(this.lightDir);
 
-    gfx3MeshRenderer.dirLightColor= UT.VEC4_CREATE(0.2, 0,  0.2, 0.0);
-    gfx3MeshRenderer.pointLight0Color= UT.VEC4_CREATE(0.2, 0.2, 0.00, 10.0);
+    gfx3MeshRenderer.dirLightColor= UT.VEC4_CREATE(0.6, 0,  0.6, 0.0);
+    gfx3MeshRenderer.pointLight0Color= UT.VEC4_CREATE(0.8, 0.8, 0.00, 10.0);
+    gfx3MeshRenderer.pointLight1Color= UT.VEC4_CREATE(0.8, 0.8, 0.00, 10.0);
 
-    document.getElementById('mode').innerHTML =this.mode;
-    document.getElementById('bind1').innerHTML =gfx3MeshRenderer.binds;
-    
-    
+    //document.getElementById('mode').innerHTML =this.mode;
     document.getElementById('time').innerHTML =parseInt(gfx3Manager.lastRenderTime);
     document.getElementById('fps').innerHTML = (1000 / (gfx3Manager.lastRenderTime)).toFixed(2);
 
@@ -1308,38 +1800,51 @@ class CCScreen extends Screen {
     if (this.world.track)
       this.drawTrack(this.world.track);
 
-    if (this.world.myCar) {
+    let n=0;
+
+    for(let car of this.world.cars){
       
-      if (this.world.myCar.ChassisMesh) {
-        for (const obj of this.world.myCar.ChassisMesh) {
-          gfx3MeshRenderer.drawMesh(obj[1], this.world.myCar.matrix);
+      if (car.ChassisMesh) {
+        for (const obj of car.ChassisMesh) {
+          gfx3MeshRenderer.drawMesh(obj[1], car.matrix);
         }
 
-
-        const ofs = UT.QUAT_MULTIPLY_BY_VEC3(this.world.myCar.wquat, UT.VEC3_CREATE(-this.world.myCar.chassisWidth /2, 0, this.world.myCar.chassisLength + 0.2 ));
-        const p=UT.VEC3_CREATE(this.world.myCar.wpos[0] + ofs[0] , this.world.myCar.wpos[1] + 2, this.world.myCar.wpos[2]+ ofs[2]);
-
-        
+        const ofs = InPlace.QUAT_MULTIPLY_BY_VEC3([this.world.myCar.quat.x,this.world.myCar.quat.y,this.world.myCar.quat.z,this.world.myCar.quat.w], UT.VEC3_CREATE(-this.world.myCar.chassisWidth /2, 0, this.world.myCar.chassisLength + 0.2 ));
+        const p=UT.VEC3_CREATE(this.world.myCar.pos.x + ofs[0] , this.world.myCar.pos.y + 2, this.world.myCar.pos.z+ ofs[2]);
 
         gfx3MeshRenderer.enablePointLight(p, 0);
       }
 
-      if (this.world.myCar.tireMesh) {
-        for (let w of this.world.myCar.wheels) {
-          for (const obj of this.world.myCar.tireMesh) {
+      if (car.tireMesh) {
+        for (let w of car.wheels) {
+          for (const obj of car.tireMesh) {
             gfx3MeshRenderer.drawMesh(obj[1], w.matrix);
           }
         }
       }
+     
+      for(let s of car.nitroSpheres)
+      {
+        s.obj.mesh.draw();
+      }
 
-      this.drawText(Math.abs(this.world.myCar.speed).toFixed(0).toString())
+      for(let c of car.contacts)
+      {
+        if(c.object)
+          c.object.mesh.draw();
+      }
+      for(let p of this.world.cars[n].skidPlanes)
+      {
+        if(p.object)
+          p.object.mesh.draw();
+      }
     }
+
+    if(this.world.myCar)
+      this.drawText(Math.abs(this.world.myCar.speed).toFixed(0).toString());
     
     if (this.roadObj)
       this.roadObj.draw();
-
-
-
 
     if (this.roadWall)
       this.roadWall.draw();
@@ -1347,16 +1852,12 @@ class CCScreen extends Screen {
 
     this.drawUI();
 
-    //this.skybox.draw();
-    //gfx3DebugRenderer.drawGrid(UT.MAT4_ROTATE_X(Math.PI * 0.5), 20, 1);
   }
 
 
   handleKeyUp(e) {
 
-    if(e.code === 'KeyB')
-      gfx3MeshRenderer.binds ^= 1;
-    
+
     if(e.code === 'KeyR')
       this.mode ^= 1;
 
@@ -1382,6 +1883,7 @@ class CCScreen extends Screen {
   handleKeyDown(e) {
 
     
+
     if (this.gameStat != 1)
       return
 
@@ -1460,4 +1962,4 @@ class CCScreen extends Screen {
   }
 }
 
-export { CCScreen };
+export { PlayScreen };

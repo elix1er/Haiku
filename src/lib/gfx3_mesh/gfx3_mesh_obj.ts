@@ -37,6 +37,16 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     this.materials = new Map<string, Gfx3Material>();
   }
 
+  destroy()
+  {
+    for(let[n, o] of this){ o.delete(true); }
+
+    for(let[n, m] of this.materials){ m.delete(); }
+
+    
+
+  }
+
   async* makeTextFileLineIterator(fileURL: string): AsyncGenerator<string> {
     const utf8Decoder = new TextDecoder("utf-8");
     const response = await fetch(fileURL);
@@ -116,7 +126,7 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
 
       if (line.startsWith('Kd ')) {
         if (curMat)
-          curMat.diffuse = UT.VEC4_PARSE(line.substr(3));
+          curMat.diffuse = new  Float32Array(UT.VEC4_PARSE(line.substr(3)));
       }
 
       if (line.startsWith('Ks ')) {
@@ -130,16 +140,20 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
       }
 
       if (line.startsWith('Ke ')) {
+        /*
         if (curMat)
-          curMat.emissive = UT.VEC3_PARSE(line.substr(3));
+          curMat.emissive = new Float32Array(UT.VEC3_PARSE(line.substr(3)));
+        */
       }
       if (line.startsWith('Ns')) {
         if (curMat)
           curMat.specular[3] = parseFloat(line.substr(3));
       }
       if (line.startsWith('Ni ')) {
+        /*
         if (curMat)
           curMat.normalIntensity = parseFloat(line.substr(3));
+        */
       }
 
       if (line.startsWith('map_Kd ')) {
@@ -165,8 +179,10 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
           if (sw == 'bm') {
             infos.shift();
 
+            /*
             if (curMat)
               curMat.normalIntensity = parseFloat(infos[0]);
+            */
 
             infos.shift();
           }

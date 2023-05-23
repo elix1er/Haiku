@@ -69,7 +69,7 @@ fn main(
 }`;
 
 export const FRAGMENT_SHADER = `
-@group(0) @binding(0) var<uniform> vpcMatrix: mat4x4<f32>;
+@group(0) @binding(0) var<uniform> VPC_INVERSE_MATRIX: mat4x4<f32>;
 
 @group(1) @binding(0) var CubeMapSampler: sampler;
 @group(1) @binding(1) var CubeMapTexture: texture_cube<f32>;
@@ -79,7 +79,7 @@ fn main(
   @builtin(position) Position: vec4<f32>,
   @location(0) pos: vec4<f32>
 ) -> @location(0) vec4<f32> {
-  var t = vpcMatrix * pos;
+  var t = VPC_INVERSE_MATRIX * pos;
   var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler, normalize(t.xyz / t.w)));
   return textureColor;
 }`;

@@ -1,4 +1,4 @@
-import { gfx3Manager, UniformGroup } from '../gfx3/gfx3_manager';
+import { gfx3Manager, UniformGroupDataset } from '../gfx3/gfx3_manager';
 import { UT } from '../core/utils';
 import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_VERTEX_ATTR_COUNT } from './gfx3_debug_shader';
 
@@ -12,10 +12,10 @@ class Gfx3DebugRenderer {
   pipeline: GPURenderPipeline;
   device: GPUDevice;
   vertexBuffer: GPUBuffer;
-  uniformBuffer: UniformGroup;
   vertexCount: number;
   commands: Array<Command>;
   showDebug: boolean;
+  cmdBuffer: UniformGroupDataset;
 
   constructor() {
     this.pipeline = gfx3Manager.loadPipeline('DEBUG_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
@@ -26,9 +26,9 @@ class Gfx3DebugRenderer {
     this.commands = [];
     this.showDebug = false;
 
-    this.uniformBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
-    this.uniformBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
-    this.uniformBuffer.allocate(1);
+    this.cmdBuffer = gfx3Manager.createUniformGroupDataset('DEBUG_PIPELINE', 0);
+    this.cmdBuffer.addInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
+    this.cmdBuffer.allocate();
   }
 
   render(): void {
@@ -44,21 +44,21 @@ class Gfx3DebugRenderer {
     this.vertexBuffer.destroy();
     this.vertexBuffer = this.device.createBuffer({ size: this.vertexCount * SHADER_VERTEX_ATTR_COUNT * 4, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC });
 
-    if (this.uniformBuffer.getSize() < this.commands.length) {
-      this.uniformBuffer.allocate(this.commands.length);
+    if (this.cmdBuffer.getSize() < this.commands.length) {
+      this.cmdBuffer.allocate(this.commands.length);
     }
 
     const vpcMatrix = currentView.getViewProjectionClipMatrix();
     const mvpcMatrix = UT.MAT4_CREATE();
 
-    this.uniformBuffer.beginWrite();
+    this.cmdBuffer.beginWrite();
 
     for (let i = 0; i < this.commands.length; i++) {
       const cmd = this.commands[i];
       
       UT.MAT4_MULTIPLY(vpcMatrix, cmd.matrix, mvpcMatrix);
-      this.uniformBuffer.write(0, mvpcMatrix);
-      passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(i));
+      this.cmdBuffer.write(0, mvpcMatrix);
+      passEncoder.setBindGroup(0, this.cmdBuffer.getBindGroup(i));
 
       this.device.queue.writeBuffer(this.vertexBuffer, vertexBufferOffset, cmd.vertices);
       passEncoder.setVertexBuffer(0, this.vertexBuffer, vertexBufferOffset, cmd.vertices.byteLength);
@@ -66,7 +66,7 @@ class Gfx3DebugRenderer {
       vertexBufferOffset += cmd.vertices.byteLength;
     }
 
-    this.uniformBuffer.endWrite();
+    this.cmdBuffer.endWrite();
 
     this.commands = [];
     this.vertexCount = 0;

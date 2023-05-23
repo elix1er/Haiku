@@ -17,7 +17,7 @@ import { FPSScreen } from '../fps/fps_screen';
 import { RPGScreen } from '../rpg/rpg_screen';
 // import { CCScreen } from '../crazy-cars/select_screen';
 import { PerfScreen } from '../perf/perf_screen';
-import { PoolScreen } from '../pool/pool_screen';
+// import { PoolScreen } from '../pool/pool_screen';
 // ---------------------------------------------------------------------------------------
 
 class BootScreen extends Screen {
@@ -92,7 +92,7 @@ class BootScreen extends Screen {
       screenManager.requestSetScreen(new PerfScreen());
     }
     else if (data.id == 13) {
-      screenManager.requestSetScreen(new PoolScreen());
+      // screenManager.requestSetScreen(new PoolScreen());
     }
   }
 }

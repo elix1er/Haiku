@@ -119,17 +119,16 @@ struct MaterialParams {
 @group(2) @binding(2) var<uniform> MAT_SPECULAR: vec4<f32>;
 @group(2) @binding(3) var<uniform> MAT_PARAMS: MaterialParams;
 
-@group(2) @binding(4) var Sampler: sampler;
-@group(2) @binding(5) var Texture: texture_2d<f32>;
-
-@group(2) @binding(6) var RoughTexture: texture_2d<f32>;
-@group(2) @binding(7) var NormTexture: texture_2d<f32>;
-
-@group(2) @binding(8) var EnvMapSampler: sampler;
-@group(2) @binding(9) var EnvMapTexture: texture_cube<f32>;
-
-@group(2) @binding(10) var EnvMapSampler2: sampler;
-@group(2) @binding(11) var EnvMapTexture2: texture_2d<f32>;
+@group(3) @binding(0) var Sampler: sampler;
+@group(3) @binding(1) var Texture: texture_2d<f32>;
+@group(3) @binding(2) var RoughSampler: sampler;
+@group(3) @binding(3) var RoughTexture: texture_2d<f32>;
+@group(3) @binding(4) var NormSampler: sampler;
+@group(3) @binding(5) var NormTexture: texture_2d<f32>;
+@group(3) @binding(6) var EnvMapSampler: sampler;
+@group(3) @binding(7) var EnvMapTexture: texture_cube<f32>;
+@group(3) @binding(8) var EnvMapSampler2: sampler;
+@group(3) @binding(9) var EnvMapTexture2: texture_2d<f32>;
 
 @fragment
 fn main(
@@ -156,13 +155,13 @@ fn main(
 
   if(MAT_PARAMS.HAS_NORMAL_MAP != 0)
   {
-    var normalMap:vec4<f32> = textureSample(NormTexture, Sampler, FragUV);
+    var normalMap:vec4<f32> = textureSample(NormTexture, NormSampler, FragUV);
     normal = normalize(normalize(FragTangent) * normalMap.x + normalize(FragBinormal) * normalMap.y + normal * normalMap.z);
   }
 
   if (MAT_PARAMS.HAS_ROUGH_MAP != 0)
   {
-    rougness = MAT_SPECULAR.a * textureSample(RoughTexture, Sampler, FragUV).r;
+    rougness = MAT_SPECULAR.a * textureSample(RoughTexture, RoughSampler, FragUV).r;
   }
   else
   {

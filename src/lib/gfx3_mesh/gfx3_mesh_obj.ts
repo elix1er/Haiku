@@ -37,13 +37,14 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     this.materials = new Map<string, Gfx3Material>();
   }
 
-  destroy()
-  {
-    for(let[n, o] of this){ o.delete(true); }
+  destroy() {
+    for (let [n, o] of this) {
+      o.delete(true);
+    }
 
-    for(let[n, m] of this.materials){ m.delete(); }
+    for (let [n, m] of this.materials) { m.delete(); }
 
-    
+
 
   }
 
@@ -126,7 +127,7 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
 
       if (line.startsWith('Kd ')) {
         if (curMat)
-          curMat.diffuse = new  Float32Array(UT.VEC4_PARSE(line.substr(3)));
+          curMat.diffuse = new Float32Array(UT.VEC4_PARSE(line.substr(3)));
       }
 
       if (line.startsWith('Ks ')) {
@@ -433,11 +434,8 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     return Gfx3BoundingBox.merge(boxes);
   }
 
-
   buildMesh(name: string, faces: Array<Polygon>, matName: string, vCnt: number, vtang: Array<vec3>, vbnorm: Array<vec3>) {
-
     const mesh = new Gfx3Mesh();
-
     const mat = this.materials.get(matName);
 
     for (let i = 0; i < vtang.length; i++) {

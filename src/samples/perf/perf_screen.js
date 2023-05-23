@@ -4,7 +4,6 @@ import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
 import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
-import { Gfx3Skybox } from '../../lib/gfx3_skybox/gfx3_skybox';
 import { SHADER_VERTEX_ATTR_COUNT } from '../../lib/gfx3_mesh/gfx3_mesh_shader';
 import { Gfx3MeshShapeCylinder } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_cylinder';
 import { Gfx3MeshShapeSphere } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_sphere';
@@ -29,7 +28,6 @@ class PerfScreen extends Screen {
   constructor() {
     super();
     this.camera = new Gfx3Camera(0);
-    this.skybox = new Gfx3Skybox();
     this.isDragging = false;
     this.dragStartPosition = [0, 0];
     this.dragStartRotation = [0, 0];

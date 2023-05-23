@@ -12,7 +12,7 @@ Important note: This engine comes with a dozen of diverse and varied examples.
 ## General features
 - 👾 2D - Sprite, animated tilemap
 - 🧊 3D - Debug shapes, light, static mesh, animated mesh, material, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover
-- 💁 Format - Obj
+- 💁 Format - Wavefront (obj)
 - 💥 VFX - Phong, normal-map, env-map
 - 🎮 Input - Action mapper for keyboard and gamepad
 - 🚔 Pathfinder - A* for 2D & 3D

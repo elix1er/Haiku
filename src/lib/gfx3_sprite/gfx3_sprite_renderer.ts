@@ -1,20 +1,18 @@
-import { gfx3Manager, UniformGroup } from '../gfx3/gfx3_manager';
+import { gfx3Manager, UniformGroupDataset } from '../gfx3/gfx3_manager';
 import { UT } from '../core/utils';
-import { Gfx3Texture } from '../gfx3/gfx3_texture';
+import { Gfx3RendererAbstract } from '../gfx3/gfx3_renderer_abstract';
 import { Gfx3Sprite } from './gfx3_sprite';
 import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER } from './gfx3_sprite_shader';
 
-class Gfx3SpriteRenderer {
-  pipeline: GPURenderPipeline;
-  defaultTexture: Gfx3Texture;
-  uniformBuffer: UniformGroup;
+class Gfx3SpriteRenderer extends Gfx3RendererAbstract {
+  spritesBuffer: UniformGroupDataset;
   sprites: Array<Gfx3Sprite>;
 
   constructor() {
-    this.pipeline = gfx3Manager.loadPipeline('SPRITE_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
-    this.defaultTexture = gfx3Manager.createTextureFromBitmap();
-    this.uniformBuffer = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
-    this.uniformBuffer.addDatasetInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
+    super('SPRITE_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
+    this.spritesBuffer = gfx3Manager.createUniformGroupDataset('SPRITE_PIPELINE', 0);
+    this.spritesBuffer.addInput(0, UT.MAT4_SIZE, 'MVPC_MATRIX');
+    this.spritesBuffer.allocate();
     this.sprites = [];
   }
 
@@ -23,8 +21,8 @@ class Gfx3SpriteRenderer {
     const passEncoder = gfx3Manager.getPassEncoder();
     passEncoder.setPipeline(this.pipeline);
 
-    if (this.uniformBuffer.getSize() < this.sprites.length) {
-      this.uniformBuffer.allocate(this.sprites.length);
+    if (this.spritesBuffer.getSize() < this.sprites.length) {
+      this.spritesBuffer.allocate(this.sprites.length);
     }
 
     const cameraMatrix = currentView.getCameraMatrix();
@@ -33,7 +31,7 @@ class Gfx3SpriteRenderer {
     const vpcMatrix = currentView.getViewProjectionClipMatrix();
     const mvpcMatrix = UT.MAT4_CREATE();
 
-    this.uniformBuffer.beginWrite();
+    this.spritesBuffer.beginWrite();
 
     for (let i = 0; i < this.sprites.length; i++) {
       const sprite = this.sprites[i];
@@ -47,36 +45,22 @@ class Gfx3SpriteRenderer {
         UT.MAT4_MULTIPLY(vpcMatrix, sprite.getTransformMatrix(), mvpcMatrix);
       }
 
-      this.uniformBuffer.write(0, mvpcMatrix);
-      passEncoder.setBindGroup(0, this.uniformBuffer.getBindGroup(i));
+      this.spritesBuffer.write(0, mvpcMatrix);
+      passEncoder.setBindGroup(0, this.spritesBuffer.getBindGroup(i));
 
-      const texture = sprite.getTexture();
-      passEncoder.setBindGroup(1, texture.bindGroup!);
+      const textureBuffer = sprite.getTextureBuffer();
+      passEncoder.setBindGroup(1, textureBuffer.getBindGroup());
 
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), sprite.getVertexSubBufferOffset(), sprite.getVertexSubBufferSize());
       passEncoder.draw(sprite.getVertexCount());
     }
 
-    this.uniformBuffer.endWrite();
+    this.spritesBuffer.endWrite();
     this.sprites = [];
   }
 
   drawSprite(sprite: Gfx3Sprite): void {
     this.sprites.push(sprite);
-  }
-
-  createTextureBinding(sampler: GPUSampler, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): GPUBindGroup {
-    const device = gfx3Manager.getDevice();
-    return device.createBindGroup({
-      layout: this.pipeline.getBindGroupLayout(1),
-      entries: [{
-        binding: 0,
-        resource: sampler
-      }, {
-        binding: 1,
-        resource: texture.createView(createViewDescriptor)
-      }]
-    });
   }
 }
 

@@ -10,91 +10,94 @@ export interface VertexSubBuffer {
   changed: boolean;
 };
 
-export class UniformGroup {
+export class UniformGroupBitmaps {
   device: GPUDevice;
-  layout: GPUBindGroupLayout;
+  pipeline: GPURenderPipeline;
+  groupIndex: number;
+  inputs: Array<GPUBindGroupEntry>;
+  bindGroup: GPUBindGroup | null;
+
+  constructor(device: GPUDevice, pipeline: GPURenderPipeline, groupIndex: number) {
+    this.device = device;
+    this.pipeline = pipeline;
+    this.groupIndex = groupIndex;
+    this.inputs = [];
+    this.bindGroup = null;
+  }
+
+  addSamplerInput(index: number, sampler: GPUSampler): void {
+    this.inputs[index] = { binding: index, resource: sampler };
+  }
+
+  addTextureInput(index: number, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): void {
+    this.inputs[index] = { binding: index, resource: texture.createView(createViewDescriptor) };
+  }
+
+  setSamplerInput(index: number, sampler: GPUSampler): void {
+    this.inputs[index] = { binding: index, resource: sampler };
+  }
+
+  setTextureInput(index: number, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): void {
+    this.inputs[index] = { binding: index, resource: texture.createView(createViewDescriptor) };
+  }
+
+  allocate(): void {
+    this.bindGroup = this.device.createBindGroup({ layout: this.pipeline.getBindGroupLayout(this.groupIndex), entries: this.inputs });
+  }
+
+  getBindGroup(): GPUBindGroup {
+    return this.bindGroup!;
+  }
+}
+
+export class UniformGroupDataset {
+  device: GPUDevice;
+  pipeline: GPURenderPipeline;
+  groupIndex: number;
   buffer: GPUBuffer;
   bufferWriteOffset: number;
-  datasetInputs: Array<{ index: number, size: number }>;
-  samplerInputs: Array<{ index: number, resource: GPUSampler }>;
-  textureInputs: Array<{ index: number, resource: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor }>;
-  storeEntries: Array<Array<GPUBindGroupEntry>>;
+  inputs: Array<{ index: number, size: number }>;
   storeBindGroups: Array<GPUBindGroup>;
   size: number;
 
-  constructor(device: GPUDevice, layout: GPUBindGroupLayout) {
+  constructor(device: GPUDevice, pipeline: GPURenderPipeline, groupIndex: number) {
     this.device = device;
-    this.layout = layout;
+    this.pipeline = pipeline;
+    this.groupIndex = groupIndex;
     this.buffer = device.createBuffer({ size: 16 * 4, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
     this.bufferWriteOffset = 0;
-    this.datasetInputs = [];
-    this.samplerInputs = [];
-    this.textureInputs = [];
-    this.storeEntries = [];
+    this.inputs = [];
     this.storeBindGroups = [];
     this.size = 0;
   }
 
   destroy(): void {
     this.buffer.destroy();
-    this.storeEntries = [];
     this.storeBindGroups = [];
   }
 
-  addDatasetInput(index: number, byteLength: number, name: string): void {
-    this.datasetInputs.push({ index: index, size: byteLength });
+  addInput(index: number, byteLength: number, name: string): void {
+    this.inputs[index] = { index: index, size: byteLength };
   }
 
-  addSamplerInput(index: number, sampler: GPUSampler): void {
-    this.samplerInputs.push({ index: index, resource: sampler });
-  }
-
-  addTextureInput(index: number, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): void {
-    this.textureInputs.push({ index: index, resource: texture, createViewDescriptor: createViewDescriptor });
-  }
-
-  allocate(size: number): void {
+  allocate(size: number = 1): void {
     let offset = 0;
-
     this.storeBindGroups = [];
-    this.storeEntries = [];
-
     this.buffer.destroy();
-    this.buffer = this.device.createBuffer({ size: size * this.datasetInputs.length * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    this.buffer = this.device.createBuffer({ size: size * this.inputs.length * MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
 
     for (let i = 0; i < size; i++) {
       const entries: Array<GPUBindGroupEntry> = [];
 
-      for (const input of this.datasetInputs) {
+      for (const input of this.inputs) {
         entries[input.index] = { binding: input.index, resource: { buffer: this.buffer, offset: offset, size: input.size } };
         offset += MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
       }
 
-      for (const input of this.samplerInputs) {
-        entries[input.index] = { binding: input.index, resource: input.resource };
-      }
-
-      for (const input of this.textureInputs) {
-        entries[input.index] = { binding: input.index, resource: input.resource.createView(input.createViewDescriptor) };
-      }
-
-      this.storeEntries.push(entries);
-      this.storeBindGroups.push(this.device.createBindGroup({ layout: this.layout, entries: entries }));
+      this.storeBindGroups.push(this.device.createBindGroup({ layout: this.pipeline.getBindGroupLayout(this.groupIndex), entries: entries }));
     }
 
     this.size = size;
-  }
-
-  setSamplerEntry(groupIndex: number, index: number, sampler: GPUSampler): void {
-    this.storeEntries[groupIndex][index] = { binding: index, resource: sampler };
-  }
-
-  setTextureEntry(groupIndex: number, index: number, texture: GPUTexture, createViewDescriptor: GPUTextureViewDescriptor = {}): void {
-    this.storeEntries[groupIndex][index] = { binding: index, resource: texture.createView(createViewDescriptor) };
-  }
-
-  refresh(groupIndex: number): void {
-    this.storeBindGroups[groupIndex] = this.device.createBindGroup({ layout: this.layout, entries: this.storeEntries[groupIndex] });
   }
 
   beginWrite(): void {
@@ -110,7 +113,7 @@ export class UniformGroup {
     this.bufferWriteOffset = 0;
   }
 
-  getBindGroup(groupIndex: number): GPUBindGroup {
+  getBindGroup(groupIndex: number = 0): GPUBindGroup {
     return this.storeBindGroups[groupIndex];
   }
 
@@ -330,11 +333,15 @@ class Gfx3Manager {
     sub.changed = true;
   }
 
-  createUniformGroup(layout: GPUBindGroupLayout): UniformGroup {
-    return new UniformGroup(this.device, layout);
+  createUniformGroupDataset(pipelineId: string, groupIndex: number): UniformGroupDataset {
+    return new UniformGroupDataset(this.device, this.getPipeline(pipelineId), groupIndex);
   }
 
-  createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement, is8bit:boolean = false): Gfx3Texture {
+  createUniformGroupBitmaps(pipelineId: string, groupIndex: number): UniformGroupBitmaps {
+    return new UniformGroupBitmaps(this.device, this.getPipeline(pipelineId), groupIndex);
+  }
+
+  createTextureFromBitmap(bitmap?: ImageBitmap | HTMLCanvasElement, is8bit: boolean = false): Gfx3Texture {
     if (!bitmap) {
       const canvas = document.createElement('canvas');
       canvas.getContext('2d');
@@ -345,7 +352,7 @@ class Gfx3Manager {
 
     const gpuTexture = this.device.createTexture({
       size: [bitmap.width, bitmap.height],
-      format: is8bit?"r8unorm":'rgba8unorm',
+      format: is8bit ? "r8unorm" : 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
     });
 
@@ -358,7 +365,7 @@ class Gfx3Manager {
       addressModeV: 'repeat'
     });
 
-    return { gpuTexture: gpuTexture, gpuSampler: gpuSampler, bindGroup: null };
+    return { gpuTexture: gpuTexture, gpuSampler: gpuSampler };
   }
 
   createCubeMapFromBitmap(bitmaps?: Array<ImageBitmap | HTMLCanvasElement>): Gfx3Texture {
@@ -396,7 +403,7 @@ class Gfx3Manager {
       minFilter: 'linear'
     });
 
-    return { gpuTexture: cubemapTexture, gpuSampler: gpuSampler, bindGroup: null };
+    return { gpuTexture: cubemapTexture, gpuSampler: gpuSampler };
   }
 
   getWidth(): number {

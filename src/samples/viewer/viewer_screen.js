@@ -30,6 +30,7 @@ class ViewerScreen extends Screen {
   }
 
   async onEnter() {
+    gfx3DebugRenderer.setShowDebug(true);
     this.camera.setPosition(0, 0, 10);
 
     await loadCube(this.mesh);

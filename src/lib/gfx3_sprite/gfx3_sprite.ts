@@ -1,4 +1,4 @@
-import { gfx3Manager } from '../gfx3/gfx3_manager';
+import { gfx3Manager, UniformGroupBitmaps } from '../gfx3/gfx3_manager';
 import { gfx3SpriteRenderer } from './gfx3_sprite_renderer';
 import { UT } from '../core/utils.js';
 import { Gfx3Drawable } from '../gfx3/gfx3_drawable';
@@ -6,17 +6,25 @@ import { Gfx3Texture } from '../gfx3/gfx3_texture';
 import { SHADER_VERTEX_ATTR_COUNT } from './gfx3_sprite_shader';
 
 class Gfx3Sprite extends Gfx3Drawable {
-  texture: Gfx3Texture;
   offset: vec2;
   pixelsPerUnit: number;
   billboardMode: boolean;
+  texture: Gfx3Texture;
+  textureBuffer: UniformGroupBitmaps;
+  textureChanged: boolean;
 
   constructor() {
     super(SHADER_VERTEX_ATTR_COUNT);
-    this.texture = gfx3Manager.createTextureFromBitmap();
     this.offset = [0, 0];
     this.pixelsPerUnit = 100;
     this.billboardMode = false;
+
+    this.texture = gfx3Manager.createTextureFromBitmap();
+    this.textureBuffer = gfx3Manager.createUniformGroupBitmaps('SPRITE_PIPELINE', 1);
+    this.textureBuffer.addSamplerInput(0, this.texture.gpuSampler);
+    this.textureBuffer.addTextureInput(1, this.texture.gpuTexture);
+    this.textureBuffer.allocate();
+    this.textureChanged = false;
   }
 
   draw(): void {
@@ -33,15 +41,6 @@ class Gfx3Sprite extends Gfx3Drawable {
     UT.MAT4_MULTIPLY(matrix, UT.MAT4_SCALE(1 / this.pixelsPerUnit, 1 / this.pixelsPerUnit, 1 / this.pixelsPerUnit), matrix);
     UT.MAT4_MULTIPLY(matrix, UT.MAT4_TRANSLATE(-this.offset[0], -this.offset[1], 0), matrix);
     return matrix;
-  }
-
-  setTexture(texture: Gfx3Texture): void {
-    texture.bindGroup = gfx3SpriteRenderer.createTextureBinding(texture.gpuSampler, texture.gpuTexture);
-    this.texture = texture;    
-  }
-
-  getTexture(): Gfx3Texture {
-    return this.texture;
   }
 
   getOffset(): vec2 {
@@ -74,6 +73,26 @@ class Gfx3Sprite extends Gfx3Drawable {
 
   setBillboardMode(billboardMode: boolean): void {
     this.billboardMode = billboardMode;
+  }
+
+  setTexture(texture: Gfx3Texture): void {
+    this.texture = texture;
+    this.textureChanged = true;
+  }
+
+  getTexture(): Gfx3Texture {
+    return this.texture;
+  }
+
+  getTextureBuffer(): UniformGroupBitmaps {
+    if (this.textureChanged) {
+      this.textureBuffer.setSamplerInput(0, this.texture.gpuSampler);
+      this.textureBuffer.setTextureInput(1, this.texture.gpuTexture);
+      this.textureBuffer.allocate();
+      this.textureChanged = false;
+    }
+
+    return this.textureBuffer;
   }
 }
 

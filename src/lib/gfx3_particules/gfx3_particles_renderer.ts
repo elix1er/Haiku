@@ -93,7 +93,7 @@ class Gfx3ParticlesRenderer {
       this.uniformGroup.setTextureEntry(n, 8, particles.texture ? particles.texture.gpuTexture : this.defaultTexture.gpuTexture);
       */
 
-      passEncoder.setBindGroup(0, this.uniformGroup.getBindGroup(0));
+      passEncoder.setBindGroup(0, this.uniformGroup.getBindGroup());
 
       passEncoder.setVertexBuffer(0, gfx3Manager.getVertexBuffer(), particles.getVertexSubBufferOffset(), particles.getVertexSubBufferSize());
       passEncoder.draw(particles.getVertexCount());

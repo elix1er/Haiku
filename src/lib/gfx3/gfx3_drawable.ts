@@ -1,6 +1,6 @@
-import { gfx3Manager, VertexSubBuffer } from '../gfx3/gfx3_manager';
-import { Gfx3Transformable } from '../gfx3/gfx3_transformable';
-import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
+import { gfx3Manager, VertexSubBuffer } from './gfx3_manager';
+import { Gfx3Transformable } from './gfx3_transformable';
+import { Gfx3BoundingBox } from './gfx3_bounding_box';
 
 class Gfx3Drawable extends Gfx3Transformable {
   vertexSubBuffer: VertexSubBuffer;

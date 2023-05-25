@@ -15,12 +15,9 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
   defaultEnvMap: Gfx3Texture;
   worldBuffer: UniformGroupDataset;
   cmdBuffer: UniformGroupDataset;
-  pointLight0: vec4_buf;
-  pointLight0Color: vec4_buf;
-  pointLight1: vec4_buf;
-  pointLight1Color: vec4_buf;
-  dirLight: vec4_buf;
-  dirLightColor: vec3_buf;
+  pointLight0: vec10_buf;
+  pointLight1: vec10_buf;
+  dirLight: vec7_buf;
   meshCommands: Array<MeshCommand>;
 
   constructor() {
@@ -29,25 +26,37 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
     this.defaultEnvMap = gfx3Manager.createCubeMapFromBitmap();
 
     this.worldBuffer = gfx3Manager.createUniformGroupDataset('MESH_PIPELINE', 0);
-    this.worldBuffer.addInput(0, UT.VEC3_SIZE, 'CAM_POS');
-    this.worldBuffer.addInput(1, UT.VEC4_SIZE, 'POINT_LIGHT0');
-    this.worldBuffer.addInput(2, UT.VEC4_SIZE, 'POINT_LIGHT0_COLOR');
-    this.worldBuffer.addInput(3, UT.VEC4_SIZE, 'POINT_LIGHT1');
-    this.worldBuffer.addInput(4, UT.VEC4_SIZE, 'POINT_LIGHT1_COLOR');
-    this.worldBuffer.addInput(5, UT.VEC4_SIZE, 'DIR_LIGHT');
-    this.worldBuffer.addInput(6, UT.VEC4_SIZE, 'DIR_LIGHT_COLOR');
+    this.worldBuffer.addInput(0, UT.F03_SIZE, 'CAM_POS');
+    this.worldBuffer.addInput(1, UT.F16_SIZE, 'POINT_LIGHT0');
+    this.worldBuffer.addInput(2, UT.F16_SIZE, 'POINT_LIGHT1');
+    this.worldBuffer.addInput(3, UT.F12_SIZE, 'DIR_LIGHT');
     this.worldBuffer.allocate();
 
     this.cmdBuffer = gfx3Manager.createUniformGroupDataset('MESH_PIPELINE', 1);
-    this.cmdBuffer.addInput(0, UT.MAT4_SIZE * 3, 'MESH_MATRICES');
+    this.cmdBuffer.addInput(0, UT.F16_SIZE * 3, 'MESH_MATRICES');
     this.cmdBuffer.allocate();
 
-    this.pointLight0 = UT.VEC4_CREATE();
-    this.pointLight0Color = UT.VEC4_CREATE();
-    this.pointLight1 = UT.VEC4_CREATE();
-    this.pointLight1Color = UT.VEC4_CREATE();
-    this.dirLight = UT.VEC4_CREATE();
-    this.dirLightColor = UT.VEC3_CREATE();
+    this.pointLight0 = new Float32Array(16);
+    this.pointLight0[2 * 4 + 0] = 1;
+    this.pointLight0[2 * 4 + 1] = 1;
+    this.pointLight0[2 * 4 + 2] = 1;
+    this.pointLight0[3 * 4 + 0] = 1;
+    this.pointLight0[3 * 4 + 1] = 0;
+    this.pointLight0[3 * 4 + 2] = 0;
+    
+    this.pointLight1 = new Float32Array(16);
+    this.pointLight1[2 * 4 + 0] = 1;
+    this.pointLight1[2 * 4 + 1] = 1;
+    this.pointLight1[2 * 4 + 2] = 1;
+    this.pointLight1[3 * 4 + 0] = 1;
+    this.pointLight1[3 * 4 + 1] = 0;
+    this.pointLight1[3 * 4 + 2] = 0;
+
+    this.dirLight = new Float32Array(12);
+    this.dirLight[2 * 4 + 0] = 1;
+    this.dirLight[2 * 4 + 1] = 1;
+    this.dirLight[2 * 4 + 2] = 1;
+
     this.meshCommands = [];
   }
 
@@ -59,11 +68,8 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
     this.worldBuffer.beginWrite();
     this.worldBuffer.write(0, new Float32Array(currentView.getCameraPosition()));
     this.worldBuffer.write(1, this.pointLight0);
-    this.worldBuffer.write(2, this.pointLight0Color);
-    this.worldBuffer.write(3, this.pointLight1);
-    this.worldBuffer.write(4, this.pointLight1Color);
-    this.worldBuffer.write(5, this.dirLight);
-    this.worldBuffer.write(6, this.dirLightColor);
+    this.worldBuffer.write(2, this.pointLight1);
+    this.worldBuffer.write(3, this.dirLight);
     this.worldBuffer.endWrite();
     passEncoder.setBindGroup(0, this.worldBuffer.getBindGroup());
 
@@ -123,56 +129,65 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
     }
 
     this.cmdBuffer.endWrite();
-
     this.meshCommands = [];
-    this.pointLight0[3] = 0;
-    this.pointLight1[3] = 0;
-    this.dirLight[3] = 0;
   }
 
   drawMesh(mesh: Gfx3Mesh, matrix: mat4_buf | null = null): void {
     this.meshCommands.push({ mesh: mesh, matrix: matrix });
   }
 
-  enablePointLight(position: vec3, index: number): void {
+  enablePointLight(index: number, position: vec3, intensity: number = 1): void {
     if (index == 0) {
-      this.pointLight0[0] = position[0];
-      this.pointLight0[1] = position[1];
-      this.pointLight0[2] = position[2];
-      this.pointLight0[3] = 1;
+      this.pointLight0[0] = intensity;
+      this.pointLight0[1 * 4 + 0] = position[0];
+      this.pointLight0[1 * 4 + 1] = position[1];
+      this.pointLight0[1 * 4 + 2] = position[2];
     }
     else if (index == 1) {
-      this.pointLight1[0] = position[0];
-      this.pointLight1[1] = position[1];
-      this.pointLight1[2] = position[2];
-      this.pointLight1[3] = 1;
+      this.pointLight1[0] = intensity;
+      this.pointLight1[1 * 4 + 0] = position[0];
+      this.pointLight1[1 * 4 + 1] = position[1];
+      this.pointLight1[1 * 4 + 2] = position[2];
     }
   }
 
-  setPointLightColor(index: number, r: number, g: number, b: number): void {
+  setPointLightColor(index: number, color: vec3): void {
     if (index == 0) {
-      this.pointLight0Color[0] = r;
-      this.pointLight0Color[1] = g;
-      this.pointLight0Color[2] = b;
+      this.pointLight0[2 * 4 + 0] = color[0];
+      this.pointLight0[2 * 4 + 1] = color[1];
+      this.pointLight0[2 * 4 + 2] = color[2];
     }
     else if (index == 1) {
-      this.pointLight1Color[0] = r;
-      this.pointLight1Color[1] = g;
-      this.pointLight1Color[2] = b;
+      this.pointLight1[2 * 4 + 0] = color[0];
+      this.pointLight1[2 * 4 + 1] = color[1];
+      this.pointLight1[2 * 4 + 2] = color[2];
     }
   }
 
-  enableDirLight(direction: vec3): void {
-    this.dirLight[0] = direction[0];
-    this.dirLight[1] = direction[1];
-    this.dirLight[2] = direction[2];
-    this.dirLight[3] = 1;
+  setPointLightAttenuation(index: number, constant: number, linear: number, exp: number): void {
+    if (index == 0) {
+      this.pointLight0[3 * 4 + 0] = constant;
+      this.pointLight0[3 * 4 + 1] = linear;
+      this.pointLight0[3 * 4 + 2] = exp;
+    }
+    else if (index == 1) {
+      this.pointLight1[3 * 4 + 0] = constant;
+      this.pointLight1[3 * 4 + 1] = linear;
+      this.pointLight1[3 * 4 + 2] = exp;
+    }
   }
 
-  setDirLightColor(r: number, g: number, b: number): void {
-    this.dirLightColor[0] = r;
-    this.dirLightColor[1] = g;
-    this.dirLightColor[2] = b;
+  enableDirLight(direction: vec3, intensity: number = 1): void {
+    this.dirLight[0] = intensity;
+    this.dirLight[1 * 4 + 0] = direction[0];
+    this.dirLight[1 * 4 + 1] = direction[1];
+    this.dirLight[1 * 4 + 2] = direction[2];    
+  }
+
+  setDirLightColor(color: vec3): void {
+    this.dirLight[2 * 4 + 0] = color[0];
+    this.dirLight[2 * 4 + 1] = color[1];
+    this.dirLight[2 * 4 + 2] = color[2];
   }
 
   getDefaultTexture(): Gfx3Texture {

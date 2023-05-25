@@ -10,7 +10,6 @@ class PrerenderedIsoScreen extends Screen {
   }
 
   async onEnter() {
-    gfx3DebugRenderer.setShowDebug(true);
     await this.room.loadFromFile('./samples/prerendered-isometric/scene.room', 'Spawn0000');
   }
 

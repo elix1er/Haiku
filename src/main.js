@@ -17,6 +17,7 @@ class GameManager {
   }
 
   startup() {
+    gfx3DebugRenderer.setShowDebug(true);
     this.run(0);
   }
 

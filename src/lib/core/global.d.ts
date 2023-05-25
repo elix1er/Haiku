@@ -25,6 +25,10 @@ declare global {
   type vec4_buf = Float32Array;
   type vec5_buf = Float32Array;
   type vec6_buf = Float32Array;
+  type vec7_buf = Float32Array;
+  type vec8_buf = Float32Array;
+  type vec9_buf = Float32Array;
+  type vec10_buf = Float32Array;
   type mat3_buf = Float32Array;
   type mat4_buf = Float32Array;
 }

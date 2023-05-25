@@ -1,13 +1,12 @@
 class UT {
   static EPSILON = 0.0000001;
-  static MAT4_SIZE: number = 64;
-  static VEC2_SIZE: number = 8;
+  static VEC2_SIZE = 8;
   static VEC2_ZERO: vec2 = [0, 0];
   static VEC2_LEFT: vec2 = [-1, 0];
   static VEC2_RIGHT: vec2 = [1, 0];
   static VEC2_UP: vec2 = [0, 1];
   static VEC2_DOWN: vec2 = [0, -1];
-  static VEC3_SIZE: number = 12;
+  static VEC3_SIZE = 12;
   static VEC3_ZERO: vec3 = [0, 0, 0];
   static VEC3_BACKWARD: vec3 = [0, 0, 1];
   static VEC3_FORWARD: vec3 = [0, 0, -1];
@@ -19,6 +18,23 @@ class UT {
   static VEC5_SIZE = 20;
   static VEC6_SIZE = 24;
   static MAT3_SIZE = 36;
+  static MAT4_SIZE = 64;
+  static F01_SIZE = 4;
+  static F02_SIZE = 8;
+  static F03_SIZE = 12;
+  static F04_SIZE = 16;
+  static F05_SIZE = 20;
+  static F06_SIZE = 24;
+  static F07_SIZE = 28;
+  static F08_SIZE = 32;
+  static F09_SIZE = 36;
+  static F10_SIZE = 40;
+  static F11_SIZE = 44;
+  static F12_SIZE = 48;
+  static F13_SIZE = 52;
+  static F14_SIZE = 56;
+  static F15_SIZE = 60;
+  static F16_SIZE = 64;
 
   static FAIL(message: string) {
     const elem = document.querySelector<HTMLDivElement>('#APP_FAIL')!;
@@ -473,32 +489,6 @@ class UT {
     out[3]= a[3];
     return out;
   }
-
-  /**************************************************************************/
-  /* VEC5 */
-  /**************************************************************************/
-
-  static VEC5_CREATE(x: number = 0, y: number = 0, z: number = 0, w: number = 0, v: number = 0): vec5_buf {
-    const out = new Float32Array(5);
-    out[0] = x;
-    out[1] = y;
-    out[2] = z;
-    out[3] = w;
-    out[4] = v;
-    return out;
-  }
-
-  static VEC6_CREATE(x: number = 0, y: number = 0, z: number = 0, w: number = 0, v: number = 0, u: number = 0): vec5_buf {
-    const out = new Float32Array(6);
-    out[0] = x;
-    out[1] = y;
-    out[2] = z;
-    out[3] = w;
-    out[4] = v;
-    out[5] = u;
-    return out;
-  }
-
 
   /**************************************************************************/
   /* MAT3 */

@@ -18,8 +18,8 @@ type MaterialOptions = {
 
 class Gfx3Material {
   params: vec6_buf;
-  ambiant: vec4_buf;
-  diffuse: vec4_buf;
+  ambiant: vec3_buf;
+  diffuse: vec3_buf;
   specular: vec4_buf;
   texture: Gfx3Texture;
   normalMap: Gfx3Texture;
@@ -32,15 +32,15 @@ class Gfx3Material {
   texturesChanged: boolean;
 
   constructor(options: MaterialOptions) {
-    this.params = UT.VEC6_CREATE();
+    this.params = new Float32Array(6);
     this.params[0] = options.opacity ?? 1;
     this.params[1] = options.texture ? 1 : 0;
     this.params[2] = options.lightning ? 1 : 0;
     this.params[3] = options.normalMap ? 1 : 0;
     this.params[4] = options.envMap ? 1 : options.envMapEq ? 2 : 0;
     this.params[5] = options.roughnessMap ? 1 : 0;
-    this.diffuse = options.diffuse ?? UT.VEC4_CREATE(1.0, 1.0, 1.0, 1.0);
-    this.ambiant = options.ambiant ?? UT.VEC4_CREATE(0.05, 0.05, 0.05, 1);
+    this.diffuse = options.diffuse ?? UT.VEC3_CREATE(1.0, 1.0, 1.0);
+    this.ambiant = options.ambiant ?? UT.VEC3_CREATE(0.5, 0.5, 0.5);
     this.specular = options.specular ?? UT.VEC4_CREATE(0.0, 0.0, 0.0, 0.0);
     this.texture = options.texture ?? gfx3MeshRenderer.getDefaultTexture();
     this.roughnessMap = options.roughnessMap ?? gfx3MeshRenderer.getDefaultTexture();

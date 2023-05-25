@@ -17,7 +17,6 @@ class ViewerScreen extends Screen {
     this.camera = new Gfx3Camera(0);
     this.mesh = new Gfx3MeshJSM();
     this.skybox = new Gfx3Skybox();
-    this.light = [10, 100, 0];
 
     this.isDragging = false;
     this.dragStartPosition = [0, 0];
@@ -30,10 +29,10 @@ class ViewerScreen extends Screen {
   }
 
   async onEnter() {
-    gfx3DebugRenderer.setShowDebug(true);
+    gfx3MeshRenderer.enablePointLight(0, [10, 10, 0]);
     this.camera.setPosition(0, 0, 10);
 
-    await loadCube(this.mesh);
+    await LOAD_CUBE(this.mesh);
     this.skybox.setCubemap(await gfx3TextureManager.loadCubemapTexture('./samples/viewer/sky_', 'png'));
 
     document.addEventListener('keydown', this.handleKeyDownCb);
@@ -78,7 +77,6 @@ class ViewerScreen extends Screen {
   draw() {
     this.mesh.draw();
     this.skybox.draw();
-    gfx3MeshRenderer.enablePointLight(this.light, 0);
     gfx3DebugRenderer.drawGrid(UT.MAT4_ROTATE_X(Math.PI * 0.5), 20, 1);
   }
 
@@ -88,13 +86,13 @@ class ViewerScreen extends Screen {
     }
 
     if (e.key == 'l' || e.key == 'L') {
-      await loadLantern(this.mesh);
+      await LOAD_LANTERN(this.mesh);
     }
     else if (e.key == 'c' || e.key == 'C') {
-      await loadCube(this.mesh);
+      await LOAD_CUBE(this.mesh);
     }
     else if (e.key == 'd' || e.key == 'D') {
-      await loadDuck(this.mesh);
+      await LOAD_DUCK(this.mesh);
     }
   }
 
@@ -127,7 +125,7 @@ export { ViewerScreen };
 // UTILS
 /******************************************************************* */
 
-async function loadLantern(mesh) {
+async function LOAD_LANTERN(mesh) {
   await mesh.loadFromFile('./samples/viewer/lantern.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/lantern.png'),
@@ -136,7 +134,7 @@ async function loadLantern(mesh) {
   }));
 }
 
-async function loadCube(mesh) {
+async function LOAD_CUBE(mesh) {
   await mesh.loadFromFile('./samples/viewer/cube.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/cube.png'),
@@ -144,7 +142,7 @@ async function loadCube(mesh) {
   }));
 }
 
-async function loadDuck(mesh) {
+async function LOAD_DUCK(mesh) {
   await mesh.loadFromFile('./samples/viewer/duck.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/duck.png'),

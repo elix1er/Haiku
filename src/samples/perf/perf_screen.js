@@ -31,7 +31,6 @@ class PerfScreen extends Screen {
     this.isDragging = false;
     this.dragStartPosition = [0, 0];
     this.dragStartRotation = [0, 0];
-    this.lightDir = [0, -1, 0.2];
     this.mode = 1;
     this.colFac = 0;
     this.obj = null;
@@ -42,15 +41,18 @@ class PerfScreen extends Screen {
     this.handleMouseUpCb = this.handleMouseUp.bind(this);
     this.handleMouseMoveCb = this.handleMouseMove.bind(this);
     this.handleKeyUpCb = this.handleKeyUp.bind(this);
+  }
 
+  async onEnter() {
     const view = gfx3Manager.getView(0);
     view.setPerspectiveFar(700);
     view.setPerspectiveNear(0.1);
 
-    this.camera.setPosition(0, 10, 0);
-  }
+    gfx3MeshRenderer.enableDirLight([0, -1, 0.2], 1);
+    gfx3MeshRenderer.setDirLightColor([0.8, 0.6, 0.4]);
 
-  async onEnter() {
+    this.camera.setPosition(0, 10, 0);
+
     this.skySphere = new Gfx3MeshShapeSphere(300, 8, 8, [1, 1]);
     this.skySphere.setMaterial(new Gfx3Material({
       texture: await gfx3TextureManager.loadTexture('./samples/perf/skybox.jpg')
@@ -63,7 +65,7 @@ class PerfScreen extends Screen {
       normalMap: await gfx3TextureManager.loadTexture('./samples/perf/normal_map_opengl.jpg'),
       roughnessMap: await gfx3TextureManager.loadTexture8bit('./samples/perf/roughness_map.jpg'),
       envMapEq: await gfx3TextureManager.loadTexture('./samples/perf/skybox.jpg'),
-      specular: UT.VEC4_CREATE(1, 0, 0, 32)
+      // specular: UT.VEC4_CREATE(1, 0, 0, 32)
     }));
 
     for (let y = 0; y < GRID_HEIGHT; y++) {
@@ -95,9 +97,10 @@ class PerfScreen extends Screen {
   }
 
   update(ts) {
-    this.obj.mat.setSpecular((Math.sin(this.colFac) + 1.0) * 0.5, (Math.cos(this.colFac) + 1.0) * 0.5, 0);
-    this.obj.mat.setDiffuse(0, (Math.sin(this.colFac) + 1.0) * 0.5, (Math.cos(this.colFac) + 1.0) * 0.5)
-    this.obj.mat.setLightning(true);
+    const c1 = (Math.sin(this.colFac) + 1.0) * 0.5;
+    const c2 = (Math.cos(this.colFac) + 1.0) * 0.5;
+    this.obj.mat.setSpecular(c1, c2, 0);
+    this.obj.mat.setDiffuse(0, c1, c2);
 
     const r = Math.PI * 2 * 4 / this.transformations.length;
     let n = 0;
@@ -117,9 +120,6 @@ class PerfScreen extends Screen {
   }
 
   draw() {
-    gfx3MeshRenderer.enableDirLight(this.lightDir);
-    gfx3MeshRenderer.setDirLightColor(0.8, 0.6, 0.4);
-
     this.skySphere.draw();
 
     if (this.mode == 0) {

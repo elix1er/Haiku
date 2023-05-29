@@ -8,10 +8,11 @@ type MaterialOptions = {
   diffuse?: vec4_buf,
   ambiant?: vec4_buf,
   specular?: vec4_buf,
+  specularity?: number;
   lightning?: boolean,
   texture?: Gfx3Texture,
   normalMap?: Gfx3Texture,
-  roughnessMap?: Gfx3Texture;
+  specularityMap?: Gfx3Texture;
   envMap?: Gfx3Texture,
   envMapEq?: Gfx3Texture
 };
@@ -23,7 +24,7 @@ class Gfx3Material {
   specular: vec4_buf;
   texture: Gfx3Texture;
   normalMap: Gfx3Texture;
-  roughnessMap: Gfx3Texture;
+  specularityMap: Gfx3Texture;
   envMap: Gfx3Texture;
   envMapEq: Gfx3Texture;
   dataBuffer: UniformGroupDataset;
@@ -38,12 +39,13 @@ class Gfx3Material {
     this.params[2] = options.lightning ? 1 : 0;
     this.params[3] = options.normalMap ? 1 : 0;
     this.params[4] = options.envMap ? 1 : options.envMapEq ? 2 : 0;
-    this.params[5] = options.roughnessMap ? 1 : 0;
+    this.params[5] = options.specularityMap ? 1 : 0;
     this.diffuse = options.diffuse ?? UT.VEC3_CREATE(1.0, 1.0, 1.0);
     this.ambiant = options.ambiant ?? UT.VEC3_CREATE(0.5, 0.5, 0.5);
     this.specular = options.specular ?? UT.VEC4_CREATE(0.0, 0.0, 0.0, 0.0);
+    this.specular[3] = options.specularity ?? 0.0;
     this.texture = options.texture ?? gfx3MeshRenderer.getDefaultTexture();
-    this.roughnessMap = options.roughnessMap ?? gfx3MeshRenderer.getDefaultTexture();
+    this.specularityMap = options.specularityMap ?? gfx3MeshRenderer.getDefaultTexture();
     this.normalMap = options.normalMap ?? gfx3MeshRenderer.getDefaultTexture();
     this.envMap = options.envMap ?? gfx3MeshRenderer.getDefaultEnvMap();
     this.envMapEq = options.envMapEq ?? gfx3MeshRenderer.getDefaultTexture();
@@ -59,8 +61,8 @@ class Gfx3Material {
     this.texturesBuffer = gfx3Manager.createUniformGroupBitmaps('MESH_PIPELINE', 3);
     this.texturesBuffer.addSamplerInput(0, this.texture.gpuSampler);
     this.texturesBuffer.addTextureInput(1, this.texture.gpuTexture);
-    this.texturesBuffer.addSamplerInput(2, this.roughnessMap.gpuSampler);
-    this.texturesBuffer.addTextureInput(3, this.roughnessMap.gpuTexture);
+    this.texturesBuffer.addSamplerInput(2, this.specularityMap.gpuSampler);
+    this.texturesBuffer.addTextureInput(3, this.specularityMap.gpuTexture);
     this.texturesBuffer.addSamplerInput(4, this.normalMap.gpuSampler);
     this.texturesBuffer.addTextureInput(5, this.normalMap.gpuTexture);
     this.texturesBuffer.addSamplerInput(6, this.envMap.gpuSampler);
@@ -87,10 +89,14 @@ class Gfx3Material {
     this.dataChanged = true;
   }
 
-  setSpecular(r: number, g: number, b: number, specularity: number): void {
+  setSpecular(r: number, g: number, b: number): void {
     this.specular[0] = r;
     this.specular[1] = g;
     this.specular[2] = b;
+    this.dataChanged = true;
+  }
+
+  setSpecularity(specularity: number): void {
     this.specular[3] = specularity;
     this.dataChanged = true;
   }
@@ -113,8 +119,8 @@ class Gfx3Material {
     this.texturesChanged = true;
   }
 
-  setRoughnessMap(roughnessMap: Gfx3Texture): void {
-    this.roughnessMap = roughnessMap;
+  setSpecularityMap(specularityMap: Gfx3Texture): void {
+    this.specularityMap = specularityMap;
     this.params[5] = 1;
     this.texturesChanged = true;
   }
@@ -155,8 +161,8 @@ class Gfx3Material {
     if (this.texturesChanged) {
       this.texturesBuffer.setSamplerInput(0, this.texture.gpuSampler);
       this.texturesBuffer.setTextureInput(1, this.texture.gpuTexture);
-      this.texturesBuffer.setSamplerInput(2, this.roughnessMap.gpuSampler);
-      this.texturesBuffer.setTextureInput(3, this.roughnessMap.gpuTexture);
+      this.texturesBuffer.setSamplerInput(2, this.specularityMap.gpuSampler);
+      this.texturesBuffer.setTextureInput(3, this.specularityMap.gpuTexture);
       this.texturesBuffer.setSamplerInput(4, this.normalMap.gpuSampler);
       this.texturesBuffer.setTextureInput(5, this.normalMap.gpuTexture);
       this.texturesBuffer.setSamplerInput(6, this.envMap.gpuSampler);
@@ -178,8 +184,8 @@ class Gfx3Material {
     return this.normalMap;
   }
 
-  getRoughnessMap(): Gfx3Texture {
-    return this.roughnessMap;
+  getSpecularityMap(): Gfx3Texture {
+    return this.specularityMap;
   }
 
   getEnvMap(): Gfx3Texture {

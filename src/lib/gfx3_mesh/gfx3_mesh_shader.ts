@@ -103,7 +103,7 @@ struct MaterialParams {
   HAS_LIGHTNING: f32,
   HAS_NORMAL_MAP: f32,
   HAS_ENV_MAP: f32,
-  HAS_ROUGH_MAP: f32
+  HAS_SPECULARITY_MAP: f32
 }
 
 struct PointLight {
@@ -131,8 +131,8 @@ struct DirectionnalLight {
 
 @group(3) @binding(0) var Sampler: sampler;
 @group(3) @binding(1) var Texture: texture_2d<f32>;
-@group(3) @binding(2) var RoughSampler: sampler;
-@group(3) @binding(3) var RoughTexture: texture_2d<f32>;
+@group(3) @binding(2) var SpecularitySampler: sampler;
+@group(3) @binding(3) var SpecularityTexture: texture_2d<f32>;
 @group(3) @binding(4) var NormSampler: sampler;
 @group(3) @binding(5) var NormTexture: texture_2d<f32>;
 @group(3) @binding(6) var EnvMapSampler: sampler;
@@ -206,7 +206,7 @@ fn main(
 }
 
 // *****************************************************************************************************************
-// UTILS
+// CALC LIGHT INTERNAL
 // *****************************************************************************************************************
 
 fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity: f32, normal: vec3<f32>, fragPos: vec3<f32>, fragUV: vec2<f32>) -> vec4<f32>
@@ -217,9 +217,9 @@ fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity:
   var specularExponent = MAT_SPECULAR.a;
   var diffuseFactor = max(dot(normal, -lightDir), 0.0);
 
-  if (MAT_PARAMS.HAS_ROUGH_MAP == 1.0)
+  if (MAT_PARAMS.HAS_SPECULARITY_MAP == 1.0)
   {
-    specularExponent = MAT_SPECULAR.a * textureSample(RoughTexture, RoughSampler, fragUV).r;
+    specularExponent = MAT_SPECULAR.a * textureSample(SpecularityTexture, SpecularitySampler, fragUV).r;
   }
 
   if (diffuseFactor > 0.0)
@@ -241,10 +241,18 @@ fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity:
   return vec4(ambientColor + diffuseColor + specularColor, 1.0);
 }
 
+// *****************************************************************************************************************
+// CALC DIR LIGHT
+// *****************************************************************************************************************
+
 fn CalcDirLight(lightDir: vec3<f32>, lightIntensity: f32, lightColor: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, fragUV: vec2<f32>) -> vec4<f32>
 {
   return CalcLightInternal(normalize(lightDir), lightColor, lightIntensity, normal, fragPos, fragUV);
 }
+
+// *****************************************************************************************************************
+// CALC POINT LIGHT
+// *****************************************************************************************************************
 
 fn CalcPointLight(lightPos: vec3<f32>, lightIntensity: f32, lightColor: vec3<f32>, lightAttenuation: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, fragUV: vec2<f32>) -> vec4<f32>
 {

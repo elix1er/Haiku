@@ -4,10 +4,11 @@ import { Gfx3Drawable } from '../gfx3/gfx3_drawable';
 import { Gfx3Material } from './gfx3_mesh_material';
 import { SHADER_VERTEX_ATTR_COUNT } from './gfx3_mesh_shader';
 
-interface Face {
-  vertexIds: Array<vec3>,
-  uvIds: Array<vec2>,
-  normalIds: Array<vec3>
+export interface Group {
+  id: number,
+  startIndex: number,
+  endIndex: number,
+  smooth: boolean
 };
 
 class Gfx3Mesh extends Gfx3Drawable {
@@ -42,82 +43,99 @@ class Gfx3Mesh extends Gfx3Drawable {
     return this.material;
   }
 
-  build(positions: Array<number>, texcoords: Array<number>, normals: Array<number>, faces: Array<Face>, smoothFaces: Array<Face>, uvscale: vec2) {
-    const vnorms = new Array<vec3>(numVertices);
-    const vtang = new Array<vec4>(numVertices);
-    const vbnorm = new Array<vec3>(numVertices);
+  static build(coords: Array<number>, texcoords: Array<number>, indices?: Array<number>, groups?: Array<Group>) {
+    const vcoords = new Array<vec3>();
+    const vtexs = new Array<vec2>();
+    const vnorms = new Array<vec3>();
+    const vtangs = new Array<vec3>();
+    const vflips = new Array<number>();
+    const vbnorms = new Array<vec3>();
+    const vnormsByGroup = new Array<Array<vec3>>();
+    const vtangsByGroup = new Array<Array<vec3>>();
 
-    for (let i = 0; i < numVertices; i += 3) {
-      const i1 = i;
-      const i2 = i + 1;
-      const i3 = i + 2;
+    groups = groups ?? [{
+      id: 0,
+      startIndex: 0,
+      endIndex: indices ? indices.length / 2 : coords.length / 3,
+      smooth: false
+    }];
 
-      const v0: vec3 = [positions[i1 * 3 + 0], positions[i1 * 3 + 1], positions[i1 * 3 + 2]];
-      const v1: vec3 = [positions[i2 * 3 + 0], positions[i2 * 3 + 1], positions[i2 * 3 + 2]];
-      const v2: vec3 = [positions[i3 * 3 + 0], positions[i3 * 3 + 1], positions[i3 * 3 + 2]];
+    for (const group of groups) {
+      vnormsByGroup[group.id] = [];
+      vtangsByGroup[group.id] = [];
 
-      const uv0: vec2 = [texcoords[i1 * 2 + 0] * uvscale[0], texcoords[i1 * 2 + 1] * uvscale[1]];
-      const uv1: vec2 = [texcoords[i2 * 2 + 0] * uvscale[0], texcoords[i2 * 2 + 1] * uvscale[1]];
-      const uv2: vec2 = [texcoords[i3 * 2 + 0] * uvscale[0], texcoords[i3 * 2 + 1] * uvscale[1]];
+      for (let i = group.startIndex; i < group.endIndex; i += 3) {
+        const i0 = i;
+        const i1 = i + 1;
+        const i2 = i + 2;
+  
+        const cid0 = indices ? indices[i0 * 2 + 0] : i0;
+        const cid1 = indices ? indices[i1 * 2 + 0] : i1;
+        const cid2 = indices ? indices[i2 * 2 + 0] : i2;
+  
+        const tid0 = indices ? indices[i0 * 2 + 1] : i0;
+        const tid1 = indices ? indices[i1 * 2 + 1] : i1;
+        const tid2 = indices ? indices[i2 * 2 + 1] : i2;
 
-      const v01 = UT.VEC3_SUBSTRACT(v1, v0);
-      const v02 = UT.VEC3_SUBSTRACT(v2, v0);
+        vcoords[i0] = [coords[cid0 * 3 + 0], coords[cid0 * 3 + 1], coords[cid0 * 3 + 2]];
+        vcoords[i1] = [coords[cid1 * 3 + 0], coords[cid1 * 3 + 1], coords[cid1 * 3 + 2]];
+        vcoords[i2] = [coords[cid2 * 3 + 0], coords[cid2 * 3 + 1], coords[cid2 * 3 + 2]];
+  
+        vtexs[i0] = [texcoords[tid0 * 2 + 0], texcoords[tid0 * 2 + 1]];
+        vtexs[i1] = [texcoords[tid1 * 2 + 0], texcoords[tid1 * 2 + 1]];
+        vtexs[i2] = [texcoords[tid2 * 2 + 0], texcoords[tid2 * 2 + 1]];
 
-      const uv01 = UT.VEC2_SUBSTRACT(uv1, uv0);
-      const uv02 = UT.VEC2_SUBSTRACT(uv2, uv0);
+        const v01 = UT.VEC3_SUBSTRACT(vcoords[i1], vcoords[i0]);
+        const v02 = UT.VEC3_SUBSTRACT(vcoords[i2], vcoords[i0]);
 
-      const fnorm = UT.VEC3_NORMALIZE(UT.VEC3_CROSS(v01, v02));
+        const uv01 = UT.VEC2_SUBSTRACT(vtexs[i1], vtexs[i0]);
+        const uv02 = UT.VEC2_SUBSTRACT(vtexs[i2], vtexs[i0]);
 
-      vnorms[i1] = vnorms[i1] ? UT.VEC3_ADD(vnorms[i1], fnorm) : fnorm;
-      vnorms[i2] = vnorms[i2] ? UT.VEC3_ADD(vnorms[i2], fnorm) : fnorm;
-      vnorms[i3] = vnorms[i3] ? UT.VEC3_ADD(vnorms[i3], fnorm) : fnorm;
+        const fnorm = UT.VEC3_NORMALIZE(UT.VEC3_CROSS(v01, v02));
+        vnorms[i0] = fnorm;
+        vnorms[i1] = fnorm;
+        vnorms[i2] = fnorm;
 
-      const uv2xArea = ((uv01[0] * uv02[1]) - (uv01[1] * uv02[0]));
-      if (Math.abs(uv2xArea) > UT.EPSILON) {
-        const r = 1.0 / uv2xArea;
-        const flip = uv2xArea > 0 ? 1 : -1;
+        if (group.smooth) {
+          vnormsByGroup[group.id][cid0] = vnormsByGroup[group.id][cid0] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid0], fnorm) : fnorm;
+          vnormsByGroup[group.id][cid1] = vnormsByGroup[group.id][cid1] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid1], fnorm) : fnorm;
+          vnormsByGroup[group.id][cid2] = vnormsByGroup[group.id][cid2] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid2], fnorm) : fnorm;
+        }
 
-        const tx = ((v01[0] * uv02[1]) - (v02[0] * uv01[1])) * r;
-        const ty = ((v01[1] * uv02[1]) - (v02[1] * uv01[1])) * r;
-        const tz = ((v01[2] * uv02[1]) - (v02[2] * uv01[1])) * r;
+        const ftang: vec3 = [0, 0, 0];
+        const fflip = COMPUTE_FACE_TANGENT(v01, v02, uv01, uv02, ftang);
+        vflips[i0] = fflip;
+        vflips[i1] = fflip;
+        vflips[i2] = fflip;
+        vtangs[i0] = ftang;
+        vtangs[i1] = ftang;
+        vtangs[i2] = ftang;
 
-        const ftang = UT.VEC4_NORMALIZE3([tx, ty, tz, -flip]);
+        if (group.smooth) {
+          vtangsByGroup[group.id][cid0] = vtangsByGroup[group.id][cid0] ? UT.VEC3_ADD(vtangsByGroup[group.id][cid0], ftang) : ftang;
+          vtangsByGroup[group.id][cid1] = vtangsByGroup[group.id][cid1] ? UT.VEC3_ADD(vtangsByGroup[group.id][cid1], ftang) : ftang;
+          vtangsByGroup[group.id][cid2] = vtangsByGroup[group.id][cid2] ? UT.VEC3_ADD(vtangsByGroup[group.id][cid2], ftang) : ftang;  
+        }
+      }  
+    }
 
-        vtang[i1] = vtang[i1] ? UT.VEC4_ADD3(vtang[i1], ftang) : ftang;
-        vtang[i2] = vtang[i2] ? UT.VEC4_ADD3(vtang[i2], ftang) : ftang;
-        vtang[i3] = vtang[i3] ? UT.VEC4_ADD3(vtang[i3], ftang) : ftang;
+    const finalVertices = [];
+
+    for (const group of groups) {
+      for (let i = group.startIndex; i < group.endIndex; i++) {
+        const cid = indices ? indices[i * 2 + 0] : i;
+
+        if (group.smooth) {
+          vnorms[i] = UT.VEC3_NORMALIZE(vnormsByGroup[group.id][cid]);
+          vtangs[i] = UT.VEC3_NORMALIZE(vtangsByGroup[group.id][cid]);
+        }
+
+        vbnorms[i] = UT.VEC3_SCALE(UT.VEC3_CROSS(vnorms[i], vtangs[i]), vflips[i]);
+        finalVertices.push(vcoords[i][0], vcoords[i][1], vcoords[i][2], vtexs[i][0], vtexs[i][1], vnorms[i][0], vnorms[i][1], vnorms[i][2], vtangs[i][0], vtangs[i][1], vtangs[i][2], vbnorms[i][0], vbnorms[i][1], vbnorms[i][2]);
       }
     }
 
-    for (let i = 0; i < numVertices; i++) {
-      if (vnorms[i]) {
-        vnorms[i] = UT.VEC3_NORMALIZE(vnorms[i]);
-        vtang[i] = UT.VEC4_NORMALIZE3(vtang[i]);
-        vbnorm[i] = UT.VEC3_SCALE(UT.VEC3_CROSS(vnorms[i], vtang[i]), vtang[i][3]);
-      }
-    }
-
-    this.beginVertices(indices.length);
-
-    for (let i = 0; i < indices.length; i += 3) {
-      const i1 = indices[i];
-      const i2 = indices[i + 1];
-      const i3 = indices[i + 2];
-
-      const v0 = UT.VEC3_CREATE(positions[i1 * 3 + 0], positions[i1 * 3 + 1], positions[i1 * 3 + 2]);
-      const v1 = UT.VEC3_CREATE(positions[i2 * 3 + 0], positions[i2 * 3 + 1], positions[i2 * 3 + 2]);
-      const v2 = UT.VEC3_CREATE(positions[i3 * 3 + 0], positions[i3 * 3 + 1], positions[i3 * 3 + 2]);
-
-      const uv0 = UT.VEC2_CREATE(texcoords[i1 * 2 + 0] * uvscale[0], texcoords[i1 * 2 + 1] * uvscale[1]);
-      const uv1 = UT.VEC2_CREATE(texcoords[i2 * 2 + 0] * uvscale[0], texcoords[i2 * 2 + 1] * uvscale[1]);
-      const uv2 = UT.VEC2_CREATE(texcoords[i3 * 2 + 0] * uvscale[0], texcoords[i3 * 2 + 1] * uvscale[1]);
-
-      this.defineVertex(v0[0], v0[1], v0[2], uv0[0], 1.0 - uv0[1], vnorms[i1][0], vnorms[i1][1], vnorms[i1][2], vtang[i1][0], vtang[i1][1], vtang[i1][2], vbnorm[i1][0], vbnorm[i1][1], vbnorm[i1][2]);
-      this.defineVertex(v1[0], v1[1], v1[2], uv1[0], 1.0 - uv1[1], vnorms[i2][0], vnorms[i2][1], vnorms[i2][2], vtang[i2][0], vtang[i2][1], vtang[i2][2], vbnorm[i2][0], vbnorm[i2][1], vbnorm[i2][2]);
-      this.defineVertex(v2[0], v2[1], v2[2], uv2[0], 1.0 - uv2[1], vnorms[i3][0], vnorms[i3][1], vnorms[i3][2], vtang[i3][0], vtang[i3][1], vtang[i3][2], vbnorm[i3][0], vbnorm[i3][1], vbnorm[i3][2]);
-    }
-
-    this.endVertices();
+    return finalVertices;
   }
 
   clone(transformMatrix: mat4): Gfx3Mesh {
@@ -140,3 +158,27 @@ class Gfx3Mesh extends Gfx3Drawable {
 }
 
 export { Gfx3Mesh };
+
+// -------------------------------------------------------------------------------------------
+// HELPFUL
+// -------------------------------------------------------------------------------------------
+
+function COMPUTE_FACE_TANGENT(v01: vec3, v02: vec3, uv01: vec2, uv02: vec2, out: vec3): number {
+  const uv2xArea = ((uv01[0] * uv02[1]) - (uv01[1] * uv02[0]));
+  if (Math.abs(uv2xArea) > UT.EPSILON) {
+    const r = 1.0 / uv2xArea;
+    const flip = uv2xArea > 0 ? 1 : -1;
+
+    const tx = ((v01[0] * uv02[1]) - (v02[0] * uv01[1])) * r;
+    const ty = ((v01[1] * uv02[1]) - (v02[1] * uv01[1])) * r;
+    const tz = ((v01[2] * uv02[1]) - (v02[2] * uv01[1])) * r;
+
+    const ftang =  UT.VEC3_NORMALIZE([tx, ty, tz]);
+    out[0] = ftang[0];
+    out[1] = ftang[1];
+    out[2] = ftang[2];
+    return flip;
+  }
+
+  return -1;
+}

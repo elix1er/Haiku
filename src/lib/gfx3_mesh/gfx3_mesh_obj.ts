@@ -1,31 +1,24 @@
 import { UT } from '../core/utils';
 import { Gfx3Material } from './gfx3_mesh_material';
 import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager';
-import { Gfx3Mesh } from './gfx3_mesh';
+import { Gfx3Mesh, Group } from './gfx3_mesh';
 import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
 
-class Polygon {
-  n: number;
-  vtx: Array<vec3>;
-  uvs: Array<vec2>;
-  ns: Array<vec3>;
-  nIdxs: Array<number>;
-  ts: Array<vec3 | null>;
-  bs: Array<vec3 | null>;
+class OBJObject {
+  name: string;
+  coords: Array<vec3>;
+  texcoords: Array<vec2>;
+  indices: Array<number>;
+  groups: Array<Group>;
+  materialName: string;
 
-  constructor(n: number) {
-    this.n = n;
-    this.vtx = Array<vec3>(n);
-    this.uvs = new Array<vec2>(n);
-    this.ns = new Array<vec3>(n);
-    this.ts = Array<vec3>(n);
-    this.bs = Array<vec3>(n);
-    this.nIdxs = Array<number>(n);
-
-    for (let i = 0; i < n; i++) {
-      this.ts[i] = null;
-      this.bs[i] = null;
-    }
+  constructor() {
+    this.name = '';
+    this.coords = new Array<vec3>();
+    this.texcoords = new Array<vec2>();
+    this.indices = new Array<number>();
+    this.groups = new Array<Group>();
+    this.materialName = '';
   }
 }
 
@@ -47,74 +40,34 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     }
   }
 
-  async* makeTextFileLineIterator(fileURL: string): AsyncGenerator<string> {
-    const utf8Decoder = new TextDecoder('utf-8');
-    const response = await fetch(fileURL);
-
-    if (response === null) {
-      return '';
-    }
-
-    if (response.body === null) {
-      return '';
-    }
-
-    const reader = response.body.getReader();
-    let { value: chunk, done: readerDone } = await reader.read();
-
-    if (!chunk) {
-      return '';
-    }
-
-    let mychunk = utf8Decoder.decode(chunk);
-
-    const newline = /\r?\n/gm;
-    let startIndex = 0;
-
-    while (true) {
-      const result = newline.exec(mychunk);
-      if (!result) {
-        if (readerDone) break;
-        const remainder = mychunk.substr(startIndex);
-        ({ value: chunk, done: readerDone } = await reader.read());
-        mychunk = remainder + utf8Decoder.decode(chunk);
-        startIndex = newline.lastIndex = 0;
-        continue;
-      }
-      yield mychunk.substring(startIndex, result.index);
-      startIndex = newline.lastIndex;
-    }
-
-    if (startIndex < mychunk.length) {
-      // Last line didn't end in a newline char
-      yield mychunk.substring(startIndex);
-    }
-  }
-
   // [v]
-  newMaterial(matName: string): Gfx3Material {
-    let matFound = this.materials.get(matName);
-    if (matFound) {
-      return matFound;
-    }
+  getBoundingBox(): Gfx3BoundingBox {
+    const boxes = new Array<Gfx3BoundingBox>();
 
-    const mat = new Gfx3Material({ lightning: true });
-    this.materials.set(matName, mat);
-    return mat;
+    for (const mesh of this.values()) {
+      boxes.push(mesh.getBoundingBox());
+    }
+  
+    return Gfx3BoundingBox.merge(boxes);
   }
 
   // [v]
   async loadMaterials(path: string) {
-    this.materials = new Map<string, Gfx3Material>();
+    const response = await fetch(path);
+    const text = await response.text();
+    const lines = text.split('\n');
+
+    this.materials.clear();
 
     let curMat = null;
     let curMatName = null;
     path = path.split('/').slice(0, -1).join('/') + '/';
 
-    for await (const line of this.makeTextFileLineIterator(path)) {
+    for (const line of lines) {
       if (line.startsWith('newmtl ')) {
         curMatName = line.substring(7);
-        curMat = this.newMaterial(curMatName);
+        curMat = new Gfx3Material({ lightning: true });
+        this.materials.set(curMatName, curMat);
       }
 
       if (!curMat) {
@@ -166,227 +119,75 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     }
   }
 
-  // [v]
-  getBoundingBox(): Gfx3BoundingBox {
-    const boxes = new Array<Gfx3BoundingBox>();
-
-    for (const mesh of this.values()) {
-      boxes.push(mesh.getBoundingBox());
-    }
-  
-    return Gfx3BoundingBox.merge(boxes);
-  }
-
   async loadObjects(path: string): Promise<void> {
-    let verts = new Array<vec3>();
-    let vtangs = new Array<vec3>();
-    let vbnorms = new Array<vec3>();
-    let norms = new Array<vec3>();
-    let tcoords = new Array<vec2>();
+    const response = await fetch(path);
+    const text = await response.text();
+    const lines = text.split('\n');
 
-    let curSmooth = '';
-    let faces = null;
-
-    let curName = 'off';
-    let curMatName = '';
+    let objects = new Array<OBJObject>();
+    let currentObject = new OBJObject();
+    let currentGroup: Group = { id: 0, startIndex: 0, endIndex: 0, smooth: false };
     let vCnt = 0;
 
-    for await (const line of this.makeTextFileLineIterator(path)) {
-
-      // if (line.startsWith('o ')) {
-      //   if (faces) {
-      //     /* if not first object, build binormals and mesh for the current object */
-      //     let vbnorm = new Array<vec3>();
-
-      //     if (norms) {
-      //       for (let i = 0; i < vtang.length; i++) {
-      //         if (vtang[i]) {
-      //           vtang[i] = UT.VEC4_NORMALIZE3(vtang[i]);
-      //           vbnorm[i] = UT.VEC3_SCALE(UT.VEC3_CROSS(norms[i], vtang[i]), vtang[i][3]);
-      //         }
-      //       }
-      //     }
-      //     yield this.buildMesh(curName, faces, curMatName, vCnt, vtang, vbnorm);
-      //   }
-
-      //   curName = line.substring(2);
-
-      //   /* reset faces and vertex count for the next objects */
-      //   faces = null;
-      //   vCnt = 0;
-      // }
-
-      if (line.startsWith('usemtl ')) {
-        if (faces) {
-          /* if not first object, build binormals and mesh for the current mesh */
-          let vbnorm = new Array<vec3>();
-          if (norms) {
-            for (let i = 0; i < vtang.length; i++) {
-              if (vtang[i]) {
-                vtang[i] = UT.VEC4_NORMALIZE3(vtang[i]);
-                vbnorm[i] = UT.VEC3_SCALE(UT.VEC3_CROSS(norms[i], vtang[i]), vtang[i][3]);
-              }
-            }
-          }
-          yield this.buildMesh(curName, faces, curMatName, vCnt, vtang, vbnorm);
-        }
-
-        curMatName = line.substring(7);
-
-        /* reset faces and vertex count for the next objects */
-        faces = null;
+    for (const line of lines) {
+      if (line.startsWith('o ')) {
+        const object = new OBJObject();
+        object.name = line.substring(2);
+        currentObject = object;
+        objects.push(object);
         vCnt = 0;
       }
 
-      if (line.startsWith('v ')) {
-        verts.push(UT.VEC3_PARSE(line.substring(2)));
+      if (line.startsWith('usemtl ')) {
+        currentObject.materialName = line.substring(7);
       }
 
-      if (line.startsWith('vn ')) {
-        norms.push(UT.VEC3_PARSE(line.substring(3)));
+      if (line.startsWith('v ')) {
+        currentObject.coords.push(UT.VEC3_PARSE(line.substring(2)));
       }
 
       if (line.startsWith('vt ')) {
-        tcoords.push(UT.VEC2_PARSE(line.substring(3)));
+        currentObject.texcoords.push(UT.VEC2_PARSE(line.substring(3)));
       }
 
       if (line.startsWith('s ')) {
-        curSmooth = line.substring(2);
+        const a = line.substring(2);
+        const group: Group = { id: a == 'off' ? 0 : parseInt(a), startIndex: vCnt, endIndex: 0, smooth: a != 'off' };
+        currentGroup = group;
+        currentObject.groups.push(group);
       }
 
       if (line.startsWith('f ')) {
         const a = line.substring(2).split(' ');
-        const numVertices = a.length === 3 ? 3 : 4;
+        if (a.length > 3) {
+          throw new Error('Gfx3MeshOBJ::loadObjects(): Not support non-triangulate faces !');
+        }
 
-        const tri = new Polygon(numVertices);
-        for (let i = 0; i < numVertices; i++) {
+        for (let i = 0; i < 3; i++) {
           const ids = a[i].split('/');
-          tri.vtx[i] = verts[parseInt(ids[0]) - 1] ?? [0, 0, 0];
-          tri.uvs[i] = tcoords[parseInt(ids[1]) - 1] ?? [0, 0];
-          tri.ns[i] = norms[parseInt(ids[2]) - 1] ?? [0, 0, 0];
+          const cid = parseInt(ids[0]) - 1;
+          const tid = parseInt(ids[1]) - 1;
+          currentObject.indices.push(cid, tid);
+          currentGroup.endIndex = ++vCnt;
         }
-
-        // const i1 = tri.nIdxs[0];
-        // const i2 = tri.nIdxs[1];
-        // const i3 = tri.nIdxs[2];
-
-        const v01 = UT.VEC3_SUBSTRACT(tri.vtx[1], tri.vtx[0]);
-        const v02 = UT.VEC3_SUBSTRACT(tri.vtx[2], tri.vtx[0]);
-
-        if (tri.uvs[0]) {
-          const uv01 = UT.VEC2_SUBSTRACT(tri.uvs[1], tri.uvs[0]);
-          const uv02 = UT.VEC2_SUBSTRACT(tri.uvs[2], tri.uvs[0]);
-          const uv2xArea = ((uv01[0] * uv02[1]) - (uv01[1] * uv02[0]));
-
-          if (Math.abs(uv2xArea) > UT.EPSILON) {
-            const r = 1.0 / uv2xArea;
-            const flip = uv2xArea > 0 ? 1 : -1;
-            const tx = ((v01[0] * uv02[1]) - (v02[0] * uv01[1])) * r;
-            const ty = ((v01[1] * uv02[1]) - (v02[1] * uv01[1])) * r;
-            const tz = ((v01[2] * uv02[1]) - (v02[2] * uv01[1])) * r;
-            const ftang = UT.VEC4_NORMALIZE3([tx, ty, tz, -flip]);
-
-            for (let i = 0; i < numVertices; i++) {
-              vtangs[i1] = vtangs[i1] ? UT.VEC4_ADD3(vtangs[i1], ftang) : ftang;
-            }
-          }
-        }
-
-        vCnt += 3;
-        faces.push(tri);
-        
-        // else {
-        //   /* face is a quad */
-        //   if (a.length === 4) {
-
-        //     /*first face for the current mesh */
-        //     if (!faces)
-        //       faces = new Array<Polygon>();
-
-        //     const quad = new Polygon(4);
-
-        //     for (let i = 0; i < 4; i++) {
-        //       const ids = a[i].split('/');
-
-        //       if (verts) {
-        //         const id = parseInt(ids[0]) - 1;
-        //         quad.vtx[i] = verts[id];
-        //       }
-        //       if (tcoords) {
-        //         const id = parseInt(ids[1]) - 1;
-        //         quad.uvs[i] = tcoords[id];
-        //       } else {
-        //         quad.uvs[i] = UT.VEC2_CREATE(0, 0);
-        //       }
-        //       if (norms) {
-        //         const id = parseInt(ids[2]) - 1;
-        //         quad.ns[i] = norms[id];
-        //         quad.nIdxs[i] = id;
-        //       } else {
-        //         quad.ns[i] = UT.VEC3_CREATE(0, 0, 1.0);
-        //       }
-        //     }
-        //     /* compute tangeant space */
-
-        //     const i1 = quad.nIdxs[0];
-        //     const i2 = quad.nIdxs[1];
-        //     const i3 = quad.nIdxs[2];
-        //     const i4 = quad.nIdxs[3];
-
-        //     const deltaPos1 = UT.VEC3_SUBSTRACT(quad.vtx[1], quad.vtx[0]);
-        //     const deltaPos2 = UT.VEC3_SUBSTRACT(quad.vtx[2], quad.vtx[0]);
-
-        //     /* compute normal from vertices if not present in the file
-        //     const fnorm = UT.VEC3_NORMALIZE(UT.VEC3_CROSS(deltaPos1,deltaPos2));
-        //     vnorms[i1]  = UT.VEC3_ADD(vnorms[i1], fnorm);
-        //     vnorms[i2]  = UT.VEC3_ADD(vnorms[i2], fnorm);
-        //     vnorms[i3]  = UT.VEC3_ADD(vnorms[i3], fnorm);
-        //     */
-
-        //     if (quad.uvs[0]) {
-        //       const deltaUV1 = UT.VEC2_SUBSTRACT(quad.uvs[1], quad.uvs[0]);
-        //       const deltaUV2 = UT.VEC2_SUBSTRACT(quad.uvs[2], quad.uvs[0]);
-
-        //       const uv2xArea = ((deltaUV1[0] * deltaUV2[1]) - (deltaUV1[1] * deltaUV2[0]));
-        //       if (Math.abs(uv2xArea) > UT.EPSILON) {
-        //         const r = 1.0 / uv2xArea;
-        //         const flip = uv2xArea > 0 ? 1 : -1;
-        //         const tx = ((deltaPos1[0] * deltaUV2[1]) - (deltaPos2[0] * deltaUV1[1])) * r;
-        //         const ty = ((deltaPos1[1] * deltaUV2[1]) - (deltaPos2[1] * deltaUV1[1])) * r;
-        //         const tz = ((deltaPos1[2] * deltaUV2[1]) - (deltaPos2[2] * deltaUV1[1])) * r;
-        //         const ftang = UT.VEC4_NORMALIZE3(UT.VEC4_CREATE(tx, ty, tz, -flip));
-
-        //         vtang[i1] = vtang[i1] ? UT.VEC4_ADD3(vtang[i1], ftang) : ftang;
-        //         vtang[i2] = vtang[i2] ? UT.VEC4_ADD3(vtang[i2], ftang) : ftang;
-        //         vtang[i3] = vtang[i3] ? UT.VEC4_ADD3(vtang[i3], ftang) : ftang;
-        //         vtang[i4] = vtang[i4] ? UT.VEC4_ADD3(vtang[i4], ftang) : ftang;
-        //       }
-        //     }
-
-        //     vCnt += 6;
-        //     faces.push(quad);
-        //   }
-        // }
       }
     }
 
-    /* compute tangeants for the last object and build the mesh*/
-    if (faces) {
-      let vbnorm = new Array<vec3>();
-      if (norms) {
-        for (let i = 0; i < vtang.length; i++) {
-          if (vtang[i]) {
-            vtang[i] = UT.VEC4_NORMALIZE3(vtang[i]);
-            vbnorm[i] = UT.VEC3_SCALE(UT.VEC3_CROSS(norms[i], vtang[i]), vtang[i][3]);
-          }
-        }
+    for (const object of objects) {
+      const mesh = new Gfx3Mesh();
+      const material = this.materials.get(object.materialName);
+
+      if (material) {
+        mesh.setMaterial(material);
       }
-      yield this.buildMesh(curName, faces, curMatName, vCnt, vtang, vbnorm);
+
+      const vertices = Gfx3Mesh.build(object.coords, object.texcoords, object.indices, object.groups);
+
+      mesh.beginVertices(x);
+      mesh.setVertices(vertices, x);
+      mesh.endVertices();
     }
   }
-
-
-
 
   buildMesh(name: string, faces: Array<Polygon>, matName: string, vCnt: number, vtang: Array<vec4>, vbnorm: Array<vec3>) {
     const mesh = new Gfx3Mesh();
@@ -458,12 +259,9 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     return mesh;
   }
 
-  async loadFromFile(objPath: string, matPath: string) {
-    await this.loadMaterials(matPath);
-
-    for await (const obj of await this.loadMesh(objPath)) {
-
-    }
+  async loadFromFile(objPath: string, mtlPath: string) {
+    await this.loadMaterials(mtlPath);
+    await this.loadObjects(objPath);
   }
 }
 

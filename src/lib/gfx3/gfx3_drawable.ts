@@ -39,6 +39,11 @@ class Gfx3Drawable extends Gfx3Transformable {
     this.vertexCount++;
   }
 
+  setVertices(vertices: Array<number>, vertexCount: number) {
+    this.vertices = vertices;
+    this.vertexCount = vertexCount;
+  }
+
   endVertices(): void {
     gfx3Manager.writeVertexBuffer(this.vertexSubBuffer, this.vertices);
     this.boundingBox.fromVertices(this.vertices, this.vertexStride);

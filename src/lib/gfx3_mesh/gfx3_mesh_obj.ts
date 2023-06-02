@@ -6,32 +6,36 @@ import { Gfx3BoundingBox } from '../gfx3/gfx3_bounding_box';
 
 class OBJObject {
   name: string;
-  coords: Array<vec3>;
-  texcoords: Array<vec2>;
+  coords: Array<number>;
+  texcoords: Array<number>;
   indices: Array<number>;
   groups: Array<Group>;
   materialName: string;
+  vCount: number;
 
   constructor() {
     this.name = '';
-    this.coords = new Array<vec3>();
-    this.texcoords = new Array<vec2>();
+    this.coords = new Array<number>();
+    this.texcoords = new Array<number>();
     this.indices = new Array<number>();
     this.groups = new Array<Group>();
     this.materialName = '';
+    this.vCount = 0;
   }
 }
 
-class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
+class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
   materials: Map<string, Gfx3Material>;
+  meshes: Map<string, Gfx3Mesh>;
 
   constructor() {
     super();
     this.materials = new Map<string, Gfx3Material>();
+    this.meshes = new Map<string, Gfx3Mesh>();
   }
 
   destroy() {
-    for (const mesh of this.values()) {
+    for (const mesh of this.meshes.values()) {
       mesh.delete(true);
     }
 
@@ -40,18 +44,16 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     }
   }
 
-  // [v]
   getBoundingBox(): Gfx3BoundingBox {
     const boxes = new Array<Gfx3BoundingBox>();
 
-    for (const mesh of this.values()) {
+    for (const mesh of this.meshes.values()) {
       boxes.push(mesh.getBoundingBox());
     }
   
     return Gfx3BoundingBox.merge(boxes);
   }
 
-  // [v]
   async loadMaterials(path: string) {
     const response = await fetch(path);
     const text = await response.text();
@@ -127,7 +129,6 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
     let objects = new Array<OBJObject>();
     let currentObject = new OBJObject();
     let currentGroup: Group = { id: 0, startIndex: 0, endIndex: 0, smooth: false };
-    let vCnt = 0;
 
     for (const line of lines) {
       if (line.startsWith('o ')) {
@@ -135,7 +136,6 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
         object.name = line.substring(2);
         currentObject = object;
         objects.push(object);
-        vCnt = 0;
       }
 
       if (line.startsWith('usemtl ')) {
@@ -143,16 +143,18 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
       }
 
       if (line.startsWith('v ')) {
-        currentObject.coords.push(UT.VEC3_PARSE(line.substring(2)));
+        const c = UT.VEC3_PARSE(line.substring(2));
+        currentObject.coords.push(c[0], c[1], c[2]);
       }
 
       if (line.startsWith('vt ')) {
-        currentObject.texcoords.push(UT.VEC2_PARSE(line.substring(3)));
+        const t = UT.VEC2_PARSE(line.substring(3));
+        currentObject.texcoords.push(t[0], t[1]);
       }
 
       if (line.startsWith('s ')) {
         const a = line.substring(2);
-        const group: Group = { id: a == 'off' ? 0 : parseInt(a), startIndex: vCnt, endIndex: 0, smooth: a != 'off' };
+        const group: Group = { id: a == 'off' ? 0 : parseInt(a), startIndex: currentObject.vCount, endIndex: 0, smooth: a != 'off' };
         currentGroup = group;
         currentObject.groups.push(group);
       }
@@ -168,7 +170,8 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
           const cid = parseInt(ids[0]) - 1;
           const tid = parseInt(ids[1]) - 1;
           currentObject.indices.push(cid, tid);
-          currentGroup.endIndex = ++vCnt;
+          currentObject.vCount++;
+          currentGroup.endIndex = currentObject.vCount;
         }
       }
     }
@@ -183,80 +186,12 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh>{
 
       const vertices = Gfx3Mesh.build(object.coords, object.texcoords, object.indices, object.groups);
 
-      mesh.beginVertices(x);
-      mesh.setVertices(vertices, x);
+      mesh.beginVertices(object.vCount);
+      mesh.setVertices(vertices, object.vCount);
       mesh.endVertices();
+
+      this.meshes.set(object.name, mesh);
     }
-  }
-
-  buildMesh(name: string, faces: Array<Polygon>, matName: string, vCnt: number, vtang: Array<vec4>, vbnorm: Array<vec3>) {
-    const mesh = new Gfx3Mesh();
-    const mat = this.materials.get(matName);
-
-    if (mat)
-      mesh.setMaterial(mat);
-
-    mesh.beginVertices(vCnt);
-
-    const nvec = UT.VEC3_CREATE(0, 0, 0);
-
-    for (let i = 0; i < faces.length; i++) {
-      const v0 = faces[i].vtx[0];
-      const v1 = faces[i].vtx[1];
-      const v2 = faces[i].vtx[2];
-
-      const uv0 = faces[i].uvs[0] ? faces[i].uvs[0] : UT.VEC2_CREATE(0, 0);
-      const uv1 = faces[i].uvs[1] ? faces[i].uvs[1] : UT.VEC2_CREATE(0, 0);
-      const uv2 = faces[i].uvs[2] ? faces[i].uvs[2] : UT.VEC2_CREATE(0, 0);
-
-      const n0 = faces[i].ns[0];
-      const n1 = faces[i].ns[1];
-      const n2 = faces[i].ns[2];
-
-      const t0 = vtang[faces[i].nIdxs[0]] ? vtang[faces[i].nIdxs[0]] : nvec;
-      const t1 = vtang[faces[i].nIdxs[1]] ? vtang[faces[i].nIdxs[1]] : nvec;
-      const t2 = vtang[faces[i].nIdxs[2]] ? vtang[faces[i].nIdxs[2]] : nvec;
-
-      const b0 = vbnorm[faces[i].nIdxs[0]] ? vbnorm[faces[i].nIdxs[0]] : nvec;
-      const b1 = vbnorm[faces[i].nIdxs[1]] ? vbnorm[faces[i].nIdxs[1]] : nvec;
-      const b2 = vbnorm[faces[i].nIdxs[2]] ? vbnorm[faces[i].nIdxs[2]] : nvec;
-
-      mesh.defineVertex(v0[0], v0[1], v0[2], uv0[0], 1.0 - uv0[1], n0[0], n0[1], n0[2], t0[0], t0[1], t0[2], b0[0], b0[1], b0[2]);
-      mesh.defineVertex(v1[0], v1[1], v1[2], uv1[0], 1.0 - uv1[1], n1[0], n1[1], n1[2], t1[0], t1[1], t1[2], b1[0], b1[1], b1[2]);
-      mesh.defineVertex(v2[0], v2[1], v2[2], uv2[0], 1.0 - uv2[1], n2[0], n2[1], n2[2], t2[0], t2[1], t2[2], b2[0], b2[1], b2[2]);
-
-      if (faces[i].n === 4) {
-        const v0 = faces[i].vtx[2];
-        const v1 = faces[i].vtx[3];
-        const v2 = faces[i].vtx[0];
-
-        const uv0 = faces[i].uvs[2] ? faces[i].uvs[2] : UT.VEC2_CREATE(0, 0);
-        const uv1 = faces[i].uvs[3] ? faces[i].uvs[3] : UT.VEC2_CREATE(0, 0);
-        const uv2 = faces[i].uvs[0] ? faces[i].uvs[0] : UT.VEC2_CREATE(0, 0);
-
-        const n0 = faces[i].ns[2];
-        const n1 = faces[i].ns[3];
-        const n2 = faces[i].ns[0];
-
-        const t0 = vtang[faces[i].nIdxs[2]] ? vtang[faces[i].nIdxs[2]] : nvec;
-        const t1 = vtang[faces[i].nIdxs[3]] ? vtang[faces[i].nIdxs[3]] : nvec;
-        const t2 = vtang[faces[i].nIdxs[0]] ? vtang[faces[i].nIdxs[0]] : nvec;
-
-        const b0 = vbnorm[faces[i].nIdxs[2]] ? vbnorm[faces[i].nIdxs[2]] : nvec;
-        const b1 = vbnorm[faces[i].nIdxs[3]] ? vbnorm[faces[i].nIdxs[3]] : nvec;
-        const b2 = vbnorm[faces[i].nIdxs[0]] ? vbnorm[faces[i].nIdxs[0]] : nvec;
-
-        mesh.defineVertex(v0[0], v0[1], v0[2], uv0[0], 1.0 - uv0[1], n0[0], n0[1], n0[2], t0[0], t0[1], t0[2], b0[0], b0[1], b0[2]);
-        mesh.defineVertex(v1[0], v1[1], v1[2], uv1[0], 1.0 - uv1[1], n1[0], n1[1], n1[2], t1[0], t1[1], t1[2], b1[0], b1[1], b1[2]);
-        mesh.defineVertex(v2[0], v2[1], v2[2], uv2[0], 1.0 - uv2[1], n2[0], n2[1], n2[2], t2[0], t2[1], t2[2], b2[0], b2[1], b2[2]);
-      }
-    }
-
-    mesh.endVertices();
-
-    this.set(name + '-' + matName, mesh);
-
-    return mesh;
   }
 
   async loadFromFile(objPath: string, mtlPath: string) {

@@ -1179,4 +1179,47 @@ class UT {
   }
 }
 
-export { UT };
+class Tween {
+  times: Array<number>;
+  values: Array<number>;
+
+  constructor(timeArray: Array<number> = [], valueArray: Array<number> = []) {
+    this.times = timeArray;
+    this.values = valueArray;
+  }
+
+  lerp(t: number): number {
+    let i = 0;
+    let n = this.times.length;
+    while (i < n && t > this.times[i])
+      i++;
+    if (i == 0) return this.values[0];
+    if (i == n) return this.values[n - 1];
+    let p = (t - this.times[i - 1]) / (this.times[i] - this.times[i - 1]);
+    return this.values[i - 1] + p * (this.values[i] - this.values[i - 1]);
+  }
+}
+
+class Tween3 {
+  times: Array<number>;
+  values: Array<vec3>;
+
+  constructor(timeArray: Array<number> = [], valueArray: Array<vec3> = []) {
+    this.times = timeArray;
+    this.values = valueArray;
+  }
+
+  lerp(t: number): vec3 {
+    let i = 0;
+    let n = this.times.length;
+    while (i < n && t > this.times[i])
+      i++;
+    if (i == 0) return this.values[0];
+    if (i == n) return this.values[n - 1];
+    let p = (t - this.times[i - 1]) / (this.times[i] - this.times[i - 1]);
+
+    return UT.VEC3_LERP(this.values[i - 1], this.values[i], p);
+  }
+}
+
+export { UT, Tween, Tween3 };

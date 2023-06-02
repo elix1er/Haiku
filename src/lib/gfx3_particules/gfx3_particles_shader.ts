@@ -76,7 +76,6 @@ export const PIPELINE_DESC: any = {
     topology: 'triangle-list',
     cullMode: 'none',
     frontFace: 'ccw'
-
   },
   depthStencil: {
     depthWriteEnabled: false,
@@ -86,7 +85,6 @@ export const PIPELINE_DESC: any = {
 };
 
 export const VERTEX_SHADER = `
-
 @group(0) @binding(0) var<uniform> modelViewMatrix: mat4x4<f32>;
 @group(0) @binding(1) var<uniform> projectionMatrix: mat4x4<f32>;
 
@@ -139,7 +137,6 @@ export const FRAGMENT_SHADER = `
 @group(0) @binding(7) var Sampler: sampler;
 @group(0) @binding(8) var Texture: texture_2d<f32>;
 
-
 @fragment
 fn main(
   @builtin(position) Position: vec4<f32>,
@@ -163,25 +160,11 @@ fn main(
 
     texel = textureSample(Texture, Sampler, uv);
     pixel = vColor.xyz * texel.xyz;
-  }else{
+  }
+  else
+  {
     pixel = vColor.xyz;
-  }
-
-  if(POINT_LIGHT0.w > 0.5){
-    color+=CalcPointLight(POINT_LIGHT0.xyz, POINT_LIGHT0_COLOR, mvPosition.xyz, pixel);
-  }
-  if(POINT_LIGHT1.w > 0.5){
-    color+=CalcPointLight(POINT_LIGHT1.xyz, POINT_LIGHT1_COLOR, mvPosition.xyz, pixel);
   }
   
   return vec4(color, texel.a * vColor.a );
-}
-
-fn CalcPointLight(lightPos: vec3<f32>, lightColor: vec4<f32>, fragPos: vec3<f32>, pixel: vec3<f32>) -> vec3<f32>
-{
-  var dist = distance(lightPos, fragPos);
-  var diffuseFactor = 1.0/ (dist * dist * lightColor.a);
-  return (pixel + lightColor.xyz) * diffuseFactor;
-}
-
-`;
+}`;

@@ -5,9 +5,9 @@ import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
 import { SHADER_VERTEX_ATTR_COUNT } from '../../lib/gfx3_mesh/gfx3_mesh_shader';
-import { Gfx3MeshShapeCylinder } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_cylinder';
-import { Gfx3MeshShapeSphere } from '../../lib/gfx3_mesh_shape/gfx3_mesh_shape_sphere';
+
 import { Gfx3Mesh } from '../../lib/gfx3_mesh/gfx3_mesh';
+import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
 // ---------------------------------------------------------------------------------------
 
@@ -53,19 +53,17 @@ class PerfScreen extends Screen {
 
     this.camera.setPosition(0, 10, 0);
 
-    this.skySphere = new Gfx3MeshShapeSphere(300, 8, 8, [1, 1]);
+    this.skySphere = new Gfx3MeshJSM();
+    await this.skySphere.loadFromFile('./samples/perf/sky-sphere.jsm');
     this.skySphere.setMaterial(new Gfx3Material({
-      texture: await gfx3TextureManager.loadTexture('./samples/perf/skybox.jpg')
+      texture: await gfx3TextureManager.loadTexture('./samples/perf/sky-sphere.jpg')
     }));
 
-    this.obj = new Gfx3MeshShapeCylinder(2, 5, 24, [1, 1]);
+    this.obj = new Gfx3MeshJSM();
+    await this.obj.loadFromFile('./samples/perf/cube.jsm');
     this.obj.setMaterial(new Gfx3Material({
-      lightning: true,
-      texture: await gfx3TextureManager.loadTexture('./samples/perf/color_map.jpg'),
-      normalMap: await gfx3TextureManager.loadTexture('./samples/perf/normal_map_opengl.jpg'),
-      roughnessMap: await gfx3TextureManager.loadTexture8bit('./samples/perf/roughness_map.jpg'),
-      envMapEq: await gfx3TextureManager.loadTexture('./samples/perf/skybox.jpg'),
-      // specular: UT.VEC4_CREATE(1, 0, 0, 32)
+      texture: await gfx3TextureManager.loadTexture('./samples/perf/cube.png'),
+      lightning: true
     }));
 
     for (let y = 0; y < GRID_HEIGHT; y++) {
@@ -112,9 +110,6 @@ class PerfScreen extends Screen {
       UT.MAT4_TRANSFORM(t.p, t.a, t.s, t.m);
       n += r;
     }
-
-    this.skySphere.setPosition(this.camera.getPositionX(), this.camera.getPositionY(), this.camera.getPositionZ());
-    this.skySphere.update();
 
     this.colFac += ts * 0.003;
   }

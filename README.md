@@ -5,21 +5,23 @@
 ![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.0-blue)
 
 **WebStationX** is a typescript 2D/3D video game engine based on WebGPU.   
-We provide a simple, pragmatic and lightweight development kit to build web games.  
+We provide a simple, pragmatic and lightweight development kit to build web games with very high performance.  
 Our priority is to eliminate black boxes and giving a maximum control to the user.  
 Important note: This engine comes with a dozen of diverse and varied examples.
 
 ## General features
-- 👾 2D - Sprite, animated tilemap
-- 🧊 3D - Debug shapes, light, static mesh, animated mesh, material, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover
-- 💁 Format - Wavefront (obj)
-- 💥 VFX - Phong, normal-map, env-map
+- 👾 2D Common - Sprite, tilemap with animations
+- 💁 2D Format - Custom json
+- 🧊 3D Common - Debug shapes, mesh, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover, particules system
+- 💁 3D Format - Custom json, wavefront
+- 🌞 3D Light - Directional light, multiple point lights, vertex lighting
+- 💥 3D VFX - Phong, normal-map, env-map, specularity-map
 - 🎮 Input - Action mapper for keyboard and gamepad
 - 🚔 Pathfinder - A* for 2D & 3D
 - 📺 Screen - Handle different screens of your game
 - 📜 Scripts - Write game behaviors
 - 🔊 Sound - Sound manager built on the Web Audio API
-- 🌳 Tree - Binary Space Partion for 2D & 3D
+- 🌳 Tree - Binary Space Partition for 2D & 3D
 - 🎨 UI - Component architecture to keep project clean and scalable
 
 ## Getting started
@@ -74,7 +76,7 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Vertex Light (Owner: me, Delay: N/A)
 - Possible optimization on Gfx3Camera (Owner: me, Delay: N/A)
 
-## Fun todo-list
+## Second todo-list
 - Transform a-star in a generic way (2D & 3D)
 - Add triple-triad demo (Work: In Progress, Delay: 1 month)
 

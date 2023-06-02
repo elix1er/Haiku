@@ -1,43 +1,28 @@
-import { gfx3Manager, UniformGroup, MIN_UNIFORM_BUFFER_OFFSET_ALIGNMENT } from '../gfx3/gfx3_manager';
+import { gfx3Manager, UniformGroupDataset } from '../gfx3/gfx3_manager';
 import { UT } from '../core/utils';
 import { Gfx3Texture } from '../gfx3/gfx3_texture';
 import { Gfx3Particles } from './gfx3_particles';
-import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_UNIFORM_ATTR_COUNT } from './gfx3_particles_shader';
+import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER } from './gfx3_particles_shader';
 
 class Gfx3ParticlesRenderer {
   pipeline: GPURenderPipeline;
-  uniformGroup: UniformGroup;
+  dataBuffer: UniformGroupDataset;
   particlesList: Array<Gfx3Particles>;
-  defaultTexture:Gfx3Texture;
-  pointLight0Color:vec4;
-  pointLight0: vec4;
-
-  pointLight1Color:vec4;
-  pointLight1: vec4;
+  defaultTexture: Gfx3Texture;
 
   constructor() {
     this.pipeline = gfx3Manager.loadPipeline('PARTICULES_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
+    this.dataBuffer = gfx3Manager.createUniformGroupDataset('PARTICULES_PIPELINE', 0);
+    this.dataBuffer.addInput(0, UT.F16_SIZE, 'MODEL_MAT');
+    this.dataBuffer.addInput(1, UT.F16_SIZE, 'VIEW_MAT');
+    this.dataBuffer.addInput(2, UT.F04_SIZE, 'INFOS');
+    this.dataBuffer.allocate();
+
+    this.dataBuffer.addInput(7, this.defaultTexture.gpuSampler);
+    this.dataBuffer.addInput(8, this.defaultTexture.gpuTexture);
+
     this.particlesList = [];
-
     this.defaultTexture = gfx3Manager.createTextureFromBitmap();
-    this.pointLight0 = UT.VEC4_CREATE(0, 0, 0, 1);
-    this.pointLight0Color = UT.VEC4_CREATE(1, 1, 1, 10);
-
-    this.pointLight1 = UT.VEC4_CREATE(0, 0, 0, 1);
-    this.pointLight1Color = UT.VEC4_CREATE(1, 1, 1, 10);
-
-    this.uniformGroup = gfx3Manager.createUniformGroup(this.pipeline.getBindGroupLayout(0));
-    this.uniformGroup.addDatasetInput(0, UT.MAT4_SIZE, 'MODEL_MAT');
-    this.uniformGroup.addDatasetInput(1, UT.MAT4_SIZE, 'VIEW_MAT');
-    this.uniformGroup.addDatasetInput(2, UT.VEC4_SIZE, 'INFOS');
-    this.uniformGroup.addDatasetInput(3, UT.VEC4_SIZE, 'POINT_LIGHT0');
-    this.uniformGroup.addDatasetInput(4, UT.VEC4_SIZE, 'POINT_LIGHT0_COLOR');
-    this.uniformGroup.addDatasetInput(5, UT.VEC4_SIZE, 'POINT_LIGHT1');
-    this.uniformGroup.addDatasetInput(6, UT.VEC4_SIZE, 'POINT_LIGHT1_COLOR');
-    this.uniformGroup.addSamplerInput(7, this.defaultTexture.gpuSampler);
-    this.uniformGroup.addTextureInput(8, this.defaultTexture.gpuTexture);
-    this.uniformGroup.allocate(1);
-
   }
 
   render(): void {
@@ -45,7 +30,7 @@ class Gfx3ParticlesRenderer {
     const passEncoder = gfx3Manager.getPassEncoder();
     passEncoder.setPipeline(this.pipeline);
 
-    if(this.particlesList.length<=0){
+    if (this.particlesList.length <= 0) {
       return;
     }
 
@@ -58,8 +43,7 @@ class Gfx3ParticlesRenderer {
     this.uniformGroup.addDatasetInput(4, UT.VEC4_SIZE, 'POINT_LIGHT0_COLOR');
     this.uniformGroup.addDatasetInput(5, UT.VEC4_SIZE, 'POINT_LIGHT1');
     this.uniformGroup.addDatasetInput(6, UT.VEC4_SIZE, 'POINT_LIGHT1_COLOR');
-    if(this.particlesList[0].texture)
-    {
+    if (this.particlesList[0].texture) {
       this.uniformGroup.addSamplerInput(7, this.particlesList[0].texture.gpuSampler);
       this.uniformGroup.addTextureInput(8, this.particlesList[0].texture.gpuTexture);
     }
@@ -81,7 +65,7 @@ class Gfx3ParticlesRenderer {
       this.uniformGroup.beginWrite();
       this.uniformGroup.write(0, new Float32Array(particles.getTransformMatrix()));
       this.uniformGroup.write(1, new Float32Array(cmvp));
-      this.uniformGroup.write(2, UT.VEC4_CREATE(particles.texture?1:0,0,0,0));
+      this.uniformGroup.write(2, UT.VEC4_CREATE(particles.texture ? 1 : 0, 0, 0, 0));
       this.uniformGroup.write(3, new Float32Array(this.pointLight0));
       this.uniformGroup.write(4, new Float32Array(this.pointLight0Color));
       this.uniformGroup.write(5, new Float32Array(this.pointLight1));

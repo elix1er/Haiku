@@ -19,30 +19,6 @@ class Gfx3Mesh extends Gfx3Drawable {
     this.material = new Gfx3Material({});
   }
 
-  delete(keepMat: boolean = false): void {
-    if (!keepMat) {
-      this.material.delete();
-    }
-
-    super.delete();
-  }
-
-  draw(): void {
-    gfx3MeshRenderer.drawMesh(this);
-  }
-
-  setMaterial(material: Gfx3Material, keepMat: boolean = false): void {
-    if (!keepMat) {
-      this.material.delete();
-    }
-
-    this.material = material;
-  }
-
-  getMaterial(): Gfx3Material {
-    return this.material;
-  }
-
   static build(coords: Array<number>, texcoords: Array<number>, indices?: Array<number>, groups?: Array<Group>) {
     const vcoords = new Array<vec3>();
     const vtexs = new Array<vec2>();
@@ -68,7 +44,7 @@ class Gfx3Mesh extends Gfx3Drawable {
         const i0 = i;
         const i1 = i + 1;
         const i2 = i + 2;
-  
+
         const cid0 = indices ? indices[i0 * 2 + 0] : i0;
         const cid1 = indices ? indices[i1 * 2 + 0] : i1;
         const cid2 = indices ? indices[i2 * 2 + 0] : i2;
@@ -80,7 +56,7 @@ class Gfx3Mesh extends Gfx3Drawable {
         vcoords[i0] = [coords[cid0 * 3 + 0], coords[cid0 * 3 + 1], coords[cid0 * 3 + 2]];
         vcoords[i1] = [coords[cid1 * 3 + 0], coords[cid1 * 3 + 1], coords[cid1 * 3 + 2]];
         vcoords[i2] = [coords[cid2 * 3 + 0], coords[cid2 * 3 + 1], coords[cid2 * 3 + 2]];
-  
+
         vtexs[i0] = [texcoords[tid0 * 2 + 0], texcoords[tid0 * 2 + 1]];
         vtexs[i1] = [texcoords[tid1 * 2 + 0], texcoords[tid1 * 2 + 1]];
         vtexs[i2] = [texcoords[tid2 * 2 + 0], texcoords[tid2 * 2 + 1]];
@@ -136,6 +112,30 @@ class Gfx3Mesh extends Gfx3Drawable {
     }
 
     return finalVertices;
+  }
+
+  delete(keepMat: boolean = false): void {
+    if (!keepMat) {
+      this.material.delete();
+    }
+
+    super.delete();
+  }
+
+  draw(): void {
+    gfx3MeshRenderer.drawMesh(this);
+  }
+
+  setMaterial(material: Gfx3Material, keepMat: boolean = false): void {
+    if (!keepMat) {
+      this.material.delete();
+    }
+
+    this.material = material;
+  }
+
+  getMaterial(): Gfx3Material {
+    return this.material;
   }
 
   clone(transformMatrix: mat4): Gfx3Mesh {

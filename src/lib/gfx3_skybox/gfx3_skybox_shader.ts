@@ -1,5 +1,4 @@
 export const SHADER_VERTEX_ATTR_COUNT = 6;
-export const SHADER_UNIFORM_ATTR_COUNT = 2;
 
 export const PIPELINE_DESC: any = {
   label: 'Skybox pipeline',
@@ -7,7 +6,7 @@ export const PIPELINE_DESC: any = {
   vertex: {
     entryPoint: 'main',
     buffers: [{
-      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4, // 3 position 3 normal,
+      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4,
       attributes: [{
         shaderLocation: 0, /*position*/
         offset: 0,
@@ -52,7 +51,7 @@ export const PIPELINE_DESC: any = {
 export const VERTEX_SHADER = `
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
-  @location(0) pos: vec4<f32>
+  @location(0) ClipPos: vec4<f32>
 };
 
 @vertex
@@ -62,7 +61,7 @@ fn main(
   var output : VertexOutput;
   output.Position = position;
   output.Position.z = 1;
-  output.pos = position;
+  output.ClipPos = position;
   return output;
 }`;
 
@@ -74,9 +73,9 @@ export const FRAGMENT_SHADER = `
 @fragment
 fn main(
   @builtin(position) Position: vec4<f32>,
-  @location(0) pos: vec4<f32>
+  @location(0) ClipPos: vec4<f32>
 ) -> @location(0) vec4<f32> {
-  var t = VPC_INVERSE_MATRIX * pos;
+  var t = VPC_INVERSE_MATRIX * ClipPos;
   var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler, normalize(t.xyz / t.w)));
   return textureColor;
 }`;

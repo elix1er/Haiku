@@ -1,4 +1,5 @@
 class UT {
+  static DEG_TO_RAD_RATIO = Math.PI / 180;
   static EPSILON = 0.0000001;
   static VEC2_SIZE = 8;
   static VEC2_ZERO: vec2 = [0, 0];
@@ -244,19 +245,13 @@ class UT {
     v[2] = z;
   }
 
-  static VEC3_LERP(v1: vec3, v2: vec3, n: number): vec3 {
-    const d = UT.VEC3_SUBSTRACT(v2, v1);
-    return [v1[0] + d[0] * n, v1[1] + d[1] * n, v1[2] + d[2] * n];
-  }
-
   static VEC3_HSL2RGB(h: number, s: number, l: number, out: vec3 = [0, 0, 0]): vec3 {
     let r, g, b;
     if (s == 0) {
       r = g = b = l; // achromatic
     }
-
     else {
-      const hue2rgb = function hue2rgb(p: number, q: number, t: number) {
+      const hue2rgb = function (p: number, q: number, t: number) {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
         if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -1177,49 +1172,98 @@ class UT {
 
     return false;
   }
-}
 
-class Tween {
-  times: Array<number>;
-  values: Array<number>;
+  /**************************************************************************/
+  /* QUADRATIC EASING */
+  /* t: current time, b: beginning value, e: endding value, d: duration */
+  /* t and d can be in frames or seconds/milliseconds */
+  /**************************************************************************/
 
-  constructor(timeArray: Array<number> = [], valueArray: Array<number> = []) {
-    this.times = timeArray;
-    this.values = valueArray;
+  static LINEAR(t: number, b: number, e: number, d: number): number {
+    return b + (e - b) * t / d;
   }
 
-  lerp(t: number): number {
+  static EASE_IN_QUAD(t: number, b: number, e: number, d: number): number {
+    return (e - b) * (t /= d) * t + b;
+  }
+
+  static EASE_OUT_QUAD(t: number, b: number, e: number, d: number): number {
+    const c = e - b;
+    return -c * (t /= d) * (t - 2) + b;
+  }
+
+  static EASE_IN_OUT_QUAD(t: number, b: number, e: number, d: number): number {
+    const c = e - b;
+    if ((t /= d / 2) < 1) return c / 2 * t * t + b;
+    return -c / 2 * ((--t) * (t - 2) - 1) + b;
+  }
+
+  static LINEAR_VEC2(t: number, b: vec2, e: vec2, d: number): vec2 {
+    const c = UT.VEC2_SUBSTRACT(e, b);
+    const p = t / d;
+    return [b[0] + c[0] * p, b[1] + c[1] * p];
+  }
+
+  static LINEAR_VEC3(t: number, b: vec3, e: vec3, d: number): vec3 {
+    const c = UT.VEC3_SUBSTRACT(e, b);
+    const p = t / d;
+    return [b[0] + c[0] * p, b[1] + c[1] * p, b[2] + c[2] * p];
+  }
+}
+
+class TweenAbstract<T> {
+  times: Array<number>;
+  values: Array<T>;
+  fns: Array<Function>;
+  defaultFn: Function;
+
+  constructor(times: Array<number>, values: Array<T>, defaultFn: Function, fns: Array<Function> = []) {
+    this.times = times;
+    this.values = values;
+    this.fns = fns;
+    this.defaultFn = defaultFn;
+  }
+
+  interpolate(t: number): T {
     let i = 0;
     let n = this.times.length;
-    while (i < n && t > this.times[i])
-      i++;
+    while (i < n && t > this.times[i]) i++;
     if (i == 0) return this.values[0];
     if (i == n) return this.values[n - 1];
-    let p = (t - this.times[i - 1]) / (this.times[i] - this.times[i - 1]);
-    return this.values[i - 1] + p * (this.values[i] - this.values[i - 1]);
+
+    const beginValue = this.values[i - 1];
+    const endValue = this.values[i];
+    const currentT = t - this.times[i - 1];
+    const currentDuration = this.times[i] - this.times[i - 1];
+
+    if (this.fns[i]) {
+      return this.fns[i](currentT, beginValue, endValue, currentDuration);
+    }
+
+    return this.defaultFn(currentT, beginValue, endValue, currentDuration);
+  }
+
+  isEmpty(): boolean {
+    return this.times.length == 0 || this.values.length == 0;
   }
 }
 
-class Tween3 {
-  times: Array<number>;
-  values: Array<vec3>;
-
-  constructor(timeArray: Array<number> = [], valueArray: Array<vec3> = []) {
-    this.times = timeArray;
-    this.values = valueArray;
-  }
-
-  lerp(t: number): vec3 {
-    let i = 0;
-    let n = this.times.length;
-    while (i < n && t > this.times[i])
-      i++;
-    if (i == 0) return this.values[0];
-    if (i == n) return this.values[n - 1];
-    let p = (t - this.times[i - 1]) / (this.times[i] - this.times[i - 1]);
-
-    return UT.VEC3_LERP(this.values[i - 1], this.values[i], p);
+class TweenNumber extends TweenAbstract<number> {
+  constructor(times: Array<number> = [], values: Array<number> = []) {
+    super(times, values, UT.LINEAR);
   }
 }
 
-export { UT, Tween, Tween3 };
+class TweenVEC2 extends TweenAbstract<vec2> {
+  constructor(times: Array<number> = [], values: Array<vec2> = []) {
+    super(times, values, UT.LINEAR_VEC2);
+  }
+}
+
+class TweenVEC3 extends TweenAbstract<vec3> {
+  constructor(times: Array<number> = [], values: Array<vec3> = []) {
+    super(times, values, UT.LINEAR_VEC3);
+  }
+}
+
+export { UT, TweenNumber, TweenVEC2, TweenVEC3 };

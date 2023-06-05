@@ -11,9 +11,9 @@ Important note: This engine comes with a dozen of diverse and varied examples.
 
 ## General features
 - 👾 2D Common - Sprite, tilemap with animations
-- 💁 2D Format - Custom json
+- 💁 2D Format - Custom json-like
 - 🧊 3D Common - Debug shapes, mesh, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover, particules system
-- 💁 3D Format - Custom json, wavefront
+- 💁 3D Format - Custom json-like, obj-wavefront
 - 🌞 3D Light - Directional light, multiple point lights, vertex lighting
 - 💥 3D VFX - Phong, normal-map, env-map, specularity-map
 - 🎮 Input - Action mapper for keyboard and gamepad

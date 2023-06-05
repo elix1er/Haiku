@@ -1,31 +1,4 @@
 export const SHADER_VERTEX_ATTR_COUNT = 12;
-export const SHADER_UNIFORM_ATTR_COUNT = 7;
-
-const additiveBlend: GPUBlendState = {
-  color: {
-      srcFactor: "one",
-      dstFactor: "one",
-      operation: "add",
-  },
-  alpha: {
-      srcFactor: "one",
-      dstFactor: "one",
-      operation: "add",
-  }
-};
-
-const alphaBlend = {
-  color: {
-    srcFactor: 'src-alpha',
-    dstFactor: 'one-minus-src-alpha',
-    operation: 'add'
-  },
-  alpha: {
-    srcFactor: 'one',
-    dstFactor: 'one-minus-src-alpha',
-    operation: 'add'
-  }
-}
 
 export const PIPELINE_DESC: any = {
   label: 'Particles pipeline',
@@ -33,7 +6,7 @@ export const PIPELINE_DESC: any = {
   vertex: {
     entryPoint: 'main',
     buffers: [{
-      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4, // 3 position 2 uv,
+      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4,
       attributes: [{
         shaderLocation: 0, /*position*/
         offset: 0,
@@ -69,7 +42,18 @@ export const PIPELINE_DESC: any = {
     entryPoint: 'main',
     targets: [{
       format: navigator.gpu.getPreferredCanvasFormat(),
-      blend: alphaBlend
+      blend: {
+        color: {
+          srcFactor: 'src-alpha',
+          dstFactor: 'one-minus-src-alpha',
+          operation: 'add'
+        },
+        alpha: {
+          srcFactor: 'one',
+          dstFactor: 'one-minus-src-alpha',
+          operation: 'add'
+        }
+      }
     }]
   },
   primitive: {
@@ -107,13 +91,15 @@ fn main(
   @location(5) customAngle: f32,
   @location(6) customVisible: f32
 ) -> VertexOutput {
-
   var output : VertexOutput;
   
-  if(customVisible > 0.5){  // true
-    output.vColor = vec4( customColor, customOpacity ); //     set color associated to vertex; use later in fragment shader.
-  }else{ // false
-    output.vColor = vec4(0.0, 0.0, 0.0, 0.0); 		//     make particle invisible.
+  if(customVisible > 0.5)
+  {
+    output.vColor = vec4( customColor, customOpacity ); // set color associated to vertex; use later in fragment shader.
+  }
+  else
+  {
+    output.vColor = vec4(0.0, 0.0, 0.0, 0.0); 		// make particle invisible.
   }
 
   output.vAngle = customAngle;

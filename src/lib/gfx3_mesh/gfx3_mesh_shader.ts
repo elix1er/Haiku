@@ -6,7 +6,7 @@ export const PIPELINE_DESC: any = {
   vertex: {
     entryPoint: 'main',
     buffers: [{
-      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4, // 3 position 2 uv,
+      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4,
       attributes: [{
         shaderLocation: 0, /*position*/
         offset: 0,

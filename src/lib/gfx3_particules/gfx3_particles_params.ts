@@ -1,48 +1,7 @@
 import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager';
-import { Tween, Tween3 } from '../core/utils';
-import { Gfx3Texture } from '../gfx3/gfx3_texture';
+import { TweenNumber, TweenVEC3 } from '../core/utils';
+import { PariculesOptions } from './gfx3_particles';
 
-const TYPE_CUBE = 0;
-const TYPE_SPHERE = 1;
-
-export interface ParticlesParams {
-  speedBase: number;
-  speedSpread: number;
-
-  positionStyle: number;
-  positionBase: vec3;
-  positionRadius: number;
-  positionSpread: vec3;
-
-  velocityStyle: number;
-  velocityBase: vec3;
-  velocitySpread: vec3;
-
-  particleTexture: Gfx3Texture;
-
-  sizeBase: number;
-  sizeSpread: number;
-  sizeTween: Tween;
-
-  opacityTween: Tween;
-  colorTween: Tween3;
-  angleSpread: number;
-  angleVelocityBase: number;
-  angleVelocitySpread: number;
-
-  angleBase: number;
-  opacityBase: number;
-
-  accelerationBase: vec3;
-
-  colorBase: vec3;
-  colorSpread: vec3;
-
-  /* blendStyle : AdditiveBlending */
-  particleDeathAge: number;
-  emitterDeathAge: number;
-  particlesPerSecond: number;
-};
 
 export const Fountain: Partial<ParticlesParams> = {
   positionStyle: TYPE_CUBE,

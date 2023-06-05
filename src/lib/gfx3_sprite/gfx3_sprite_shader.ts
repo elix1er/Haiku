@@ -6,7 +6,7 @@ export const PIPELINE_DESC: any = {
   vertex: {
     entryPoint: 'main',
     buffers: [{
-      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4, // 3 position 2 uv,
+      arrayStride: SHADER_VERTEX_ATTR_COUNT * 4,
       attributes: [{
         shaderLocation: 0, /*position*/
         offset: 0,
@@ -53,7 +53,7 @@ export const VERTEX_SHADER = `
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
-  @location(0) fragUV: vec2<f32>
+  @location(0) FragUV: vec2<f32>
 };
 
 @vertex
@@ -63,7 +63,7 @@ fn main(
 ) -> VertexOutput {
   var output : VertexOutput;
   output.Position = MVPC_MATRIX * position;
-  output.fragUV = uv;
+  output.FragUV = uv;
   return output;
 }`;
 
@@ -73,9 +73,9 @@ export const FRAGMENT_SHADER = `
 
 @fragment
 fn main(
-  @location(0) fragUV: vec2<f32>
+  @location(0) FragUV: vec2<f32>
 ) -> @location(0) vec4<f32> {
-  var textureColor:vec4<f32> = (textureSample(TEXTURE, SAMPLER, fragUV));
+  var textureColor:vec4<f32> = (textureSample(TEXTURE, SAMPLER, FragUV));
   if (textureColor.a == 0)
   {
     discard;

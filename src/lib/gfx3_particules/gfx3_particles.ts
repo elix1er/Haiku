@@ -57,8 +57,8 @@ class Particle {
   }
 
   update(ts: number) {
-    UT.VEC3_ADD(this.position, UT.VEC3_SCALE(this.velocity, ts / 1000.0), this.position);
-    UT.VEC3_ADD(this.velocity, UT.VEC3_SCALE(this.acceleration, ts / 1000.0), this.velocity);
+    this.position = UT.VEC3_ADD(this.position, UT.VEC3_SCALE(this.velocity, ts / 1000.0));
+    this.velocity = UT.VEC3_ADD(this.velocity, UT.VEC3_SCALE(this.acceleration, ts / 1000.0));
 
     this.angle += this.angleVelocity * UT.DEG_TO_RAD_RATIO * ts / 1000.0;
     this.angleVelocity += this.angleAcceleration * UT.DEG_TO_RAD_RATIO * ts / 1000.0;
@@ -245,15 +245,13 @@ class Gfx3Particles extends Gfx3Drawable {
       }
     }
 
-    // if any particles have died while the emitter is still running, we imediately recycle them
-    for (var j = 0; j < recycleIndices.length; j++) {
-      var i = recycleIndices[j];
+    for (let j = 0; j < recycleIndices.length; j++) { // if any particles have died while the emitter is still running, we imediately recycle them
+      const i = recycleIndices[j];
       this.particleArray[i] = this.createParticle();
       this.particleArray[i].alive = 1.0; // activate right away
 
       for (let k = 0; k < 6; k++) {
         const v = UT.VEC3_ADD(this.particleArray[i].position, PARTICULES_PTS[PARTICULES_IDX[k]]);
-
         this.vertices[i * SHADER_VERTEX_ATTR_COUNT * 6 + SHADER_VERTEX_ATTR_COUNT * k + 0] = v[0];
         this.vertices[i * SHADER_VERTEX_ATTR_COUNT * 6 + SHADER_VERTEX_ATTR_COUNT * k + 1] = v[1];
         this.vertices[i * SHADER_VERTEX_ATTR_COUNT * 6 + SHADER_VERTEX_ATTR_COUNT * k + 2] = v[2];

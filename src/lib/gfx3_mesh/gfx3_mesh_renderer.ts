@@ -2,7 +2,6 @@ import { gfx3Manager, UniformGroupDataset } from '../gfx3/gfx3_manager';
 import { UT } from '../core/utils';
 import { Gfx3RendererAbstract } from '../gfx3/gfx3_renderer_abstract';
 import { Gfx3Mesh } from './gfx3_mesh';
-import { Gfx3Texture } from '../gfx3/gfx3_texture';
 import { PIPELINE_DESC, VERTEX_SHADER, FRAGMENT_SHADER } from './gfx3_mesh_shader';
 
 interface MeshCommand {
@@ -11,8 +10,6 @@ interface MeshCommand {
 };
 
 class Gfx3MeshRenderer extends Gfx3RendererAbstract {
-  defaultTexture: Gfx3Texture;
-  defaultEnvMap: Gfx3Texture;
   worldBuffer: UniformGroupDataset;
   cmdBuffer: UniformGroupDataset;
   pointLight0: vec10_buf;
@@ -22,9 +19,6 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
 
   constructor() {
     super('MESH_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
-    this.defaultTexture = gfx3Manager.createTextureFromBitmap();
-    this.defaultEnvMap = gfx3Manager.createCubeMapFromBitmap();
-
     this.worldBuffer = gfx3Manager.createUniformGroupDataset('MESH_PIPELINE', 0);
     this.worldBuffer.addInput(0, UT.F03_SIZE, 'CAM_POS');
     this.worldBuffer.addInput(1, UT.F16_SIZE, 'POINT_LIGHT0');
@@ -176,14 +170,6 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
     this.dirLight[2 * 4 + 0] = color[0];
     this.dirLight[2 * 4 + 1] = color[1];
     this.dirLight[2 * 4 + 2] = color[2];
-  }
-
-  getDefaultTexture(): Gfx3Texture {
-    return this.defaultTexture;
-  }
-
-  getDefaultEnvMap(): Gfx3Texture {
-    return this.defaultEnvMap;
   }
 }
 

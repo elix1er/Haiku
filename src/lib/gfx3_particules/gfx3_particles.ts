@@ -1,4 +1,5 @@
-import { gfx3ParticlesRenderer } from './gfx3_particles_renderer'
+import { gfx3ParticlesRenderer } from './gfx3_particles_renderer';
+import { gfx3Manager, UniformGroupBitmaps } from '../gfx3/gfx3_manager';
 import { UT, TweenNumber, TweenVEC3 } from '../core/utils';
 import { Gfx3Drawable } from '../gfx3/gfx3_drawable';
 import { Gfx3Texture } from '../gfx3/gfx3_texture';
@@ -85,7 +86,7 @@ interface ParticlesOptions {
   positionStyle: PositionStyle;
   positionBase: vec3;
   positionSpread: vec3;
-  positionRadiusBase: number;
+  positionSphereRadiusBase: number;
   positionRadiusSpread: number;
   velocityStyle: VelocityStyle;
   velocityBase: vec3;
@@ -116,11 +117,13 @@ interface ParticlesOptions {
 };
 
 class Gfx3Particles extends Gfx3Drawable {
-  texture: Gfx3Texture | null;
+  texture: Gfx3Texture;
+  textureBuffer: UniformGroupBitmaps;
+  textureChanged: boolean;
   positionStyle: PositionStyle;
   positionBase: vec3;
   positionSpread: vec3;
-  positionRadiusBase: number;
+  positionSphereRadiusBase: number;
   positionRadiusSpread: number;
   velocityStyle: VelocityStyle;
   velocityBase: vec3;
@@ -154,11 +157,17 @@ class Gfx3Particles extends Gfx3Drawable {
 
   constructor(options: Partial<ParticlesOptions>) {
     super(SHADER_VERTEX_ATTR_COUNT);
-    this.texture = options.texture ?? null;
+    this.texture = options.texture ?? gfx3Manager.createTextureFromBitmap();
+    this.textureBuffer = gfx3Manager.createUniformGroupBitmaps('PARTICLES_PIPELINE', 1);
+    this.textureBuffer.addSamplerInput(0, this.texture.gpuSampler);
+    this.textureBuffer.addTextureInput(1, this.texture.gpuTexture);
+    this.textureBuffer.allocate();
+    this.textureChanged = false;
+
     this.positionStyle = options.positionStyle ?? PositionStyle.CUBE;
     this.positionBase = options.positionBase ?? [0, 0, 0];
     this.positionSpread = options.positionSpread ?? [0, 0, 0];
-    this.positionRadiusBase = options.positionRadiusBase ?? 0.0;
+    this.positionSphereRadiusBase = options.positionSphereRadiusBase ?? 0.0;
     this.positionRadiusSpread = options.positionRadiusSpread ?? 0.0;
     this.velocityStyle = options.velocityStyle ?? VelocityStyle.CLASSIC;
     this.velocityBase = options.velocityBase ?? [0, 0, 0];
@@ -214,11 +223,11 @@ class Gfx3Particles extends Gfx3Drawable {
         }
 
         const pos = this.particleArray[i].position;
-        const alive = this.particleArray[i].alive;
         const color = this.particleArray[i].color;
         const opacity = this.particleArray[i].opacity;
         const size = this.particleArray[i].size;
         const angle = this.particleArray[i].angle;
+        const alive = this.particleArray[i].alive;
 
         for (let k = 0; k < 6; k++) {
           const v = UT.VEC3_ADD(pos, PARTICULES_PTS[PARTICULES_IDX[k]]);
@@ -273,7 +282,7 @@ class Gfx3Particles extends Gfx3Drawable {
       particle.position = RANDOM_VEC3(this.positionBase, this.positionSpread);
     }
     else if (this.positionStyle == PositionStyle.SPHERE) {
-      const positionRadius = RANDOM_VALUE(this.positionRadiusBase, this.positionRadiusSpread);
+      const positionRadius = RANDOM_VALUE(this.positionSphereRadiusBase, this.positionRadiusSpread);
       const a1 = Math.PI * 2 * Math.random();
       const a2 = Math.PI * 2 * Math.random();
       const r = positionRadius * Math.cos(a1);
@@ -306,10 +315,22 @@ class Gfx3Particles extends Gfx3Drawable {
 
   setTexture(texture: Gfx3Texture): void {
     this.texture = texture;
+    this.textureChanged = true;
   }
 
   getTexture(): Gfx3Texture | null {
     return this.texture;
+  }
+
+  getTextureBuffer(): UniformGroupBitmaps {
+    if (this.textureChanged) {
+      this.textureBuffer.setSamplerInput(0, this.texture.gpuSampler);
+      this.textureBuffer.setTextureInput(1, this.texture.gpuTexture);
+      this.textureBuffer.allocate();
+      this.textureChanged = false;
+    }
+
+    return this.textureBuffer;
   }
 }
 

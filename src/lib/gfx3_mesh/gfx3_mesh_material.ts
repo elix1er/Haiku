@@ -1,5 +1,4 @@
 import { gfx3Manager, UniformGroupDataset, UniformGroupBitmaps } from '../gfx3/gfx3_manager';
-import { gfx3MeshRenderer } from './gfx3_mesh_renderer';
 import { UT } from '../core/utils';
 import { Gfx3Texture } from '../gfx3/gfx3_texture';
 
@@ -44,11 +43,11 @@ class Gfx3Material {
     this.ambiant = options.ambiant ?? UT.VEC3_CREATE(0.5, 0.5, 0.5);
     this.specular = options.specular ?? UT.VEC4_CREATE(0.0, 0.0, 0.0, 0.0);
     this.specular[3] = options.specularity ?? 0.0;
-    this.texture = options.texture ?? gfx3MeshRenderer.getDefaultTexture();
-    this.specularityMap = options.specularityMap ?? gfx3MeshRenderer.getDefaultTexture();
-    this.normalMap = options.normalMap ?? gfx3MeshRenderer.getDefaultTexture();
-    this.envMap = options.envMap ?? gfx3MeshRenderer.getDefaultEnvMap();
-    this.envMapEq = options.envMapEq ?? gfx3MeshRenderer.getDefaultTexture();
+    this.texture = options.texture ?? gfx3Manager.createTextureFromBitmap();
+    this.specularityMap = options.specularityMap ?? gfx3Manager.createTextureFromBitmap();
+    this.normalMap = options.normalMap ?? gfx3Manager.createTextureFromBitmap();
+    this.envMap = options.envMap ?? gfx3Manager.createCubeMapFromBitmap();
+    this.envMapEq = options.envMapEq ?? gfx3Manager.createTextureFromBitmap();
 
     this.dataBuffer = gfx3Manager.createUniformGroupDataset('MESH_PIPELINE', 2);
     this.dataBuffer.addInput(0, UT.VEC4_SIZE, 'MAT_AMBIANT_COLOR');

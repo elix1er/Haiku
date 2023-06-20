@@ -8,23 +8,21 @@ class OBJObject {
   name: string;
   coords: Array<number>;
   texcoords: Array<number>;
-  indices: Array<number>;
   groups: Array<Group>;
   materialName: string;
-  vCount: number;
+  vertexCount: number;
 
   constructor() {
     this.name = '';
     this.coords = new Array<number>();
     this.texcoords = new Array<number>();
-    this.indices = new Array<number>();
     this.groups = new Array<Group>();
     this.materialName = '';
-    this.vCount = 0;
+    this.vertexCount = 0;
   }
 }
 
-class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
+class Gfx3MeshOBJ extends Gfx3Mesh {
   materials: Map<string, Gfx3Material>;
   meshes: Map<string, Gfx3Mesh>;
 
@@ -34,13 +32,28 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
     this.meshes = new Map<string, Gfx3Mesh>();
   }
 
-  destroy() {
+  delete() {
     for (const mesh of this.meshes.values()) {
       mesh.delete(true);
     }
 
     for (const material of this.materials.values()) {
       material.delete();
+    }
+  }
+
+  update(ts: number): void {
+    for (const mesh of this.meshes.values()) {
+      mesh.setPosition(this.position[0], this.position[1], this.position[2]);
+      mesh.setRotation(this.rotation[0], this.rotation[1], this.rotation[2]);
+      mesh.setScale(this.scale[0], this.scale[1], this.scale[2]);
+      mesh.update(ts);
+    }
+  }
+
+  draw(): void {
+    for (const mesh of this.meshes.values()) {
+      mesh.draw();
     }
   }
 
@@ -126,9 +139,9 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
     const text = await response.text();
     const lines = text.split('\n');
 
-    let objects = new Array<OBJObject>();
+    const objects = new Array<OBJObject>();
     let currentObject = new OBJObject();
-    let currentGroup: Group = { id: 0, startIndex: 0, endIndex: 0, smooth: false };
+    let currentGroup: Group = { id: 0, indices: [], vertexCount: 0, smooth: false };
 
     for (const line of lines) {
       if (line.startsWith('o ')) {
@@ -153,25 +166,34 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
       }
 
       if (line.startsWith('s ')) {
-        const a = line.substring(2);
-        const group: Group = { id: a == 'off' ? 0 : parseInt(a), startIndex: currentObject.vCount, endIndex: 0, smooth: a != 'off' };
-        currentGroup = group;
-        currentObject.groups.push(group);
+        const arg = parseInt(line.substring(2));
+        const group = currentObject.groups.find(g => g.id == arg);
+
+        if (group) {
+          currentGroup = group;
+        }
+        else {
+          const newGroup: Group = { id: arg, indices: [], vertexCount: 0, smooth: arg != 0 };
+          currentObject.groups.push(newGroup);
+          currentGroup = newGroup;
+        }
       }
 
       if (line.startsWith('f ')) {
         const a = line.substring(2).split(' ');
         if (a.length > 3) {
-          throw new Error('Gfx3MeshOBJ::loadObjects(): Not support non-triangulate faces !');
+          throw new Error('Gfx3MeshOBJ::loadObjects(): Not support quad faces !');
         }
 
         for (let i = 0; i < 3; i++) {
           const ids = a[i].split('/');
-          const cid = parseInt(ids[0]) - 1;
-          const tid = parseInt(ids[1]) - 1;
-          currentObject.indices.push(cid, tid);
-          currentObject.vCount++;
-          currentGroup.endIndex = currentObject.vCount;
+
+          for (const id of ids) {
+            currentGroup.indices.push(parseInt(id) - 1);
+          }
+
+          currentGroup.vertexCount++;
+          currentObject.vertexCount++;
         }
       }
     }
@@ -184,10 +206,10 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
         mesh.setMaterial(material);
       }
 
-      const vertices = Gfx3Mesh.build(object.coords, object.texcoords, object.indices, object.groups);
+      const vertices = Gfx3Mesh.build(object.coords, object.texcoords, object.vertexCount, object.groups);
 
-      mesh.beginVertices(object.vCount);
-      mesh.setVertices(vertices, object.vCount);
+      mesh.beginVertices(object.vertexCount);
+      mesh.setVertices(vertices, object.vertexCount);
       mesh.endVertices();
 
       this.meshes.set(object.name, mesh);
@@ -200,4 +222,4 @@ class Gfx3MeshObj extends Map<string, Gfx3Mesh> {
   }
 }
 
-export { Gfx3MeshObj };
+export { Gfx3MeshOBJ };

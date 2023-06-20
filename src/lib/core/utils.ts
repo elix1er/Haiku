@@ -64,6 +64,10 @@ class UT {
     return res;
   }
 
+  static RANGE_ARRAY(start: number, stop: number, step: number = 0) {
+    return Array.from({ length: (stop - start) / step + 1 }, (value, index) => start + index * step);
+  }
+
   static RANDARRAY(min: number, max: number): Array<number> {
     const arr = [];
     for (let i = min; i <= max; i++) {
@@ -136,6 +140,12 @@ class UT {
   static VEC2_SET(v: vec2, x: number, y: number): void {
     v[0] = x;
     v[1] = y;
+  }
+
+  static VEC2_OPPOSITE(a: vec2, out: vec2 = [0, 0]): vec2 {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    return out;
   }
 
   static VEC2_DISTANCE(a: vec2, b: vec2): number {
@@ -243,6 +253,13 @@ class UT {
     v[0] = x;
     v[1] = y;
     v[2] = z;
+  }
+
+  static VEC3_OPPOSITE(a: vec3, out: vec3 = [0, 0, 0]): vec3 {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    out[2] = -a[2];
+    return out;
   }
 
   static VEC3_HSL2RGB(h: number, s: number, l: number, out: vec3 = [0, 0, 0]): vec3 {

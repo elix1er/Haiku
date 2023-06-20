@@ -160,7 +160,7 @@ fn main(
 
   if(MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
   {
-    var normalMap:vec4<f32> = textureSample(NormTexture, NormSampler, FragUV);
+    var normalMap = textureSample(NormTexture, NormSampler, FragUV);
     normal = normalize(normalize(FragTangent) * normalMap.x + normalize(FragBinormal) * normalMap.y + normal * normalMap.z);
   }
 
@@ -193,7 +193,7 @@ fn main(
 
     if(MAT_PARAMS.HAS_ENV_MAP == 1.0)
     {
-      var uv = vec2<f32>(atan2( rvec.z, rvec.x ) * 0.15915494309189535 + 0.5, asin( clamp( rvec.y, - 1.0, 1.0 ) ) * 0.3183098861837907 + 0.5);
+      var uv = vec2<f32>(atan2(rvec.z, rvec.x) * 0.15915494309189535 + 0.5, asin(clamp(rvec.y, - 1.0, 1.0)) * 0.3183098861837907 + 0.5);
       outputColor += textureSample(EnvMapTexture2, EnvMapSampler2, uv) * 0.2;
     }
     else

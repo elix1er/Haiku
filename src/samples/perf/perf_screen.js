@@ -5,7 +5,6 @@ import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
 import { SHADER_VERTEX_ATTR_COUNT } from '../../lib/gfx3_mesh/gfx3_mesh_shader';
-
 import { Gfx3Mesh } from '../../lib/gfx3_mesh/gfx3_mesh';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -54,9 +53,9 @@ class PerfScreen extends Screen {
     this.camera.setPosition(0, 10, 0);
 
     this.skySphere = new Gfx3MeshJSM();
-    await this.skySphere.loadFromFile('./samples/perf/sky-sphere.jsm');
+    await this.skySphere.loadFromFile('./samples/perf/sky_sphere.jsm');
     this.skySphere.setMaterial(new Gfx3Material({
-      texture: await gfx3TextureManager.loadTexture('./samples/perf/sky-sphere.jpg')
+      texture: await gfx3TextureManager.loadTexture('./samples/perf/sky_sphere.jpg')
     }));
 
     this.obj = new Gfx3MeshJSM();

@@ -48,7 +48,7 @@ class Gfx3MeshJAM extends Gfx3Mesh {
         vertices: []
       };
 
-      frame.vertices = Gfx3Mesh.build(obj['Vertices'], json['TextureCoords']);
+      frame.vertices = Gfx3Mesh.build(obj['Vertices'], json['TextureCoords'], json['NumVertices']);
       this.frames.push(frame);
     }
 

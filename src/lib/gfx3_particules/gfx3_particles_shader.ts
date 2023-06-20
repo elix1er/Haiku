@@ -112,7 +112,7 @@ export const FRAGMENT_SHADER = `
 @fragment
 fn main(
   @builtin(position) Position: vec4<f32>,
-  @location(0) FragUV: vec2<f32>
+  @location(0) FragUV: vec2<f32>,
   @location(1) Color: vec4<f32>,
   @location(2) Angle: f32
 ) -> @location(0) vec4<f32> {

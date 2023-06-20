@@ -6,6 +6,7 @@ import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
+import { Gfx3MeshOBJ } from '../../lib/gfx3_mesh/gfx3_mesh_obj';
 import { Gfx3Skybox } from '../../lib/gfx3_skybox/gfx3_skybox';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
 // ---------------------------------------------------------------------------------------
@@ -29,10 +30,11 @@ class ViewerScreen extends Screen {
   }
 
   async onEnter() {
-    gfx3MeshRenderer.enablePointLight(0, [10, 10, 0]);
+    gfx3MeshRenderer.enablePointLight(0, [10, 30, 0]);
+    gfx3MeshRenderer.setPointLightColor(0, [1, 1, 1]);
     this.camera.setPosition(0, 0, 10);
 
-    await LOAD_CUBE(this.mesh);
+    this.mesh = await CREATE_CUBE();
     this.skybox.setCubemap(await gfx3TextureManager.loadCubemapTexture('./samples/viewer/sky_', 'png'));
 
     document.addEventListener('keydown', this.handleKeyDownCb);
@@ -85,14 +87,17 @@ class ViewerScreen extends Screen {
       return;
     }
 
-    if (e.key == 'l' || e.key == 'L') {
-      await LOAD_LANTERN(this.mesh);
+    if (e.key == 'o' || e.key == 'O') {
+      this.mesh = await CREATE_OBJ();
+    }
+    else if (e.key == 'l' || e.key == 'L') {
+      this.mesh = await CREATE_LANTERN();
     }
     else if (e.key == 'c' || e.key == 'C') {
-      await LOAD_CUBE(this.mesh);
+      this.mesh = await CREATE_CUBE();
     }
     else if (e.key == 'd' || e.key == 'D') {
-      await LOAD_DUCK(this.mesh);
+      this.mesh = await CREATE_DUCK();
     }
   }
 
@@ -125,28 +130,43 @@ export { ViewerScreen };
 // UTILS
 /******************************************************************* */
 
-async function LOAD_LANTERN(mesh) {
+async function CREATE_OBJ() {
+  const mesh = new Gfx3MeshOBJ();
+  await mesh.loadFromFile('./samples/viewer/wavefront.obj', './samples/viewer/wavefront.mtl');
+  return mesh;
+}
+
+async function CREATE_LANTERN() {
+  const mesh = new Gfx3MeshJSM();
   await mesh.loadFromFile('./samples/viewer/lantern.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/lantern.png'),
     normalMap: await gfx3TextureManager.loadTexture('./samples/viewer/lantern-normal.png'),
     lightning: true
   }));
+
+  return mesh;
 }
 
-async function LOAD_CUBE(mesh) {
+async function CREATE_CUBE() {
+  const mesh = new Gfx3MeshJSM();
   await mesh.loadFromFile('./samples/viewer/cube.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/cube.png'),
     lightning: true
   }));
+
+  return mesh;
 }
 
-async function LOAD_DUCK(mesh) {
+async function CREATE_DUCK() {
+  const mesh = new Gfx3MeshJSM();
   await mesh.loadFromFile('./samples/viewer/duck.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/duck.png'),
     lightning: true,
     specular: [1.0, 1.0, 1.0, 50.0]
   }));
+
+  return mesh;
 }

@@ -32,9 +32,11 @@ class Gfx3MeshRenderer extends Gfx3RendererAbstract {
 
     this.pointLight0 = new Float32Array(16);
     this.enablePointLight(0, [1, 1, 1], 0);
+    this.setPointLightAttenuation(0, 1, 0, 0);
     
     this.pointLight1 = new Float32Array(16);
     this.enablePointLight(1, [1, 1, 1], 0);
+    this.setPointLightAttenuation(1, 1, 0, 0);
 
     this.dirLight = new Float32Array(12);
     this.enableDirLight([1, 1, 1], 0);

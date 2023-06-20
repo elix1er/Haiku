@@ -270,7 +270,7 @@ class Gfx3Particles extends Gfx3Drawable {
     this.endVertices();
 
     this.emitterAge += ts / 1000.0; 
-    if (this.emitterAge > this.emitterDeathAge) { // stop emitter?
+    if (this.emitterAge > this.emitterDeathAge) { // stop emitter ?
       this.emitterAlive = false;
     }
   }

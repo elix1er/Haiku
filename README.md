@@ -73,8 +73,11 @@ If you have a suggestion that would make this better, please fork the repo and c
 ## First todo-list
 - Texture Scroll UV (Owner: Me, Delay: 1 month)
 - Texture Frames (JSM/JAM) (Owner: me, Delay: 1 month)
+- Add normal intensity
+- Add emissive
 - Vertex Light (Owner: me, Delay: N/A)
-- Possible optimization on Gfx3Camera (Owner: me, Delay: N/A)
+- Add 2D physics sample (sonic like)
+- Add jumps in fps sample
 
 ## Second todo-list
 - Transform a-star in a generic way (2D & 3D)

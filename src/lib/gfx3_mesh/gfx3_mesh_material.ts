@@ -2,13 +2,23 @@ import { gfx3Manager, UniformGroupDataset, UniformGroupBitmaps } from '../gfx3/g
 import { UT } from '../core/utils';
 import { Gfx3Texture } from '../gfx3/gfx3_texture';
 
+class MaterialTexture {
+  texture: Gfx3Texture;
+  transformMatrix: mat4;
+
+  constructor(texture: Gfx3Texture) {
+    this.texture = texture;
+    this.transformMatrix = UT.MAT4_IDENTITY();
+  }
+};
+
 type MaterialOptions = {
   opacity?: number,
   normalIntensity?: number,
-  emissive?: vec3_buf,
-  diffuse?: vec3_buf,
-  ambiant?: vec3_buf,
-  specular?: vec4_buf,
+  emissive?: vec3,
+  diffuse?: vec3,
+  ambiant?: vec3,
+  specular?: vec4,
   lightning?: boolean,
   texture?: Gfx3Texture,
   normalMap?: Gfx3Texture,
@@ -41,10 +51,10 @@ class Gfx3Material {
     this.params[5] = options.envMap ? 1 : 0;
     this.params[6] = options.specularityMap ? 1 : 0;
 
-    this.emissive = options.emissive ?? UT.VEC3_CREATE(0.0, 0.0, 0.0);
-    this.diffuse = options.diffuse ?? UT.VEC3_CREATE(1.0, 1.0, 1.0);
-    this.ambiant = options.ambiant ?? UT.VEC3_CREATE(0.5, 0.5, 0.5);
-    this.specular = options.specular ?? UT.VEC4_CREATE(0.0, 0.0, 0.0, 0.0);
+    this.emissive = new Float32Array(options.emissive ?? [0.0, 0.0, 0.0]);
+    this.diffuse = new Float32Array(options.diffuse ?? [1.0, 1.0, 1.0]);
+    this.ambiant = new Float32Array(options.ambiant ?? [0.5, 0.5, 0.5]);
+    this.specular = new Float32Array(options.specular ?? [0.0, 0.0, 0.0, 0.0]);
     this.texture = options.texture ?? gfx3Manager.createTextureFromBitmap();
     this.normalMap = options.normalMap ?? gfx3Manager.createTextureFromBitmap();
     this.envMap = options.envMap ?? gfx3Manager.createCubeMapFromBitmap();

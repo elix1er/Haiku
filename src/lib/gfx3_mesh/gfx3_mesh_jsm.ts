@@ -13,10 +13,10 @@ class Gfx3MeshJSM extends Gfx3Mesh {
       throw new Error('Gfx3MeshJSM::loadFromFile(): File not valid !');
     }
 
-    const vertices = Gfx3Mesh.build(json['Vertices'], json['TextureCoords'], json['NumVertices']);
+    const vertices = Gfx3Mesh.build(json['NumVertices'], json['Vertices'], json['TextureCoords'], json['Normals']);
 
     this.beginVertices(json['NumVertices']);
-    this.setVertices(vertices, json['NumVertices']);
+    this.setVertices(vertices);
     this.endVertices();
   }
 }

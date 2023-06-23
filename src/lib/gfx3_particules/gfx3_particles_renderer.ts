@@ -11,7 +11,8 @@ class Gfx3ParticlesRenderer {
   constructor() {
     this.pipeline = gfx3Manager.loadPipeline('PARTICLES_PIPELINE', VERTEX_SHADER, FRAGMENT_SHADER, PIPELINE_DESC);
     this.particlesBuffer = gfx3Manager.createUniformGroupDataset('PARTICLES_PIPELINE', 0);
-    this.particlesBuffer.addInput(0, UT.F16_SIZE, 'MVPC_MATRIX');
+    this.particlesBuffer.addInput(0, UT.F16_SIZE, 'VC_MATRIX');
+    this.particlesBuffer.addInput(1, UT.F16_SIZE, 'MVPC_MATRIX');
     this.particlesBuffer.allocate();
     this.particlesList = [];
   }
@@ -25,7 +26,8 @@ class Gfx3ParticlesRenderer {
       this.particlesBuffer.allocate(this.particlesList.length);
     }
 
-    const vpcMatrix = currentView.getViewProjectionClipMatrix();
+    const vMatrix = currentView.getCameraViewMatrix();
+    const vpcMatrix = currentView.getViewProjectionClipMatrix();    
     const mvpcMatrix = UT.MAT4_CREATE();
 
     this.particlesBuffer.beginWrite();
@@ -33,9 +35,11 @@ class Gfx3ParticlesRenderer {
     for (let i = 0; i < this.particlesList.length; i++) {
       const particles = this.particlesList[i];
 
-      UT.MAT4_MULTIPLY(vpcMatrix, particles.getTransformMatrix(), mvpcMatrix);
-      this.particlesBuffer.write(0, mvpcMatrix);
-      this.particlesBuffer.write(1, UT.VEC4_CREATE(particles.texture ? 1 : 0, 0, 0, 0));
+      const mMatrix = particles.getTransformMatrix();
+      UT.MAT4_MULTIPLY(vpcMatrix, mMatrix, mvpcMatrix);
+
+      this.particlesBuffer.write(0, vMatrix);
+      this.particlesBuffer.write(1, mvpcMatrix);
       passEncoder.setBindGroup(0, this.particlesBuffer.getBindGroup(i));
 
       const textureBuffer = particles.getTextureBuffer();

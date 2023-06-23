@@ -68,7 +68,7 @@ export const Clouds: Partial<ParticlesOptions> = {
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [40, 0, 0],
   velocitySpread: [20, 0, 0],
-  colorBase: [0.0, 0.0, 1.0], // H,S,L
+  colorBase: [0.0, 0.0, 1.0],
   sizeBase: 80.0,
   sizeSpread: 100.0,
   opacityTween: new TweenNumber([0, 1, 4, 5], [0, 1, 1, 0]),
@@ -85,7 +85,7 @@ export const Snow: Partial<ParticlesOptions> = {
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [0, -60, 0],
   velocitySpread: [50, 20, 50],
-  colorBase: [0.66, 1.0, 0.9], // H,S,L
+  colorBase: [0.66, 1.0, 0.9],
   sizeTween: new TweenNumber([0, 0.25], [1, 10]),
   opacityTween: new TweenNumber([2, 3], [0.8, 0]),
   accelerationBase: [0, -10, 0],
@@ -106,7 +106,7 @@ export const Rain: Partial<ParticlesOptions> = {
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [0, -400, 0],
   velocitySpread: [10, 50, 10],
-  colorBase: [0.66, 1.0, 0.7], // H,S,L
+  colorBase: [0.66, 1.0, 0.7],
   colorSpread: [0.00, 0.0, 0.2],
   sizeBase: 8.0,
   sizeSpread: 4.0,
@@ -125,7 +125,7 @@ export const Starfield: Partial<ParticlesOptions> = {
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [0, 0, 0],
   velocitySpread: [0.5, 0.5, 0.5],
-  colorBase: [0.15, 1.0, 0.9], // H,S,L
+  colorBase: [0.15, 1.0, 0.9],
   colorSpread: [0.00, 0.0, 0.2],
   sizeBase: 10.0,
   sizeSpread: 2.0,
@@ -147,7 +147,7 @@ export const Fireflies: Partial<ParticlesOptions> = {
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [0, 0, 0],
   velocitySpread: [60, 20, 60],
-  colorBase: [0.30, 1.0, 0.6], // H,S,L
+  colorBase: [0.30, 1.0, 0.6],
   colorSpread: [0.3, 0.0, 0.0],
   sizeBase: 30.0,
   sizeSpread: 2.0,
@@ -165,7 +165,7 @@ export const Startunnel: Partial<ParticlesOptions> = {
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [0, 100, 200],
   velocitySpread: [40, 40, 80],
-  colorBase: [0.15, 1.0, 0.8], // H,S,L
+  colorBase: [0.15, 1.0, 0.8],
   sizeBase: 4.0,
   sizeSpread: 2.0,
   opacityBase: 1,
@@ -182,31 +182,29 @@ export const Firework: Partial<ParticlesOptions> = {
   texture: await gfx3TextureManager.loadTexture('./textures/spark.png'),
   positionStyle: PositionStyle.SPHERE,
   positionBase: [0, 100, 0],
-  positionSphereRadiusBase: 10,
+  positionSphereRadiusBase: 2,
   velocityStyle: VelocityStyle.EXPLODE,
-  velocityExplodeSpeedBase: 90,
+  velocityExplodeSpeedBase: 10,
   velocityExplodeSpeedSpread: 10,
   colorTween: new TweenVEC3([0.4, 0.8, 1.0], [[0, 1, 1], [0, 1, 0.6], [0.8, 1, 0.6]]),
-  sizeTween: new TweenNumber([0.5, 0.7, 1.3], [5, 40, 1]),
+  sizeTween: new TweenNumber([0.5, 0.7, 1.3], [2, 3, 1]),
   opacityTween: new TweenNumber([0.2, 0.7, 2.5], [0.75, 1, 0]),
   accelerationBase: [0, -80, 0],
   particlesPerSecond: 3000,
   particleDeathAge: 2.5,
-  emitterDeathAge: 0.2
+  emitterDeathAge: 600.0
 };
 
 export const Candle: Partial<ParticlesOptions> = {
   texture: await gfx3TextureManager.loadTexture('./textures/smokeparticle.png'),
   positionStyle: PositionStyle.SPHERE,
   positionBase: [0, 5, 0],
-  positionSphereRadiusBase: 2,
+  positionSphereRadiusBase: 1,
   velocityStyle: VelocityStyle.CLASSIC,
   velocityBase: [0, 30, 0],
   velocitySpread: [20, 0, 20],
-  colorTween: new TweenVEC3([0.5, 1.0], [[0.02, 1, 0.5], [0.05, 1, 0]]),
-  sizeBase: 1,
-  sizeSpread: 3,
-  sizeTween: new TweenNumber([0, 0.3, 1.2], [20, 150, 1]),
+  colorTween: new TweenVEC3([0.5, 1.0], [[1, 0, 0], [0, 1, 0]]),
+  sizeTween: new TweenNumber([0, 0.3, 1.2], [2, 6, 2]),
   opacityTween: new TweenNumber([0.9, 1.5], [1, 0]),
   particleDeathAge: 1.5,
   emitterDeathAge: 600.0

@@ -164,8 +164,7 @@ async function CREATE_DUCK() {
   await mesh.loadFromFile('./samples/viewer/duck.jsm');
   mesh.setMaterial(new Gfx3Material({
     texture: await gfx3TextureManager.loadTexture('./samples/viewer/duck.png'),
-    lightning: true,
-    specular: [1.0, 1.0, 1.0, 50.0]
+    lightning: true
   }));
 
   return mesh;

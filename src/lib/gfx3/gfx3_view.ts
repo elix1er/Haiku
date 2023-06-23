@@ -43,7 +43,7 @@ class Gfx3View {
     this.viewport = { xFactor: 0, yFactor: 0, widthFactor: 1, heightFactor: 1 };
     this.projectionMode = ProjectionMode.PERSPECTIVE;
     this.perspectiveFovy = Math.PI / 4;
-    this.perspectiveNear = 2;
+    this.perspectiveNear = 0.1;
     this.perspectiveFar = 2000;
     this.orthographicSize = 1;
     this.orthographicDepth = 700;

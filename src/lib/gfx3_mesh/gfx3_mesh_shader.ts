@@ -65,9 +65,7 @@ struct MeshMatrices {
   MVPC_MATRIX: mat4x4<f32>,
   M_MATRIX: mat4x4<f32>,
   NORM_MATRIX: mat3x3<f32>,
-}
-
-@group(1) @binding(0) var<uniform> MESH_MATRICES: MeshMatrices;
+};
 
 struct VertexOutput {
   @builtin(position) Position: vec4<f32>,
@@ -78,27 +76,30 @@ struct VertexOutput {
   @location(4) FragBinormal: vec3<f32>
 };
 
+@group(1) @binding(0) var<uniform> MESH_MATRICES: MeshMatrices;
+
 @vertex
 fn main(
-  @location(0) position: vec4<f32>,
-  @location(1) uv: vec2<f32>,
-  @location(2) normal: vec3<f32>,
-  @location(3) tangent: vec3<f32>,
-  @location(4) binormal: vec3<f32>
+  @location(0) Position: vec4<f32>,
+  @location(1) TexUV: vec2<f32>,
+  @location(2) Normal: vec3<f32>,
+  @location(3) Tangent: vec3<f32>,
+  @location(4) Binormal: vec3<f32>
 ) -> VertexOutput {
   var output: VertexOutput;
-  output.Position = MESH_MATRICES.MVPC_MATRIX * position;
-  output.FragPos = vec4(MESH_MATRICES.M_MATRIX * position).xyz;
-  output.FragUV = uv;
-  output.FragNormal = MESH_MATRICES.NORM_MATRIX * normal;
-  output.FragTangent = MESH_MATRICES.NORM_MATRIX * tangent;
-  output.FragBinormal = MESH_MATRICES.NORM_MATRIX * binormal;
+  output.Position = MESH_MATRICES.MVPC_MATRIX * Position;
+  output.FragPos = vec4(MESH_MATRICES.M_MATRIX * Position).xyz;
+  output.FragUV = TexUV;
+  output.FragNormal = MESH_MATRICES.NORM_MATRIX * Normal;
+  output.FragTangent = MESH_MATRICES.NORM_MATRIX * Tangent;
+  output.FragBinormal = MESH_MATRICES.NORM_MATRIX * Binormal;
   return output;
 }`;
 
 export const FRAGMENT_SHADER = `
 struct MaterialParams {
   OPACITY: f32,
+  NORMAL_INTENSITY: f32,
   HAS_TEXTURE: f32,
   HAS_LIGHTNING: f32,
   HAS_NORMAL_MAP: f32,
@@ -124,10 +125,11 @@ struct DirectionnalLight {
 @group(0) @binding(2) var<uniform> POINT_LIGHT1: PointLight;
 @group(0) @binding(3) var<uniform> DIR_LIGHT: DirectionnalLight;
 
-@group(2) @binding(0) var<uniform> MAT_AMBIANT_COLOR: vec3<f32>;
-@group(2) @binding(1) var<uniform> MAT_DIFFUSE_COLOR: vec3<f32>;
-@group(2) @binding(2) var<uniform> MAT_SPECULAR: vec4<f32>;
-@group(2) @binding(3) var<uniform> MAT_PARAMS: MaterialParams;
+@group(2) @binding(0) var<uniform> MAT_EMISSIVE_COLOR: vec3<f32>;
+@group(2) @binding(1) var<uniform> MAT_AMBIANT_COLOR: vec3<f32>;
+@group(2) @binding(2) var<uniform> MAT_DIFFUSE_COLOR: vec3<f32>;
+@group(2) @binding(3) var<uniform> MAT_SPECULAR: vec4<f32>;
+@group(2) @binding(4) var<uniform> MAT_PARAMS: MaterialParams;
 
 @group(3) @binding(0) var Sampler: sampler;
 @group(3) @binding(1) var Texture: texture_2d<f32>;
@@ -137,8 +139,6 @@ struct DirectionnalLight {
 @group(3) @binding(5) var NormTexture: texture_2d<f32>;
 @group(3) @binding(6) var EnvMapSampler: sampler;
 @group(3) @binding(7) var EnvMapTexture: texture_cube<f32>;
-@group(3) @binding(8) var EnvMapSampler2: sampler;
-@group(3) @binding(9) var EnvMapTexture2: texture_2d<f32>;
 
 @fragment
 fn main(
@@ -158,10 +158,11 @@ fn main(
     texel = textureSample(Texture, Sampler, FragUV);
   }
 
-  if(MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
+  if (MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
   {
-    var normalMap = textureSample(NormTexture, NormSampler, FragUV);
-    normal = normalize(normalize(FragTangent) * normalMap.x + normalize(FragBinormal) * normalMap.y + normal * normalMap.z);
+    var normalIntensity = vec4<f32>(MAT_PARAMS.NORMAL_INTENSITY, MAT_PARAMS.NORMAL_INTENSITY, 1, 1);
+    var normalPixel = textureSample(NormTexture, NormSampler, FragUV) * normalIntensity;
+    normal = normalize(normalize(FragTangent) * normalPixel.x + normalize(FragBinormal) * normalPixel.y + normal * normalPixel.z);
   }
 
   if (MAT_PARAMS.HAS_LIGHTNING == 1.0)
@@ -186,22 +187,14 @@ fn main(
     outputColor = texel;
   }
 
-  if(MAT_PARAMS.HAS_ENV_MAP == 1.0)
+  if (MAT_PARAMS.HAS_ENV_MAP == 1.0)
   {
     var viewDir = normalize(CAMERA_POS - FragPos);
     var rvec = normalize(reflect(viewDir, normal));
-
-    if(MAT_PARAMS.HAS_ENV_MAP == 1.0)
-    {
-      var uv = vec2<f32>(atan2(rvec.z, rvec.x) * 0.15915494309189535 + 0.5, asin(clamp(rvec.y, - 1.0, 1.0)) * 0.3183098861837907 + 0.5);
-      outputColor += textureSample(EnvMapTexture2, EnvMapSampler2, uv) * 0.2;
-    }
-    else
-    {
-      outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z));
-    }
+    outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z));
   }
 
+  outputColor += vec4(MAT_EMISSIVE_COLOR, 1.0);
   return vec4(outputColor.rgb, texel.a * MAT_PARAMS.OPACITY);
 }
 
@@ -225,7 +218,7 @@ fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity:
   if (diffuseFactor > 0.0)
   {
     diffuseColor = lightColor * lightIntensity * MAT_DIFFUSE_COLOR * diffuseFactor;
-    if(specularExponent > 0.0)
+    if (specularExponent > 0.0)
     {
       var reflectDir = reflect(lightDir, normal);
       var viewDir = normalize(CAMERA_POS - fragPos);

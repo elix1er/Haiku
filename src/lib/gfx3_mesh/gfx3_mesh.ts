@@ -19,7 +19,7 @@ class Gfx3Mesh extends Gfx3Drawable {
     this.material = new Gfx3Material({});
   }
 
-  static build(coords: Array<number>, texcoords: Array<number>, vertexCount: number, groups?: Array<Group>) {
+  static build(vertexCount: number, coords: Array<number>, texcoords: Array<number>, normals?: Array<number>, groups?: Array<Group>) {
     const finalVertices = new Array<number>();
     const vcoords = new Array<vec3>();
     const vtexs = new Array<vec2>();
@@ -29,11 +29,17 @@ class Gfx3Mesh extends Gfx3Drawable {
     const vbnorms = new Array<vec3>();
     const vnormsByGroup = new Array<Array<vec3>>();
     const vtangsByGroup = new Array<Array<vec3>>();
+    const indexStride = normals ? 3 : 2;
 
     if (!groups) {
       const indices = [];
       for (let i = 0; i < vertexCount; i++) {
-        indices.push(i, i);
+        if (normals) {
+          indices.push(i, i, i);
+        }
+        else {
+          indices.push(i, i);
+        }        
       }
 
       groups = [{ id: 0, indices: indices, vertexCount: vertexCount, smooth: false }];
@@ -45,13 +51,13 @@ class Gfx3Mesh extends Gfx3Drawable {
       vtangsByGroup[group.id] = [];
 
       for (let j = 0; j < group.vertexCount; j += 3, n += 3) {
-        const cid0 = group.indices[(j + 0) * 2 + 0];
-        const cid1 = group.indices[(j + 1) * 2 + 0];
-        const cid2 = group.indices[(j + 2) * 2 + 0];
+        const cid0 = group.indices[(j + 0) * indexStride + 0];
+        const cid1 = group.indices[(j + 1) * indexStride + 0];
+        const cid2 = group.indices[(j + 2) * indexStride + 0];
 
-        const tid0 = group.indices[(j + 0) * 2 + 1];
-        const tid1 = group.indices[(j + 1) * 2 + 1];
-        const tid2 = group.indices[(j + 2) * 2 + 1];
+        const tid0 = group.indices[(j + 0) * indexStride + 1];
+        const tid1 = group.indices[(j + 1) * indexStride + 1];
+        const tid2 = group.indices[(j + 2) * indexStride + 1];
 
         vcoords[n + 0] = [coords[cid0 * 3 + 0], coords[cid0 * 3 + 1], coords[cid0 * 3 + 2]];
         vcoords[n + 1] = [coords[cid1 * 3 + 0], coords[cid1 * 3 + 1], coords[cid1 * 3 + 2]];
@@ -67,15 +73,25 @@ class Gfx3Mesh extends Gfx3Drawable {
         const uv01 = UT.VEC2_SUBSTRACT(vtexs[n + 1], vtexs[n + 0]);
         const uv02 = UT.VEC2_SUBSTRACT(vtexs[n + 2], vtexs[n + 0]);
 
-        const fnorm = UT.VEC3_NORMALIZE(UT.VEC3_CROSS(v01, v02));
-        vnorms[n + 0] = fnorm;
-        vnorms[n + 1] = fnorm;
-        vnorms[n + 2] = fnorm;
+        if (normals) {
+          const nid0 = group.indices[(j + 0) * indexStride + 2];
+          const nid1 = group.indices[(j + 1) * indexStride + 2];
+          const nid2 = group.indices[(j + 2) * indexStride + 2];
+          vnorms[n + 0] = [normals[nid0 * 3 + 0], normals[nid0 * 3 + 1], normals[nid0 * 3 + 2]];
+          vnorms[n + 1] = [normals[nid1 * 3 + 0], normals[nid1 * 3 + 1], normals[nid1 * 3 + 2]];
+          vnorms[n + 2] = [normals[nid2 * 3 + 0], normals[nid2 * 3 + 1], normals[nid2 * 3 + 2]];
+        }
+        else {
+          const fnorm = UT.VEC3_NORMALIZE(UT.VEC3_CROSS(v01, v02));
+          vnorms[n + 0] = fnorm;
+          vnorms[n + 1] = fnorm;
+          vnorms[n + 2] = fnorm;
+        }
 
         if (group.smooth) {
-          vnormsByGroup[group.id][cid0] = vnormsByGroup[group.id][cid0] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid0], fnorm) : fnorm;
-          vnormsByGroup[group.id][cid1] = vnormsByGroup[group.id][cid1] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid1], fnorm) : fnorm;
-          vnormsByGroup[group.id][cid2] = vnormsByGroup[group.id][cid2] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid2], fnorm) : fnorm;
+          vnormsByGroup[group.id][cid0] = vnormsByGroup[group.id][cid0] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid0], vnorms[n + 0]) : vnorms[n + 0];
+          vnormsByGroup[group.id][cid1] = vnormsByGroup[group.id][cid1] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid1], vnorms[n + 1]) : vnorms[n + 1];
+          vnormsByGroup[group.id][cid2] = vnormsByGroup[group.id][cid2] ? UT.VEC3_ADD(vnormsByGroup[group.id][cid2], vnorms[n + 2]) : vnorms[n + 2];
         }
 
         const ftang: vec3 = [0, 0, 0];
@@ -99,7 +115,7 @@ class Gfx3Mesh extends Gfx3Drawable {
       const group = groups[i];
 
       for (let j = 0; j < group.vertexCount; j++, n++) {
-        const cid = group.indices[j * 2 + 0];
+        const cid = group.indices[j * indexStride + 0];
 
         if (group.smooth) {
           vnorms[n] = UT.VEC3_NORMALIZE(vnormsByGroup[group.id][cid]);

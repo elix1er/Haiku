@@ -56,12 +56,12 @@ struct VertexOutput {
 
 @vertex
 fn main(
-  @location(0) position: vec4<f32>,
+  @location(0) Position: vec4<f32>,
 ) -> VertexOutput {
   var output : VertexOutput;
-  output.Position = position;
+  output.Position = Position;
   output.Position.z = 1;
-  output.ClipPos = position;
+  output.ClipPos = Position;
   return output;
 }`;
 

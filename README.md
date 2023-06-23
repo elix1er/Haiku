@@ -76,7 +76,6 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Add normal intensity
 - Add emissive
 - Vertex Light (Owner: me, Delay: N/A)
-- Add 2D physics sample (sonic like)
 - Add jumps in fps sample
 
 ## Second todo-list

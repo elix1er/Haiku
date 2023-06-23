@@ -8,6 +8,7 @@ class OBJObject {
   name: string;
   coords: Array<number>;
   texcoords: Array<number>;
+  normals: Array<number>;
   groups: Array<Group>;
   materialName: string;
   vertexCount: number;
@@ -16,6 +17,7 @@ class OBJObject {
     this.name = '';
     this.coords = new Array<number>();
     this.texcoords = new Array<number>();
+    this.normals = new Array<number>();
     this.groups = new Array<Group>();
     this.materialName = '';
     this.vertexCount = 0;
@@ -165,6 +167,11 @@ class Gfx3MeshOBJ extends Gfx3Mesh {
         currentObject.texcoords.push(t[0], t[1]);
       }
 
+      if (line.startsWith('vn ')) {
+        const c = UT.VEC3_PARSE(line.substring(3));
+        currentObject.normals.push(c[0], c[1], c[2]);
+      }
+
       if (line.startsWith('s ')) {
         const arg = parseInt(line.substring(2));
         const group = currentObject.groups.find(g => g.id == arg);
@@ -206,10 +213,11 @@ class Gfx3MeshOBJ extends Gfx3Mesh {
         mesh.setMaterial(material);
       }
 
-      const vertices = Gfx3Mesh.build(object.coords, object.texcoords, object.vertexCount, object.groups);
+      const normals = object.normals.length > 0 ? object.normals : undefined; // normals are optionnals
+      const vertices = Gfx3Mesh.build(object.vertexCount, object.coords, object.texcoords, normals, object.groups);
 
       mesh.beginVertices(object.vertexCount);
-      mesh.setVertices(vertices, object.vertexCount);
+      mesh.setVertices(vertices);
       mesh.endVertices();
 
       this.meshes.set(object.name, mesh);

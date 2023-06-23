@@ -61,8 +61,8 @@ class Particle {
     this.position = UT.VEC3_ADD(this.position, UT.VEC3_SCALE(this.velocity, ts / 1000.0));
     this.velocity = UT.VEC3_ADD(this.velocity, UT.VEC3_SCALE(this.acceleration, ts / 1000.0));
 
-    this.angle += this.angleVelocity * UT.DEG_TO_RAD_RATIO * ts / 1000.0;
-    this.angleVelocity += this.angleAcceleration * UT.DEG_TO_RAD_RATIO * ts / 1000.0;
+    this.angle += this.angleVelocity * UT.DEG_TO_RAD_RATIO * (ts / 1000.0);
+    this.angleVelocity += this.angleAcceleration * UT.DEG_TO_RAD_RATIO * (ts / 1000.0);
 
     this.age += ts / 1000.0;
 
@@ -71,8 +71,7 @@ class Particle {
     }
 
     if (!this.colorTween.isEmpty()) {
-      const colorHSL = this.colorTween.interpolate(this.age);
-      this.color = UT.VEC3_HSL2RGB(colorHSL[0], colorHSL[1], colorHSL[2]);
+      this.color = this.colorTween.interpolate(this.age);
     }
 
     if (!this.opacityTween.isEmpty()) {
@@ -112,7 +111,7 @@ interface ParticlesOptions {
   angleAccelerationSpread: number;
   particleDeathAge: number;
   particlesPerSecond: number;
-  particleCount: number;
+  particleQuantity: number;
   emitterDeathAge: number;
 };
 
@@ -149,7 +148,8 @@ class Gfx3Particles extends Gfx3Drawable {
   angleAccelerationSpread: number;
   particleDeathAge: number;
   particlesPerSecond: number;
-  particleCount: number;
+  particleQuantity: number;
+  particleAlivedCount: number;
   particleArray: Array<Particle>;
   emitterDeathAge: number;
   emitterAge: number;
@@ -193,86 +193,93 @@ class Gfx3Particles extends Gfx3Drawable {
     this.angleAccelerationSpread = options.angleAccelerationSpread ?? 0.0;
     this.particleDeathAge = options.particleDeathAge ?? 1.0;
     this.particlesPerSecond = options.particlesPerSecond ?? 30;
-    this.particleCount = options.particleCount ?? 100;
+    this.particleQuantity = options.particleQuantity ?? 100;
+    this.particleAlivedCount = 0;
     this.particleArray = [];
     this.emitterDeathAge = options.emitterDeathAge ?? 60;
     this.emitterAge = 0.0;
     this.emitterAlive = true;
 
-    for (let i = 0; i < this.particleCount; i++) {
+    for (let i = 0; i < this.particleQuantity; i++) {
       this.particleArray[i] = this.createParticle();
     }
   }
 
-  draw(): void {
-    gfx3ParticlesRenderer.drawParticles(this);
+  update(ts: number): void {
+    this.updateLifeCycle(ts);
+    this.updateGeometry(ts);
   }
 
-  update(ts: number) {
+  updateLifeCycle(ts: number): void {
     const recycleIndices = [];
 
-    this.beginVertices(this.particleCount * 6);
-
-    for (let i = 0; i < this.particleCount; i++) {
+    for (let i = 0; i < this.particleQuantity; i++) {
       if (this.particleArray[i].alive) {
         this.particleArray[i].update(ts);
 
         if (this.particleArray[i].age > this.particleDeathAge) { // check if particle should expire; could also use: death by size<0 or alpha < 0.
           this.particleArray[i].alive = 0.0;
+          this.particleAlivedCount--;
           recycleIndices.push(i);
-        }
-
-        const pos = this.particleArray[i].position;
-        const color = this.particleArray[i].color;
-        const opacity = this.particleArray[i].opacity;
-        const size = this.particleArray[i].size;
-        const angle = this.particleArray[i].angle;
-        const alive = this.particleArray[i].alive;
-
-        for (let k = 0; k < 6; k++) {
-          const v = UT.VEC3_ADD(pos, PARTICULES_PTS[PARTICULES_IDX[k]]);
-          const uv = PARTICULES_UV[PARTICULES_IDX[k]];
-          this.defineVertex(v[0], v[1], v[2], uv[0], uv[1], color[0], color[1], color[2], opacity, size, angle, alive);
         }
       }
     }
 
     if (!this.emitterAlive) { // check if particle emitter is still running
-      this.endVertices();
       return;
     }
 
     if (this.emitterAge < this.particleDeathAge) { // if no particles have died yet, then there are still particles to activate
       let startIndex = Math.round(this.particlesPerSecond * (this.emitterAge + 0)); // determine indices of particles to activate
       let endIndex = Math.round(this.particlesPerSecond * (this.emitterAge + ts / 1000.0));
-      if (endIndex > this.particleCount) {
-        endIndex = this.particleCount;
+      if (endIndex > this.particleQuantity) {
+        endIndex = this.particleQuantity;
       }
 
       for (let i = startIndex; i < endIndex; i++) {
         this.particleArray[i].alive = 1.0;
+        this.particleAlivedCount++;
       }
     }
 
-    for (let j = 0; j < recycleIndices.length; j++) { // if any particles have died while the emitter is still running, we imediately recycle them
-      const i = recycleIndices[j];
-      this.particleArray[i] = this.createParticle();
-      this.particleArray[i].alive = 1.0; // activate right away
+    for (let i = 0; i < recycleIndices.length; i++) { // if any particles have died while the emitter is still running, we imediately recycle them
+      const idx = recycleIndices[i];
+      this.particleArray[idx] = this.createParticle();
+      this.particleArray[idx].alive = 1.0; // activate right away
+      this.particleAlivedCount++;
+    }
 
-      for (let k = 0; k < 6; k++) {
-        const v = UT.VEC3_ADD(this.particleArray[i].position, PARTICULES_PTS[PARTICULES_IDX[k]]);
-        this.vertices[i * SHADER_VERTEX_ATTR_COUNT * 6 + SHADER_VERTEX_ATTR_COUNT * k + 0] = v[0];
-        this.vertices[i * SHADER_VERTEX_ATTR_COUNT * 6 + SHADER_VERTEX_ATTR_COUNT * k + 1] = v[1];
-        this.vertices[i * SHADER_VERTEX_ATTR_COUNT * 6 + SHADER_VERTEX_ATTR_COUNT * k + 2] = v[2];
+    this.emitterAge += ts / 1000.0;
+    if (this.emitterAge > this.emitterDeathAge) { // stop emitter ?
+      this.emitterAlive = false;
+    }
+  }
+
+  updateGeometry(ts: number): void {
+    this.beginVertices(this.particleAlivedCount * 6);
+
+    for (let i = 0; i < this.particleQuantity; i++) {
+      if (this.particleArray[i].alive) {
+        const pos = this.particleArray[i].position;
+        const color = this.particleArray[i].color;
+        const size = this.particleArray[i].size;
+        const opacity = this.particleArray[i].opacity;
+        const angle = this.particleArray[i].angle;
+        const alive = this.particleArray[i].alive;
+
+        for (let j = 0; j < 6; j++) {
+          const v = PARTICULES_PTS[PARTICULES_IDX[j]];
+          const uv = PARTICULES_UV[PARTICULES_IDX[j]];
+          this.defineVertex(v[0], v[1], v[2], pos[0], pos[1], pos[2], uv[0], uv[1], color[0], color[1], color[2], size, opacity, angle, alive);
+        }
       }
     }
 
     this.endVertices();
+  }
 
-    this.emitterAge += ts / 1000.0; 
-    if (this.emitterAge > this.emitterDeathAge) { // stop emitter ?
-      this.emitterAlive = false;
-    }
+  draw(): void {
+    gfx3ParticlesRenderer.drawParticles(this);
   }
 
   createParticle(): Particle {

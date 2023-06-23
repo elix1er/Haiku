@@ -1,5 +1,7 @@
+import { inputManager } from '../../lib/input/input_manager';
 import { gfx3TextureManager } from '../../lib/gfx3/gfx3_texture_manager';
 import { gfx3MeshRenderer } from '../../lib/gfx3_mesh/gfx3_mesh_renderer';
+import { UT } from '../../lib/core/utils';
 import { Screen } from '../../lib/screen/screen';
 import { Gfx3MeshJSM } from '../../lib/gfx3_mesh/gfx3_mesh_jsm';
 import { Gfx3Material } from '../../lib/gfx3_mesh/gfx3_mesh_material';
@@ -7,6 +9,7 @@ import { Gfx3Camera } from '../../lib/gfx3_camera/gfx3_camera';
 import { Gfx3Particles } from '../../lib/gfx3_particules/gfx3_particles';
 import { Candle, Firework } from '../../lib/gfx3_particules/gfx3_particles_params';
 // ---------------------------------------------------------------------------------------
+const CAMERA_SPEED = 1;
 
 class ParticlesScreen extends Screen {
   constructor() {
@@ -27,6 +30,7 @@ class ParticlesScreen extends Screen {
 
   async onEnter() {
     this.camera.setPosition(0, 40, 0);
+    this.camera.setRotation(0.15, 0, 0);
 
     this.skySphere = new Gfx3MeshJSM();
     await this.skySphere.loadFromFile('./samples/particles/sky_sphere.jsm');
@@ -45,15 +49,13 @@ class ParticlesScreen extends Screen {
     }));
 
     this.particles0 = new Gfx3Particles(Object.assign(Candle, {
-      positionBase: [0, 18, -100],
-      sizeBase: 6.0,
-      particleCount: 100
+      positionBase: [0, 0, -100],
+      particleQuantity: 100
     }));
 
     this.particles1 = new Gfx3Particles(Object.assign(Firework, {
-      positionBase: [0, 18, -100],
-      sizeBase: 8.0,
-      particleCount: 100
+      positionBase: [0, 10, -100],
+      particleQuantity: 100
     }));
 
     document.addEventListener('mousedown', this.handleMouseDownCb);
@@ -68,6 +70,27 @@ class ParticlesScreen extends Screen {
   }
 
   update(ts) {
+    const cameraAxies = this.camera.getLocalAxies();
+    let move = UT.VEC3_CREATE(0, 0, 0);
+
+    if (inputManager.isActiveAction('LEFT')) {
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[0], -CAMERA_SPEED));
+    }
+
+    if (inputManager.isActiveAction('RIGHT')) {
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[0], +CAMERA_SPEED));
+    }
+
+    if (inputManager.isActiveAction('UP')) {
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[2], -CAMERA_SPEED));
+    }
+
+    if (inputManager.isActiveAction('DOWN')) {
+      move = UT.VEC3_ADD(move, UT.VEC3_SCALE(cameraAxies[2], +CAMERA_SPEED));
+    }
+
+    this.camera.translate(move[0], move[1], move[2]);
+
     this.floor.rotate(0, ts * 0.001, 0);
     this.floor.update(ts);
     this.skySphere.update(ts);

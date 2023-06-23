@@ -1244,6 +1244,7 @@ class TweenAbstract<T> {
   interpolate(t: number): T {
     let i = 0;
     let n = this.times.length;
+
     while (i < n && t > this.times[i]) i++;
     if (i == 0) return this.values[0];
     if (i == n) return this.values[n - 1];

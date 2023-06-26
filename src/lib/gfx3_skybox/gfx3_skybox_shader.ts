@@ -67,8 +67,8 @@ fn main(
 
 export const FRAGMENT_SHADER = `
 @group(0) @binding(0) var<uniform> VPC_INVERSE_MATRIX: mat4x4<f32>;
-@group(1) @binding(0) var CubeMapSampler: sampler;
-@group(1) @binding(1) var CubeMapTexture: texture_cube<f32>;
+@group(1) @binding(0) var CUBEMAP_SAMPLER: sampler;
+@group(1) @binding(1) var CUBEMAP_TEXTURE: texture_cube<f32>;
 
 @fragment
 fn main(
@@ -76,6 +76,5 @@ fn main(
   @location(0) ClipPos: vec4<f32>
 ) -> @location(0) vec4<f32> {
   var t = VPC_INVERSE_MATRIX * ClipPos;
-  var textureColor:vec4<f32> = (textureSample(CubeMapTexture, CubeMapSampler, normalize(t.xyz / t.w)));
-  return textureColor;
+  return textureSample(CUBEMAP_TEXTURE, CUBEMAP_SAMPLER, normalize(t.xyz / t.w));
 }`;

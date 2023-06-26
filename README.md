@@ -4,18 +4,16 @@
 
 ![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.0-blue)
 
-**WebStationX** is a typescript 2D/3D video game engine based on WebGPU.   
-We provide a simple, pragmatic and lightweight development kit to build web games with very high performance.  
+**Haiku** is video game engine based on WebGPU written in Typescript.   
+We provide a simple, pragmatic and lightweight development kit to build web games with high performance.  
 Our priority is to eliminate black boxes and giving a maximum control to the user.  
 Important note: This engine comes with a dozen of diverse and varied examples.
 
 ## General features
-- 👾 2D Common - Sprite, tilemap with animations
-- 💁 2D Format - Custom json-like
-- 🧊 3D Common - Debug shapes, mesh, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover, particules system
-- 💁 3D Format - Custom json-like, obj-wavefront
-- 🌞 3D Light - Directional light, multiple point lights, vertex lighting
-- 💥 3D VFX - Phong, normal-map, env-map, specularity-map
+- 👾 2D - Sprite, tilemap with animations
+- 🧊 3D - Debug shapes, mesh, sprite, billboard, skybox, walkmesh, multiple-camera, ray, nav-mesh, mover, particules
+- 💥 VFX - Phong, displacement-map, normal-map, env-map, specularity-map, texture scrolling
+- 🌞 Light - Directional light, multiple point lights, vertex lighting
 - 🎮 Input - Action mapper for keyboard and gamepad
 - 🚔 Pathfinder - A* for 2D & 3D
 - 📺 Screen - Handle different screens of your game
@@ -23,6 +21,7 @@ Important note: This engine comes with a dozen of diverse and varied examples.
 - 🔊 Sound - Sound manager built on the Web Audio API
 - 🌳 Tree - Binary Space Partition for 2D & 3D
 - 🎨 UI - Component architecture to keep project clean and scalable
+- 🌆 DNA - Development normalized architecture
 
 ## Getting started
 You need to install [nodejs](https://nodejs.org/en/download/). 
@@ -38,7 +37,7 @@ Clone this repo, go to the root of project and launch the build with the followi
 ```
 
 ## How to integrate your 3D models ?
-The [WebStation Blender Exporter](https://github.com/jay19240/WebStationX-Blender-Exporter) allows you to export your models in compatible formats!
+The [Haiku Blender Exporter](https://github.com/jay19240/Haiku-Blender-Exporter) allows you to export your models in compatible formats!
 Important note: The Blender coordinate system and the engine don't match, this is the rule to translate:  
 ```
 blender = engine
@@ -71,10 +70,6 @@ If you have a suggestion that would make this better, please fork the repo and c
 > *As WebGPU is not released, please enable `chrome://flags/#enable-unsafe-webgpu` or `edge://flags/#enable-unsafe-webgpu`*
 
 ## First todo-list
-- Texture Scroll UV (Owner: Me, Delay: 1 month)
-- Texture Frames (JSM/JAM) (Owner: me, Delay: 1 month)
-- Add normal intensity
-- Add emissive
 - Vertex Light (Owner: me, Delay: N/A)
 - Add jumps in fps sample
 
@@ -83,4 +78,4 @@ If you have a suggestion that would make this better, please fork the repo and c
 - Add triple-triad demo (Work: In Progress, Delay: 1 month)
 
 ## License 
-WebStationX engine is released under the [MIT](https://opensource.org/licenses/MIT) license. 
+Haiku engine is released under the [MIT](https://opensource.org/licenses/MIT) license. 

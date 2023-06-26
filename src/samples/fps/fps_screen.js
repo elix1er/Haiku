@@ -46,7 +46,6 @@ class FPSScreen extends Screen {
   }
 
   update(ts) {
-    const mts = ts / 1000;
     const cameraAxies = this.camera.getLocalAxies();
     let moving = false;
     let dir = [0, 0];
@@ -75,13 +74,13 @@ class FPSScreen extends Screen {
       moving = true;
     }
 
-    const my = this.cameraGravitySpeed * -1 * mts;
+    const my = this.cameraGravitySpeed * -1 * (ts / 1000);
 
     if (moving) {
       this.cameraSpeed = this.cameraSpeed < SPEED_MAX ? this.cameraSpeed + ACCEL_RATE : SPEED_MAX;
       const ndir = UT.VEC2_NORMALIZE(dir);
-      const mx = ndir[0] * this.cameraSpeed * mts;
-      const mz = ndir[1] * this.cameraSpeed * mts;      
+      const mx = ndir[0] * this.cameraSpeed * (ts / 1000);
+      const mz = ndir[1] * this.cameraSpeed * (ts / 1000);      
       this.camera.move(mx, my, mz);
     }
     else {

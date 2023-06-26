@@ -138,6 +138,10 @@ class Gfx3Mesh extends Gfx3Drawable {
     super.delete();
   }
 
+  update(ts: number): void {
+    this.material.update(ts);
+  }
+
   draw(): void {
     gfx3MeshRenderer.drawMesh(this);
   }

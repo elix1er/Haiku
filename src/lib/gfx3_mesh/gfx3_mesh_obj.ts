@@ -106,6 +106,11 @@ class Gfx3MeshOBJ extends Gfx3Mesh {
         curMat.setSpecularity(s);
       }
 
+      if (line.startsWith('Ke ')) {
+        const e = UT.VEC3_PARSE(line.substring(3));
+        curMat.setEmissive(e[0], e[1], e[2]);
+      }
+
       if (line.startsWith('map_Kd ')) {
         const infos = line.substring(7);
         curMat.setTexture(await gfx3TextureManager.loadTexture(path + infos));
@@ -118,16 +123,16 @@ class Gfx3MeshOBJ extends Gfx3Mesh {
 
       if (line.startsWith('map_Bump ')) {
         const infos = line.split(' ');
-        infos.shift();
+        let i = 0;
 
-        while (infos[0][0] == '-') {
-          const flag = infos[0].substring(1);
-          infos.shift();
+        while (infos[i][0] == '-') {
+          const flag = infos[i].substring(1);
 
           if (flag == 'bm') {
-            /* curMat.normalIntensity = parseFloat(infos[0]); */
-            infos.shift();
+            curMat.setNormalIntensity(parseFloat(infos[i + 1]));
           }
+
+          i++;
         }
 
         const url = infos.join(' ');
@@ -194,11 +199,7 @@ class Gfx3MeshOBJ extends Gfx3Mesh {
 
         for (let i = 0; i < 3; i++) {
           const ids = a[i].split('/');
-
-          for (const id of ids) {
-            currentGroup.indices.push(parseInt(id) - 1);
-          }
-
+          ids.forEach(id => currentGroup.indices.push(parseInt(id) - 1));
           currentGroup.vertexCount++;
           currentObject.vertexCount++;
         }

@@ -5,7 +5,7 @@ enum SizeModeEnum {
   FULL = 3 // Full page
 };
 
-class CoreManager {
+class AppManager {
   container: HTMLElement;
   resWidth: number;
   resHeight: number;
@@ -49,6 +49,6 @@ class CoreManager {
 }
 
 export type { SizeModeEnum };
-const coreManager = new CoreManager();
-export { CoreManager };
-export { coreManager };
+const appManager = new AppManager();
+export { AppManager };
+export { appManager };

@@ -100,11 +100,20 @@ export const FRAGMENT_SHADER = `
 struct MaterialParams {
   OPACITY: f32,
   NORMAL_INTENSITY: f32,
-  HAS_TEXTURE: f32,
   HAS_LIGHTNING: f32,
+  HAS_TEXTURE: f32,
+  HAS_DISPLACEMENT_MAP: f32,
+  DISPLACEMENT_MAP_FACTOR: f32,
+  HAS_SPECULARITY_MAP: f32,
   HAS_NORMAL_MAP: f32,
-  HAS_ENV_MAP: f32,
-  HAS_SPECULARITY_MAP: f32
+  HAS_ENV_MAP: f32  
+}
+
+struct MaterialColors {
+  EMISSIVE: vec3<f32>,
+  AMBIANT: vec3<f32>,
+  DIFFUSE: vec3<f32>,
+  SPECULAR: vec4<f32>
 }
 
 struct PointLight {
@@ -125,20 +134,21 @@ struct DirectionnalLight {
 @group(0) @binding(2) var<uniform> POINT_LIGHT1: PointLight;
 @group(0) @binding(3) var<uniform> DIR_LIGHT: DirectionnalLight;
 
-@group(2) @binding(0) var<uniform> MAT_EMISSIVE_COLOR: vec3<f32>;
-@group(2) @binding(1) var<uniform> MAT_AMBIANT_COLOR: vec3<f32>;
-@group(2) @binding(2) var<uniform> MAT_DIFFUSE_COLOR: vec3<f32>;
-@group(2) @binding(3) var<uniform> MAT_SPECULAR: vec4<f32>;
-@group(2) @binding(4) var<uniform> MAT_PARAMS: MaterialParams;
+@group(2) @binding(0) var<uniform> MAT_COLORS: MaterialColors;
+@group(2) @binding(1) var<uniform> MAT_PARAMS: MaterialParams;
+@group(2) @binding(2) var<uniform> MAT_TEXTURE_SCROLL: vec2<f32>;
+@group(2) @binding(3) var<uniform> MAT_DISPLACEMENT_SCROLL: vec2<f32>;
 
-@group(3) @binding(0) var Sampler: sampler;
-@group(3) @binding(1) var Texture: texture_2d<f32>;
-@group(3) @binding(2) var SpecularitySampler: sampler;
-@group(3) @binding(3) var SpecularityTexture: texture_2d<f32>;
-@group(3) @binding(4) var NormSampler: sampler;
-@group(3) @binding(5) var NormTexture: texture_2d<f32>;
-@group(3) @binding(6) var EnvMapSampler: sampler;
-@group(3) @binding(7) var EnvMapTexture: texture_cube<f32>;
+@group(3) @binding(0) var SAMPLER: sampler;
+@group(3) @binding(1) var TEXTURE: texture_2d<f32>;
+@group(3) @binding(2) var DISPLACEMENT_SAMPLER: sampler;
+@group(3) @binding(3) var DISPLACEMENT_TEXTURE: texture_2d<f32>;
+@group(3) @binding(4) var SPECULARITY_SAMPLER: sampler;
+@group(3) @binding(5) var SPECULARITY_TEXTURE: texture_2d<f32>;
+@group(3) @binding(6) var NORM_SAMPLER: sampler;
+@group(3) @binding(7) var NORM_TEXTURE: texture_2d<f32>;
+@group(3) @binding(8) var ENV_MAP_SAMPLER: sampler;
+@group(3) @binding(9) var ENV_MAP_TEXTURE: texture_cube<f32>;
 
 @fragment
 fn main(
@@ -149,37 +159,42 @@ fn main(
   @location(3) FragTangent: vec3<f32>,
   @location(4) FragBinormal: vec3<f32>
 ) -> @location(0) vec4<f32> {
-  var normal: vec3<f32> = normalize(FragNormal);
+  var pos = FragPos;
+  var normal = normalize(FragNormal);
   var outputColor = vec4(0.0, 0.0, 0.0, 1.0);
+  var textureUV = MAT_TEXTURE_SCROLL + FragUV;
   var texel = vec4(1.0, 1.0, 1.0, 1.0);
+
+  if (MAT_PARAMS.HAS_DISPLACEMENT_MAP == 1.0)
+  {
+    textureUV += CalcDisplacementMap(FragUV);
+  }
 
   if (MAT_PARAMS.HAS_TEXTURE == 1.0)
   {
-    texel = textureSample(Texture, Sampler, FragUV);
+    texel = textureSample(TEXTURE, SAMPLER, textureUV);
   }
 
   if (MAT_PARAMS.HAS_NORMAL_MAP == 1.0)
   {
-    var normalIntensity = vec4<f32>(MAT_PARAMS.NORMAL_INTENSITY, MAT_PARAMS.NORMAL_INTENSITY, 1, 1);
-    var normalPixel = textureSample(NormTexture, NormSampler, FragUV) * normalIntensity;
-    normal = normalize(normalize(FragTangent) * normalPixel.x + normalize(FragBinormal) * normalPixel.y + normal * normalPixel.z);
+    normal = CalcNormalMap(normal, FragTangent, FragBinormal, textureUV);
   }
 
   if (MAT_PARAMS.HAS_LIGHTNING == 1.0)
   {
     if (DIR_LIGHT.INTENSITY > 0.0)
     {
-      outputColor += CalcDirLight(DIR_LIGHT.DIR, DIR_LIGHT.INTENSITY, DIR_LIGHT.COLOR, normal, FragPos, FragUV) * texel;
+      outputColor += CalcDirLight(DIR_LIGHT.DIR, DIR_LIGHT.INTENSITY, DIR_LIGHT.COLOR, normal, pos, textureUV) * texel;
     }
 
     if (POINT_LIGHT0.INTENSITY > 0.0)
     {
-      outputColor += CalcPointLight(POINT_LIGHT0.POSITION, POINT_LIGHT0.INTENSITY, POINT_LIGHT0.COLOR, POINT_LIGHT0.ATTEN, normal, FragPos, FragUV) * texel;
+      outputColor += CalcPointLight(POINT_LIGHT0.POSITION, POINT_LIGHT0.INTENSITY, POINT_LIGHT0.COLOR, POINT_LIGHT0.ATTEN, normal, pos, textureUV) * texel;
     }
 
     if (POINT_LIGHT1.INTENSITY > 0.0)
     {
-      outputColor += CalcPointLight(POINT_LIGHT1.POSITION, POINT_LIGHT1.INTENSITY, POINT_LIGHT1.COLOR, POINT_LIGHT1.ATTEN, normal, FragPos, FragUV) * texel;
+      outputColor += CalcPointLight(POINT_LIGHT1.POSITION, POINT_LIGHT1.INTENSITY, POINT_LIGHT1.COLOR, POINT_LIGHT1.ATTEN, normal, pos, textureUV) * texel;
     }
   }
   else
@@ -189,35 +204,68 @@ fn main(
 
   if (MAT_PARAMS.HAS_ENV_MAP == 1.0)
   {
-    var viewDir = normalize(CAMERA_POS - FragPos);
-    var rvec = normalize(reflect(viewDir, normal));
-    outputColor += textureSample(EnvMapTexture, EnvMapSampler, vec3<f32>(rvec.x, rvec.y, rvec.z));
+    outputColor += CalcEnvMap(normal, pos);
   }
 
-  outputColor += vec4(MAT_EMISSIVE_COLOR, 1.0);
+  outputColor += vec4(MAT_COLORS.EMISSIVE, 1.0);
   return vec4(outputColor.rgb, texel.a * MAT_PARAMS.OPACITY);
+}
+
+// *****************************************************************************************************************
+// CALC NORMAL MAP
+// *****************************************************************************************************************
+
+fn CalcNormalMap(normal: vec3<f32>, fragTangent: vec3<f32>, fragBinormal: vec3<f32>, textureUV: vec2<f32>) -> vec3<f32>
+{
+  var normalIntensity = vec4<f32>(MAT_PARAMS.NORMAL_INTENSITY, MAT_PARAMS.NORMAL_INTENSITY, 1, 1);
+  var normalPixel = textureSample(NORM_TEXTURE, NORM_SAMPLER, textureUV) * normalIntensity;
+  return normalize(normalize(fragTangent) * normalPixel.x + normalize(fragBinormal) * normalPixel.y + normal * normalPixel.z);
+}
+
+// *****************************************************************************************************************
+// CALC ENV MAP
+// *****************************************************************************************************************
+
+fn CalcEnvMap(normal: vec3<f32>, fragPos: vec3<f32>) -> vec4<f32>
+{
+  var viewDir = normalize(CAMERA_POS - fragPos);
+  var rvec = normalize(reflect(viewDir, normal));
+  return textureSample(ENV_MAP_TEXTURE, ENV_MAP_SAMPLER, vec3<f32>(rvec.x, rvec.y, rvec.z));
+}
+
+// *****************************************************************************************************************
+// CALC DISPLACEMENT MAP
+// *****************************************************************************************************************
+
+fn CalcDisplacementMap(fragUV: vec2<f32>) -> vec2<f32>
+{
+  var uv = vec2<f32>(0.0, 0.0);
+  var greyScale = textureSample(DISPLACEMENT_TEXTURE, DISPLACEMENT_SAMPLER, MAT_DISPLACEMENT_SCROLL + fragUV);
+  uv.x = clamp(MAT_PARAMS.DISPLACEMENT_MAP_FACTOR * ((greyScale.r * 2) - 1), 0.0, 1.0);
+  uv.y = clamp(MAT_PARAMS.DISPLACEMENT_MAP_FACTOR * ((greyScale.r * 2) - 1), 0.0, 1.0);
+  return uv;
 }
 
 // *****************************************************************************************************************
 // CALC LIGHT INTERNAL
 // *****************************************************************************************************************
 
-fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity: f32, normal: vec3<f32>, fragPos: vec3<f32>, fragUV: vec2<f32>) -> vec4<f32>
+fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity: f32, normal: vec3<f32>, fragPos: vec3<f32>, textureUV: vec2<f32>) -> vec4<f32>
 {
-  var ambientColor = lightColor * lightIntensity * MAT_AMBIANT_COLOR;
+  var ambientColor = lightColor * lightIntensity * MAT_COLORS.AMBIANT;
   var diffuseColor: vec3<f32> = vec3(0.0, 0.0, 0.0);
   var specularColor: vec3<f32> = vec3(0.0, 0.0, 0.0);
-  var specularExponent = MAT_SPECULAR.a;
+  var specularExponent = MAT_COLORS.SPECULAR.a;
   var diffuseFactor = max(dot(normal, -lightDir), 0.0);
 
   if (MAT_PARAMS.HAS_SPECULARITY_MAP == 1.0)
   {
-    specularExponent = MAT_SPECULAR.a * textureSample(SpecularityTexture, SpecularitySampler, fragUV).r;
+    specularExponent = MAT_COLORS.SPECULAR.a * textureSample(SPECULARITY_TEXTURE, SPECULARITY_SAMPLER, textureUV).r;
   }
 
   if (diffuseFactor > 0.0)
   {
-    diffuseColor = lightColor * lightIntensity * MAT_DIFFUSE_COLOR * diffuseFactor;
+    diffuseColor = lightColor * lightIntensity * MAT_COLORS.DIFFUSE * diffuseFactor;
     if (specularExponent > 0.0)
     {
       var reflectDir = reflect(lightDir, normal);
@@ -226,7 +274,7 @@ fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity:
       if (specularFactor > 0.0)
       {
         specularFactor = pow(specularFactor, specularExponent);
-        specularColor = lightColor * lightIntensity * MAT_SPECULAR.rgb * specularFactor;
+        specularColor = lightColor * lightIntensity * MAT_COLORS.SPECULAR.rgb * specularFactor;
       }
     }
   }
@@ -238,22 +286,22 @@ fn CalcLightInternal(lightDir: vec3<f32>, lightColor: vec3<f32>, lightIntensity:
 // CALC DIR LIGHT
 // *****************************************************************************************************************
 
-fn CalcDirLight(lightDir: vec3<f32>, lightIntensity: f32, lightColor: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, fragUV: vec2<f32>) -> vec4<f32>
+fn CalcDirLight(lightDir: vec3<f32>, lightIntensity: f32, lightColor: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, textureUV: vec2<f32>) -> vec4<f32>
 {
-  return CalcLightInternal(normalize(lightDir), lightColor, lightIntensity, normal, fragPos, fragUV);
+  return CalcLightInternal(normalize(lightDir), lightColor, lightIntensity, normal, fragPos, textureUV);
 }
 
 // *****************************************************************************************************************
 // CALC POINT LIGHT
 // *****************************************************************************************************************
 
-fn CalcPointLight(lightPos: vec3<f32>, lightIntensity: f32, lightColor: vec3<f32>, lightAttenuation: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, fragUV: vec2<f32>) -> vec4<f32>
+fn CalcPointLight(lightPos: vec3<f32>, lightIntensity: f32, lightColor: vec3<f32>, lightAttenuation: vec3<f32>, normal: vec3<f32>, fragPos: vec3<f32>, textureUV: vec2<f32>) -> vec4<f32>
 {
   var lightDir = fragPos - lightPos;
   var distance = length(lightDir);
   lightDir = normalize(lightDir);
 
-  var color = CalcLightInternal(lightDir, lightColor, lightIntensity, normal, fragPos, fragUV);
+  var color = CalcLightInternal(lightDir, lightColor, lightIntensity, normal, fragPos, textureUV);
   var attenuation = lightAttenuation[0] + lightAttenuation[1] * distance + lightAttenuation[2] * distance * distance;
   return color / attenuation;
 }

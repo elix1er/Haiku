@@ -1,6 +1,6 @@
-import { ECSComponent } from "./ecs_component";
+import { DNAComponent } from "./dna_component";
 
-class ECSSystem {
+class DNASystem {
   entities: Array<number>;
   requiredComponentTypenames: Array<string>;
 
@@ -21,7 +21,7 @@ class ECSSystem {
 
   bindEntity(index: number): void {
     if (this.entities.indexOf(index) != -1) {
-      throw new Error('ECSSystem::bindEntity(): Entity already exist in this system');
+      throw new Error('DNASystem::bindEntity(): Entity already exist in this system');
     }
 
     this.entities.push(index);
@@ -29,7 +29,7 @@ class ECSSystem {
 
   unbindEntity(index: number): void {
     if (this.entities.indexOf(index) == -1) {
-      throw new Error('ECSSystem::unbindEntity(): Entity not exist in this system');
+      throw new Error('DNASystem::unbindEntity(): Entity not exist in this system');
     }
 
     this.entities.splice(this.entities.indexOf(index), 1);
@@ -41,13 +41,13 @@ class ECSSystem {
 
   addRequiredComponentTypename(typename: string): void {
     if (this.requiredComponentTypenames.indexOf(typename) != -1) {
-      throw new Error('ECSSystem::addRequiredComponentTypename(): Required typename already set in this system');
+      throw new Error('DNASystem::addRequiredComponentTypename(): Required typename already set in this system');
     }
 
     this.requiredComponentTypenames.push(typename);
   }
 
-  isMatchingComponentRequirements(components: Array<ECSComponent>): boolean {
+  isMatchingComponentRequirements(components: Array<DNAComponent>): boolean {
     for (const typename of this.requiredComponentTypenames) {
       if (!components.find(c => c.getTypename() == typename)) {
         return false;
@@ -70,4 +70,4 @@ class ECSSystem {
   }
 }
 
-export { ECSSystem };
+export { DNASystem };

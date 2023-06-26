@@ -150,6 +150,8 @@ class Gfx3MeshJAM extends Gfx3Mesh {
     else {
       this.frameProgress += ts;
     }
+
+    super.update(ts);
   }
 
   play(animationName: string, looped: boolean = false, preventSameAnimation: boolean = false): void {

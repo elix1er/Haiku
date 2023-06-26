@@ -1,14 +1,14 @@
-import { ECSComponent } from './ecs_component';
-import { ECSSystem } from './ecs_system';
+import { DNAComponent } from './dna_component';
+import { DNASystem } from './dna_system';
 
-class ECSManager {
+class DNAManager {
   entityIndex: number;
-  entities: Map<number, Array<ECSComponent>>;
-  systems: Array<ECSSystem>;
+  entities: Map<number, Array<DNAComponent>>;
+  systems: Array<DNASystem>;
 
   constructor() {
     this.entityIndex = 0;
-    this.entities = new Map<number, Array<ECSComponent>>();
+    this.entities = new Map<number, Array<DNAComponent>>();
     this.systems = [];
   }
 
@@ -18,7 +18,7 @@ class ECSManager {
     }
   }
 
-  setup(systems: Array<ECSSystem>): void {
+  setup(systems: Array<DNASystem>): void {
     this.entities.clear();
     this.systems = systems;
   }
@@ -28,10 +28,10 @@ class ECSManager {
     return this.entityIndex++;
   }
 
-  getEntity(index: number): Array<ECSComponent> {
+  getEntity(index: number): Array<DNAComponent> {
     const found = this.entities.get(index);
     if (!found) {
-      throw new Error('ECSManager::getEntity(): Entity not found');
+      throw new Error('DNAManager::getEntity(): Entity not found');
     }
 
     return found;
@@ -40,7 +40,7 @@ class ECSManager {
   removeEntity(index: number): void {
     const found = this.entities.get(index);
     if (!found) {
-      throw new Error('ECSManager::removeEntity(): Entity not found');
+      throw new Error('DNAManager::removeEntity(): Entity not found');
     }
 
     this.entities.delete(index);
@@ -56,10 +56,10 @@ class ECSManager {
     return this.entities.has(index);
   }
 
-  addComponent(index: number, component: ECSComponent): void {
+  addComponent(index: number, component: DNAComponent): void {
     const entity = this.entities.get(index);
     if (!entity) {
-      throw new Error('ECSManager::addComponent(): Entity not found');
+      throw new Error('DNAManager::addComponent(): Entity not found');
     }
 
     const found = entity.find(c => c.getTypename() == component.getTypename());
@@ -79,12 +79,12 @@ class ECSManager {
   removeComponent(index: number, typename: string): void {
     const entity = this.entities.get(index);
     if (!entity) {
-      throw new Error('ECSManager::removeComponent(): Entity not found');
+      throw new Error('DNAManager::removeComponent(): Entity not found');
     }
 
     const found = entity.find(c => c.getTypename() == typename);
     if (!found) {
-      throw new Error('ECSManager::removeComponent(): Entity has not ' + typename);
+      throw new Error('DNAManager::removeComponent(): Entity has not ' + typename);
     }
 
     entity.splice(entity.indexOf(found), 1);
@@ -96,15 +96,15 @@ class ECSManager {
     }
   }
 
-  getComponent(index: number, typename: string): ECSComponent {
+  getComponent(index: number, typename: string): DNAComponent {
     const entity = this.entities.get(index);
     if (!entity) {
-      throw new Error('ECSManager::getComponent(): Entity not found');
+      throw new Error('DNAManager::getComponent(): Entity not found');
     }
 
     const found = entity.find(c => c.getTypename() == typename);
     if (!found) {
-      throw new Error('ECSManager::getComponent(): Entity has not ' + typename);
+      throw new Error('DNAManager::getComponent(): Entity has not ' + typename);
     }
 
     return found;
@@ -113,7 +113,7 @@ class ECSManager {
   hasComponent(index: number, typename: string): boolean {
     const entity = this.entities.get(index);
     if (!entity) {
-      throw new Error('ECSManager::hasComponent(): Entity not found');
+      throw new Error('DNAManager::hasComponent(): Entity not found');
     }
 
     const found = entity.find(c => c.getTypename() == typename);
@@ -121,6 +121,6 @@ class ECSManager {
   }
 }
 
-const ecsManager = new ECSManager();
-export { ECSManager };
-export { ecsManager };
+const dnaManager = new DNAManager();
+export { DNAManager };
+export { dnaManager };

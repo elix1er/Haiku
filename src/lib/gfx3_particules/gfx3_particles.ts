@@ -28,33 +28,35 @@ class Particle {
   position: vec3;
   velocity: vec3; // units per second
   acceleration: vec3;
+  accelerationTween: TweenVEC3;
   angle: number;
   angleVelocity: number; // degrees per second
   angleAcceleration: number; // degrees per second, per second
   size: number;
+  sizeTween: TweenNumber;
   color: vec3;
+  colorTween: TweenVEC3;
   opacity: number;
+  opacityTween: TweenNumber;
   age: number;
   alive: number; // use float instead of boolean for shader purposes	
-  sizeTween: TweenNumber;
-  opacityTween: TweenNumber;
-  colorTween: TweenVEC3;
 
   constructor() {
     this.position = [0, 0, 0];
     this.velocity = [0, 0, 0];
     this.acceleration = [0, 0, 0];
+    this.accelerationTween = new TweenVEC3();
     this.angle = 0;
     this.angleVelocity = 0;
     this.angleAcceleration = 0;
     this.size = 16.0;
+    this.sizeTween = new TweenNumber();
     this.color = [0, 0, 0];
+    this.colorTween = new TweenVEC3();
     this.opacity = 1.0;
+    this.opacityTween = new TweenNumber();
     this.age = 0;
     this.alive = 0;
-    this.sizeTween = new TweenNumber();
-    this.opacityTween = new TweenNumber();
-    this.colorTween = new TweenVEC3();
   }
 
   update(ts: number) {
@@ -76,6 +78,10 @@ class Particle {
 
     if (!this.opacityTween.isEmpty()) {
       this.opacity = this.opacityTween.interpolate(this.age);
+    }
+
+    if (!this.accelerationTween.isEmpty()) {
+      this.acceleration = this.accelerationTween.interpolate(this.age);
     }
   }
 }
@@ -103,6 +109,7 @@ interface ParticlesOptions {
   opacityTween: TweenNumber;
   accelerationBase: vec3;
   accelerationSpread: vec3;
+  accelerationTween: TweenVEC3;
   angleBase: number;
   angleSpread: number;
   angleVelocityBase: number;
@@ -140,6 +147,7 @@ class Gfx3Particles extends Gfx3Drawable {
   opacityTween: TweenNumber;
   accelerationBase: vec3;
   accelerationSpread: vec3;
+  accelerationTween: TweenVEC3;
   angleBase: number;
   angleSpread: number;
   angleVelocityBase: number;
@@ -185,6 +193,7 @@ class Gfx3Particles extends Gfx3Drawable {
     this.opacityTween = options.opacityTween ?? new TweenNumber();
     this.accelerationBase = options.accelerationBase ?? [0, 0, 0];
     this.accelerationSpread = options.accelerationSpread ?? [0, 0, 0];
+    this.accelerationTween = options.accelerationTween ?? new TweenVEC3();
     this.angleBase = options.angleBase ?? 0.0;
     this.angleSpread = options.angleSpread ?? 0.0;
     this.angleVelocityBase = options.angleVelocityBase ?? 0.0;
@@ -312,6 +321,7 @@ class Gfx3Particles extends Gfx3Drawable {
     particle.opacity = RANDOM_VALUE(this.opacityBase, this.opacitySpread);
     particle.opacityTween = this.opacityTween;
     particle.acceleration = RANDOM_VEC3(this.accelerationBase, this.accelerationSpread);
+    particle.accelerationTween = this.accelerationTween;
     particle.angle = RANDOM_VALUE(this.angleBase, this.angleSpread);
     particle.angleVelocity = RANDOM_VALUE(this.angleVelocityBase, this.angleVelocitySpread);
     particle.angleAcceleration = RANDOM_VALUE(this.angleAccelerationBase, this.angleAccelerationSpread);

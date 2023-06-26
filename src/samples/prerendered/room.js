@@ -183,10 +183,15 @@ class Room {
     }
   }
 
-  handleControllerMoved({ moveX, moveZ }) {
-    for (let other of this.models) {
-      let velocityImpact = [0, 0];
-      if (UT.CIRCLE_COLLIDE(this.controller.getNextPosition(), this.controller.getRadius(), other.getPosition(), other.getRadius(), velocityImpact)) {
+  handleControllerMoved({ op, np, moveX, moveZ }) {
+    for (let model of this.models) {
+      let distance = UT.VEC3_DISTANCE(model.getPosition(), np);
+      let distanceMin = this.controller.getRadius() + model.getRadius();
+
+      // let velocityImpact = UT.COLLIDE_CIRCLE_TO_CIRCLE(;
+      // let p = this.controller.getNextPosition();
+      // let o = other.getPosition();
+      if (UT.COLLIDE_CIRCLE_TO_CIRCLE([np[0], np[2]], this.controller.getRadius(), [o[0], o[2]], other.getRadius(), velocityImpact)) {
         moveX += velocityImpact[0];
         moveZ += velocityImpact[1];
         break;
@@ -198,7 +203,7 @@ class Room {
     this.controller.setVelocity(move[0], move[1], move[2]);
 
     for (let trigger of this.triggers) {
-      let distance = UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
+      let distance = UT.VEC3_DISTANCE(trigger.getPosition(), np);
       let distanceMin = this.controller.getRadius() + trigger.getRadius();
 
       if (trigger.getOnEnterBlockId() && !trigger.isHovered() && distance < distanceMin) {

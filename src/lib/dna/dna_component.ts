@@ -1,4 +1,4 @@
-class ECSComponent {
+class DNAComponent {
   typename: string;
 
   constructor(typename: string) {
@@ -10,4 +10,4 @@ class ECSComponent {
   }
 }
 
-export { ECSComponent };
+export { DNAComponent };

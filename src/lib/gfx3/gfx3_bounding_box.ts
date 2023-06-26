@@ -137,19 +137,11 @@ class Gfx3BoundingBox {
   }
 
   isPointInside(x: number, y: number, z: number): boolean {
-    return (
-      (x >= this.min[0] && x <= this.max[0]) &&
-      (y >= this.min[1] && y <= this.max[1]) &&
-      (z >= this.min[2] && z <= this.max[2])
-    );
+    return UT.COLLIDE_POINT_TO_BOX([x, y, z], this.min, this.max);
   }
 
   intersectBoundingBox(aabb: Gfx3BoundingBox): boolean {
-    return (
-      (this.min[0] <= aabb.max[0] && this.max[0] >= aabb.min[0]) &&
-      (this.min[1] <= aabb.max[1] && this.max[1] >= aabb.min[1]) &&
-      (this.min[2] <= aabb.max[2] && this.max[2] >= aabb.min[2])
-    );
+    return UT.COLLIDE_BOX_TO_BOX(this.min, this.max, aabb.min, aabb.max);
   }
 
   reset(): void {

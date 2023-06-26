@@ -118,17 +118,11 @@ class Gfx2BoundingRect {
   }
 
   isPointInside(x: number, y: number): boolean {
-    return (
-      (x >= this.min[0] && x <= this.max[0]) &&
-      (y >= this.min[1] && y <= this.max[1])
-    );
+    return UT.COLLIDE_POINT_TO_RECT([x, y], this.min, this.max);
   }
 
   intersectBoundingRect(aabr: Gfx2BoundingRect): boolean {
-    return (
-      (this.min[0] <= aabr.max[0] && this.max[0] >= aabr.min[0]) &&
-      (this.min[1] <= aabr.max[1] && this.max[1] >= aabr.min[1])
-    );
+    return UT.COLLIDE_RECT_TO_RECT(this.min, this.max, aabr.min, aabr.max);
   }
 }
 

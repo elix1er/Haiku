@@ -104,21 +104,6 @@ class UT {
     return Math.round(num * pow) / pow;
   }
 
-  static CIRCLE_COLLIDE(c1: vec3, r1: number, c2: vec3, r2: number, outVelocity: vec2 = [0, 0]): boolean {
-    const delta = UT.VEC3_SUBSTRACT(c1, c2);
-    const distance = UT.VEC3_LENGTH(delta);
-    const distanceMin = r1 + r2;
-
-    if (distance > distanceMin) {
-      return false;
-    }
-
-    const c = Math.PI * 2 - (Math.PI * 2 - Math.atan2(delta[2], delta[0]));
-    outVelocity[0] = Math.cos(c) * (distanceMin - distance);
-    outVelocity[1] = Math.sin(c) * (distanceMin - distance);
-    return true;
-  }
-
   /**************************************************************************/
   /* VEC2 */
   /**************************************************************************/
@@ -261,33 +246,6 @@ class UT {
     out[2] = -a[2];
     return out;
   }
-
-  static VEC3_HSL2RGB(h: number, s: number, l: number, out: vec3 = [0, 0, 0]): vec3 {
-    let r, g, b;
-    if (s == 0) {
-      r = g = b = l; // achromatic
-    }
-    else {
-      const hue2rgb = function (p: number, q: number, t: number) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-      }
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1 / 3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1 / 3);
-    }
-
-    out[0] = Math.round(r);
-    out[1] = Math.round(g);
-    out[2] = Math.round(b);
-    return out;
-  };
 
   static VEC3_DISTANCE(a: vec3, b: vec3): number {
     const x = b[0] - a[0];
@@ -1099,28 +1057,52 @@ class UT {
   }
 
   /**************************************************************************/
-  /* QUATERNION */
+  /* COLLIDE */
   /**************************************************************************/
 
-  static QUATERNION_TO_EULER(q: { x: number, y: number, z: number, w: number }): { yaw: number, pitch: number, roll: number } {
-    const sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
-    const cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
-    const roll = Math.atan2(sinr_cosp, cosr_cosp);
+  static COLLIDE_CIRCLE_TO_CIRCLE(c1: vec3, r1: number, c2: vec3, r2: number, outVelocity: vec2 = [0, 0]): boolean {
+    const delta = UT.VEC3_SUBSTRACT(c1, c2);
+    const distance = UT.VEC3_LENGTH(delta);
+    const distanceMin = r1 + r2;
 
-    const sinp = 2 * (q.w * q.y - q.z * q.x);
-    let pitch: number;
-    if (Math.abs(sinp) >= 1) {
-      pitch = Math.sign(sinp) * (Math.PI / 2);
-    }
-    else {
-      pitch = Math.asin(sinp);
+    if (distance > distanceMin) {
+      return false;
     }
 
-    const siny_cosp = 2 * (q.w * q.z + q.x * q.y);
-    const cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
-    const yaw = Math.atan2(siny_cosp, cosy_cosp);
+    const c = Math.PI * 2 - (Math.PI * 2 - Math.atan2(delta[2], delta[0]));
+    outVelocity[0] = Math.cos(c) * (distanceMin - distance);
+    outVelocity[1] = Math.sin(c) * (distanceMin - distance);
+    return true;
+  }
 
-    return { yaw, pitch, roll };
+  static COLLIDE_POINT_TO_RECT(p: vec2, min: vec2, max: vec2): boolean {
+    return (
+      (p[0] >= min[0] && p[0] <= max[0]) &&
+      (p[1] >= min[1] && p[1] <= max[1])
+    );
+  }
+
+  static COLLIDE_RECT_TO_RECT(min1: vec2, max1: vec2, min2: vec2, max2: vec2): boolean {
+    return (
+      (min1[0] <= max2[0] && max1[0] >= min2[0]) &&
+      (min1[1] <= max2[1] && max1[1] >= min2[1])
+    );
+  }
+
+  static COLLIDE_POINT_TO_BOX(p: vec3, min: vec3, max: vec3): boolean {
+    return (
+      (p[0] >= min[0] && p[0] <= max[0]) &&
+      (p[1] >= min[1] && p[1] <= max[1]) &&
+      (p[2] >= min[2] && p[2] <= max[2])
+    );
+  }
+
+  static COLLIDE_BOX_TO_BOX(min1: vec3, max1: vec3, min2: vec3, max2: vec3): boolean {
+    return (
+      (min1[0] <= max2[0] && max1[0] >= min2[0]) &&
+      (min1[1] <= max2[1] && max1[1] >= min2[1]) &&
+      (min1[2] <= max2[2] && max1[2] >= min2[2])
+    );
   }
 
   /**************************************************************************/

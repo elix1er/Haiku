@@ -115,8 +115,8 @@ fn main(
 }`;
 
 export const FRAGMENT_SHADER = `
-@group(1) @binding(0) var Sampler: sampler;
-@group(1) @binding(1) var Texture: texture_2d<f32>;
+@group(1) @binding(0) var SAMPLER: sampler;
+@group(1) @binding(1) var TEXTURE: texture_2d<f32>;
 
 @fragment
 fn main(
@@ -133,5 +133,5 @@ fn main(
     c * (FragUV.y - 0.5) - s * (FragUV.x - 0.5) + 0.5
   );
 
-  return textureSample(Texture, Sampler, rotatedUV) * Color;
+  return textureSample(TEXTURE, SAMPLER, rotatedUV) * Color;
 }`;

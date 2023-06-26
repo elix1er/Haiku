@@ -71,6 +71,7 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 ## First todo-list
 - Vertex Light (Owner: me, Delay: N/A)
+- Add converter bsp -> grid for pathfinding (Owner: thetinyspark, Delay: 1 Mounth)
 - Add jumps in fps sample
 
 ## Second todo-list

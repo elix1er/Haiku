@@ -1,12 +1,17 @@
 {
-  "name": "aliyah",
-  "private": true,
-  "version": "0.0.0",
+  "name": "create-haiku",
+  "email": "aliyah.raijin@gmail.com",
+  "author": "Julien Rongiere",
+  "license": "MIT",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
+  },
+  "bin": {
+    "create-haiku": "bin/create-haiku.js"
   },
   "devDependencies": {
     "typedoc": "^0.23.15",

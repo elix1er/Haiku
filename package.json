@@ -1,5 +1,11 @@
 {
   "name": "create-haiku",
+  "description": "Game engine built on WebGPU written in Typescript",
+  "keywords": [
+    "game-engine-2d",
+    "game-engine-3d",
+    "webgpu"
+  ],
   "email": "aliyah.raijin@gmail.com",
   "author": "Julien Rongiere",
   "license": "MIT",
@@ -8,7 +14,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "doc": "typedoc src/lib/ --json docs/doc.json"
   },
   "bin": {
     "create-haiku": "bin/create-haiku.js"

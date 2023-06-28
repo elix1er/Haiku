@@ -1,8 +1,9 @@
 import { UIMenu } from '../ui_menu/ui_menu';
+import { MenuAxis } from '../ui_menu/ui_menu';
 import { UIMenuTextItem } from './ui_menu_text_item';
 
 class UIMenuText extends UIMenu {
-  constructor(options: { className?: string } = {}) {
+  constructor(options: { axis?: MenuAxis, className?: string } = {}) {
     super(Object.assign(options, {
       className: options.className ?? 'UIMenuText'
     }));

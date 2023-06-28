@@ -3,6 +3,7 @@ import { UT } from '../core/utils';
 import { Gfx3Transformable } from '../gfx3/gfx3_transformable';
 
 const MOVE_MAX_RECURSIVE_CALL = 5;
+const MARGIN = 0.8;
 
 interface Sector {
   v1: vec3;
@@ -102,12 +103,12 @@ class Gfx3JWM extends Gfx3Transformable {
     gfx3DebugRenderer.drawVertices(this.debugVertices, this.debugVertexCount, this.getTransformMatrix());
   }
 
-  addWalker(id: string, x: number, z: number, radius: number): void {
+  addWalker(id: string, x: number, z: number, radius: number): Walker {
     if (this.walkers.find(w => w.id == id)) {
       throw new Error('Gfx3JWM::moveWalker: walker with id ' + id + ' already exist.');
     }
 
-    this.walkers.push({
+    const walker: Walker = {
       id: id,
       points: [
         this.$utilsCreatePoint(x, z),
@@ -116,7 +117,10 @@ class Gfx3JWM extends Gfx3Transformable {
         this.$utilsCreatePoint(x - radius, z - radius),
         this.$utilsCreatePoint(x - radius, z + radius)
       ]
-    });
+    };
+
+    this.walkers.push(walker);
+    return walker;
   }
 
   moveWalker(id: string, mx: number, mz: number): vec3 {
@@ -150,8 +154,10 @@ class Gfx3JWM extends Gfx3Transformable {
     while (i < points.length) {
       let deviation = false;
       if (!deviatedPoints[i]) {
-        const moveInfo = this.$utilsMove(points[i].sectorIndex, points[i].x, points[i].z, mx, mz);
+        const moveInfo = this.$utilsMove(points[i].sectorIndex, points[i].x, points[i].z, mx, mz, MARGIN);
         if (moveInfo.mx == 0 && moveInfo.mz == 0) {
+          mx = 0;
+          mz = 0;
           moving = false;
           break;
         }
@@ -169,8 +175,10 @@ class Gfx3JWM extends Gfx3Transformable {
         pointElevations[i] = moveInfo.elevation;
       }
 
-      // if two points are deviated it is a dead-end, no reasons to continue...
+      // if two points or more are deviated it is a dead-end, no reasons to continue...
       if (numDeviations >= 2) {
+        mx = 0;
+        mz = 0;
         moving = false;
         break;
       }
@@ -178,6 +186,8 @@ class Gfx3JWM extends Gfx3Transformable {
       // if deviation, we need to restart from 0 to update other points with new mx,mz.
       i = deviation ? 0 : i + 1;
     }
+
+    const my = pointElevations[0] - walker.points[0].y;
 
     if (moving) {
       walker.points[0].sectorIndex = pointSectors[0];
@@ -202,11 +212,7 @@ class Gfx3JWM extends Gfx3Transformable {
       walker.points[4].z += mz;
     }
 
-    return [
-      walker.points[0].x,
-      walker.points[0].y,
-      walker.points[0].z
-    ];
+    return [mx, my, mz];
   }
 
   clearWalkers(): void {
@@ -218,56 +224,63 @@ class Gfx3JWM extends Gfx3Transformable {
       const a = this.sectors[i].v1;
       const b = this.sectors[i].v2;
       const c = this.sectors[i].v3;
-      if (UT.VEC3_TRIANGLE_POINT_IS_INSIDE(a, b, c, [x, z])) {
-        return { sectorIndex: i, elev: UT.VEC3_TRIANGLE_POINT_ELEVATION(a, b, c, [x, z]) };
+      if (UT.TRI2_POINT_INSIDE([x, z], [a[0], a[2]], [b[0], b[2]], [c[0], c[2]]) == 1) {
+        return { sectorIndex: i, elev: UT.TRI3_POINT_ELEVATION([x, z], a, b, c) };
       }
     }
 
     return { sectorIndex: -1, elev: Infinity };
   }
 
-  $utilsMove(sectorIndex: number, x: number, z: number, mx: number, mz: number, i: number = 0): {sectorIndex: number, mx: number, mz: number, elevation: number } {
+  $utilsMove(sectorIndex: number, x: number, z: number, mx: number, mz: number, margin: number, i: number = 0): { sectorIndex: number, mx: number, mz: number, elevation: number } {
     const a = this.sectors[sectorIndex].v1;
     const b = this.sectors[sectorIndex].v2;
     const c = this.sectors[sectorIndex].v3;
-
-    const elevation = UT.VEC3_TRIANGLE_POINT_ELEVATION(a, b, c, [x + mx, z + mz]);
-    if (elevation != Infinity) {
-      return { sectorIndex, mx, mz, elevation };
-    }
 
     if (i == MOVE_MAX_RECURSIVE_CALL) {
       return { sectorIndex, mx: 0, mz: 0, elevation: Infinity };
     }
 
-    const outsides = UT.VEC3_TRIANGLE_POINT_OUTSIDES(a, b, c, [x + mx, z + mz]);
+    if (mx > -UT.BIG_EPSILON && mx < +UT.BIG_EPSILON && mz > -UT.BIG_EPSILON && mz < +UT.BIG_EPSILON) {
+      return { sectorIndex, mx: 0, mz: 0, elevation: Infinity };
+    }
+
+    const nmx = mx + (mx * margin);
+    const nmz = mz + (mz * margin);
+
+    const elevation = UT.TRI3_POINT_ELEVATION([x + nmx, z + nmz], a, b, c);
+    if (elevation != Infinity) {
+      return { sectorIndex, mx, mz, elevation };
+    }
+
+    const inside = UT.TRI2_POINT_INSIDE([x + nmx, z + nmz], [a[0], a[2]], [b[0], b[2]], [c[0], c[2]]);
     const ab: vec2 = [b[0] - a[0], b[2] - a[2]];
     const bc: vec2 = [c[0] - b[0], c[2] - b[2]];
     const ca: vec2 = [a[0] - c[0], a[2] - c[2]];
 
-    if (this.neighborPool[sectorIndex].s1 == -1 && outsides.ab) {
+    if (this.neighborPool[sectorIndex].s1 == -1 && inside == -1) {
       const [pmx, pmz] = UT.VEC2_PROJECTION_COS([mx, mz], ab);
-      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, i + 1);
+      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, margin, i + 1);
     }
-    else if (this.neighborPool[sectorIndex].s2 == -1 && outsides.bc) {
+    else if (this.neighborPool[sectorIndex].s2 == -1 && inside == -2) {
       const [pmx, pmz] = UT.VEC2_PROJECTION_COS([mx, mz], bc);
-      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, i + 1);
+      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, margin, i + 1);
     }
-    else if (this.neighborPool[sectorIndex].s3 == -1 && outsides.ca) {
+    else if (this.neighborPool[sectorIndex].s3 == -1 && inside == -3) {
       const [pmx, pmz] = UT.VEC2_PROJECTION_COS([mx, mz], ca);
-      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, i + 1);
+      return this.$utilsMove(sectorIndex, x, z, pmx, pmz, margin, i + 1);
     }
-    else if (this.neighborPool[sectorIndex].s1 != -1 && outsides.ab) {
+    else if (this.neighborPool[sectorIndex].s1 != -1 && inside == -1) {
       const nextSectorIndex = this.neighborPool[sectorIndex].s1;
-      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, i + 1);
+      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, margin, i + 1);
     }
-    else if (this.neighborPool[sectorIndex].s2 != -1 && outsides.bc) {
+    else if (this.neighborPool[sectorIndex].s2 != -1 && inside == -2) {
       const nextSectorIndex = this.neighborPool[sectorIndex].s2;
-      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, i + 1);
+      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, margin, i + 1);
     }
-    else if (this.neighborPool[sectorIndex].s3 != -1 && outsides.ca) {
+    else if (this.neighborPool[sectorIndex].s3 != -1 && inside == -3) {
       const nextSectorIndex = this.neighborPool[sectorIndex].s3;
-      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, i + 1);
+      return this.$utilsMove(nextSectorIndex, x, z, mx, mz, margin, i + 1);
     }
     else {
       return { sectorIndex, mx, mz, elevation };

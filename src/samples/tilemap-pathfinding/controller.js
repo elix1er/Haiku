@@ -3,19 +3,13 @@ import { Gfx2Drawable} from '../../lib/gfx2/gfx2_drawable';
 import { Gfx2SpriteJAS} from '../../lib/gfx2_sprite/gfx2_sprite_jas';
 // ---------------------------------------------------------------------------------------
 import { MotionInterpolation} from './motion_interpolation';
-
-const DIRECTION = {
-  LEFT: 'LEFT',
-  RIGHT: 'RIGHT',
-  FORWARD: 'FORWARD',
-  BACKWARD: 'BACKWARD'
-};
+// ---------------------------------------------------------------------------------------
 
 class Controller extends Gfx2Drawable {
   constructor() {
     super();
     this.jas = new Gfx2SpriteJAS();
-    this.direction = DIRECTION.FORWARD;
+    this.direction = 'FORWARD';
     this.speed = 3;
     this.width = 0;
     this.height = 0;
@@ -41,16 +35,16 @@ class Controller extends Gfx2Drawable {
     }
 
     if (prevPosition[0] > this.position[0]) {
-      this.direction = DIRECTION.LEFT;
+      this.direction = 'LEFT';
     }
     else if (prevPosition[0] < this.position[0]) {
-      this.direction = DIRECTION.RIGHT;
+      this.direction = 'RIGHT';
     }
     else if (prevPosition[1] > this.position[1]) {
-      this.direction = DIRECTION.FORWARD;
+      this.direction = 'FORWARD';
     }
     else if (prevPosition[1] < this.position[1]) {
-      this.direction = DIRECTION.BACKWARD;
+      this.direction = 'BACKWARD';
     }
 
     this.jas.setPosition(this.position[0], this.position[1]);

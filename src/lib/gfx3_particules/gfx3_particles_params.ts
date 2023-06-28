@@ -1,5 +1,5 @@
 import { gfx3TextureManager } from '../gfx3/gfx3_texture_manager';
-import { TweenNumber, TweenVEC3 } from '../core/utils';
+import { TweenNumber, TweenVEC3 } from '../core/tween';
 import { ParticlesOptions, PositionStyle, VelocityStyle } from './gfx3_particles';
 
 export const Fountain: Partial<ParticlesOptions> = {

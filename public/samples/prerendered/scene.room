@@ -19,7 +19,8 @@
   "Controller": {
     "JAMFile": "samples/prerendered/barret.jam",
     "TextureFile": "samples/prerendered/barret.png",
-    "Radius": 0.20
+    "Radius": 0.20,
+    "Height": 1
   },
   "Spawns": [{
     "Name": "Spawn0000",
@@ -39,6 +40,7 @@
     "RotationY": 3.14,
     "RotationZ": 0,
     "Radius": 0.80,
+    "Height": 1,
     "OnActionBlockId": "0000"
   }],
   "Movers": [{

@@ -1,23 +1,14 @@
 import { eventManager } from '../../lib/core/event_manager';
-import { inputManager } from '../../lib/input/input_manager';
 import { gfx2TextureManager } from '../../lib/gfx2/gfx2_texture_manager';
 import { Gfx2Drawable } from '../../lib/gfx2/gfx2_drawable';
 import { Gfx2SpriteJAS } from '../../lib/gfx2_sprite/gfx2_sprite_jas';
 // ---------------------------------------------------------------------------------------
 
-const DIRECTION = {
-  LEFT: 'LEFT',
-  RIGHT: 'RIGHT',
-  FORWARD: 'FORWARD',
-  BACKWARD: 'BACKWARD'
-};
-
 class Controller extends Gfx2Drawable {
   constructor() {
     super();
     this.jas = new Gfx2SpriteJAS();
-    this.velocity = [0, 0];
-    this.direction = DIRECTION.FORWARD;
+    this.direction = 'FORWARD';
     this.speed = 0.05;
     this.width = 0;
     this.height = 0;
@@ -41,8 +32,6 @@ class Controller extends Gfx2Drawable {
   }
 
   update(ts) {
-    this.position[0] += this.velocity[0];
-    this.position[1] += this.velocity[1];
     this.jas.setPosition(this.position[0], this.position[1]);
     this.jas.update(ts);
   }
@@ -52,22 +41,19 @@ class Controller extends Gfx2Drawable {
   }
 
   move(mx, my, direction = null) {
-    this.velocity[0] = mx;
-    this.velocity[1] = my;
-
-    if (mx != 0 || my != 0) {
-      this.direction = direction;
-      this.jas.play('RUN_' + direction, true, true);
-      eventManager.emit(this, 'E_MOVED', { moveX: mx, moveY: my });
-    }
-    else {
-      this.jas.play('IDLE_' + this.direction, true, true);
-    }
+    const old = this.position.slice();
+    this.position[0] += mx;
+    this.position[1] += my;
+    this.direction = direction;
+    eventManager.emit(this, 'E_MOVED', { old: old, moveX: mx, moveY: my });
   }
 
-  setVelocity(mx, my) {
-    this.velocity[0] = mx;
-    this.velocity[1] = my;
+  play(animationName, looped) {
+    this.jas.play(animationName, looped, true);
+  }
+
+  getDirection() {
+    return this.direction;
   }
 
   getSpeed() {
@@ -80,13 +66,6 @@ class Controller extends Gfx2Drawable {
 
   getHeight() {
     return this.height;
-  }
-
-  getNextPosition() {
-    return [
-      this.position[0] + this.velocity[0],
-      this.position[1] + this.velocity[1]
-    ];
   }
 
   getCollider1X() {

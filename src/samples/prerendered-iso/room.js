@@ -81,6 +81,7 @@ class Room {
 
     let spawn = this.spawns.find(spawn => spawn.getName() == spawnName);
     this.controller.setPosition(spawn.getPositionX(), spawn.getPositionY(), spawn.getPositionZ());
+    this.controller.setDirection(spawn.getDirection());
     this.controller.play('IDLE_' + spawn.getDirection(), true, true);
     this.walkmesh.addWalker('CONTROLLER', this.controller.getPositionX(), this.controller.getPositionZ(), this.controller.getRadius());
 
@@ -123,9 +124,10 @@ class Room {
       const moveX = DIRECTION_TO_VEC3[direction][0] * CHAR_SPEED * (ts / 1000);
       const moveZ = DIRECTION_TO_VEC3[direction][2] * CHAR_SPEED * (ts / 1000);
       this.controller.move(moveX, moveZ, direction);
+      this.controller.play('RUN_' + direction, true);
     }
     else {
-      this.controller.move(0, 0);
+      this.controller.play('IDLE_' + this.controller.getDirection(), true);
     }
 
     this.map.update(ts);
@@ -163,7 +165,7 @@ class Room {
     }
 
     for (let trigger of this.triggers) {
-      if (UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getPosition()) <= this.controller.getRadius() + trigger.getRadius()) {
+      if (this.controller.isCollide(trigger)) {
         if (trigger.getOnActionBlockId()) {
           this.scriptMachine.jump(trigger.getOnActionBlockId());
           return;
@@ -172,7 +174,7 @@ class Room {
     }
 
     for (let model of this.models) {
-      if (UT.VEC3_DISTANCE(model.getPosition(), this.controller.getHandPosition()) <= model.getRadius()) {
+      if (this.controller.isHandCollide(model)) {
         if (model.getOnActionBlockId()) {
           this.scriptMachine.jump(model.getOnActionBlockId());
           return;
@@ -181,27 +183,25 @@ class Room {
     }
   }
 
-  handleControllerMoved({ moveX, moveZ }) {
-    for (let other of this.models) {
-      if (UT.VEC3_DISTANCE(other.getPosition(), this.controller.getNextPosition()) <= this.controller.getRadius() + other.getRadius()) {
-        this.controller.setVelocity(0, 0, 0);
+  handleControllerMoved({ old, moveX, moveZ }) {
+    for (let model of this.models) {
+      if (this.controller.isCollide(model)) {
+        this.controller.setPosition(old[0], old[1], old[2]);
         return;
       }
     }
 
-    let newPosition = this.walkmesh.moveWalker('CONTROLLER', moveX, moveZ);
-    const move = UT.VEC3_SUBSTRACT(newPosition, this.controller.getPosition())
-    this.controller.setVelocity(move[0], move[1], move[2]);
+    let move = this.walkmesh.moveWalker('CONTROLLER', moveX, moveZ);
+    let newPos = UT.VEC3_ADD(old, move);
+    this.controller.setPosition(newPos[0], newPos[1], newPos[2]);
 
     for (let trigger of this.triggers) {
-      let distance = UT.VEC3_DISTANCE(trigger.getPosition(), this.controller.getNextPosition());
-      let distanceMin = this.controller.getRadius() + trigger.getRadius();
-
-      if (trigger.getOnEnterBlockId() && !trigger.isHovered() && distance < distanceMin) {
+      let isCollide = this.controller.isCollide(trigger);
+      if (trigger.getOnEnterBlockId() && !trigger.isHovered() && isCollide) {
         this.scriptMachine.jump(trigger.getOnEnterBlockId());
         trigger.setHovered(true);
       }
-      else if (trigger.getOnLeaveBlockId() && trigger.isHovered() && distance > distanceMin) {
+      else if (trigger.getOnLeaveBlockId() && trigger.isHovered() && !isCollide) {
         this.scriptMachine.jump(trigger.getOnLeaveBlockId());
         trigger.setHovered(false);
       }

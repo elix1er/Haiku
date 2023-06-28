@@ -11,7 +11,7 @@ class Model extends Gfx3Transformable {
     super();
     this.jam = new Gfx3MeshJAM();
     this.radius = 0;
-    this.velocity = [0, 0, 0];
+    this.height = 1;
     this.onActionBlockId = '';
   }
 
@@ -26,6 +26,7 @@ class Model extends Gfx3Transformable {
     this.rotation[1] = data['RotationY'];
     this.rotation[2] = data['RotationZ'];
     this.radius = data['Radius'];
+    this.height = data['Height'];
     this.onActionBlockId = data['OnActionBlockId'];
   }
 
@@ -34,9 +35,6 @@ class Model extends Gfx3Transformable {
   }
 
   update(ts) {
-    this.position[0] += this.velocity[0];
-    this.position[1] += this.velocity[1];
-    this.position[2] += this.velocity[2];
     this.jam.setPosition(this.position[0], this.position[1], this.position[2]);
     this.jam.setRotation(this.rotation[0], this.rotation[1], this.rotation[2]);
     this.jam.update(ts);
@@ -47,48 +45,58 @@ class Model extends Gfx3Transformable {
   }
 
   move(mx, mz) {
-    this.velocity[0] = mx;
-    this.velocity[1] = 0;
-    this.velocity[2] = mz;
-
-    if (mx != 0 || mz != 0) {
-      this.rotation[1] = UT.VEC2_ANGLE([this.velocity[0], this.velocity[2]]);
-      this.jam.play('RUN', true, true);
-      eventManager.emit(this, 'E_MOVED', { moveX: mx, moveZ: mz });
-    }
-    else {
-      this.jam.play('IDLE', true, true);
-    }
+    const old = this.position.slice();
+    this.position[0] += mx;
+    this.position[2] += mz;
+    this.rotation[1] = UT.VEC2_ANGLE([mx, mz]);
+    eventManager.emit(this, 'E_MOVED', { old: old, moveX: mx, moveZ: mz });
   }
 
-  setVelocity(mx, my, mz) {
-    this.velocity[0] = mx;
-    this.velocity[1] = my;
-    this.velocity[2] = mz;
+  play(animationName) {
+    this.jam.play(animationName, true, true);
   }
 
   getRadius() {
     return this.radius;
   }
 
-  getNextPosition() {
-    return [
-      this.position[0] + this.velocity[0],
-      this.position[1] + this.velocity[1],
-      this.position[2] + this.velocity[2]
-    ];
+  getHeight() {
+    return this.height;
   }
 
   getHandPosition() {
     return [
-      this.position[0] + Math.cos(this.rotation[1]) * this.radius + 0.5,
+      this.position[0] + Math.cos(this.rotation[1]) * this.radius * 1.5,
       this.position[1],
-      this.position[2] + Math.sin(this.rotation[1]) * this.radius + 0.5
+      this.position[2] + Math.sin(this.rotation[1]) * this.radius * 1.5
     ]
   }
 
   getOnActionBlockId() {
     return this.onActionBlockId;
+  }
+
+  isCollide(other, velocityImpact) {
+    return UT.COLLIDE_CYLINDER(
+      this.position,
+      this.radius,
+      this.height,
+      other.getPosition(),
+      other.getRadius(),
+      other.getHeight(),
+      velocityImpact
+    );
+  }
+
+  isHandCollide(other) {
+    return UT.COLLIDE_CYLINDER(
+      this.getHandPosition(),
+      0,
+      this.height,
+      other.getPosition(),
+      other.getRadius(),
+      other.getHeight()
+    );
   }
 }
 

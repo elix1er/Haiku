@@ -7,7 +7,6 @@ import { Gfx2Map } from '../../lib/gfx2_map/gfx2_map';
 import { Gfx2MapLayer } from '../../lib/gfx2_map/gfx2_map_layer';
 // ---------------------------------------------------------------------------------------
 import { Controller } from './controller';
-import { DIRECTION } from '../prerendered-iso/enums';
 // ---------------------------------------------------------------------------------------
 
 const LAYER = {
@@ -45,32 +44,33 @@ class TilemapScreen extends Screen {
 
   update(ts) {
     let moving = false;
-    let direction = DIRECTION.FORWARD;
+    let direction = 'FORWARD';
 
     if (inputManager.isActiveAction('LEFT')) {
       moving = true;
-      direction = DIRECTION.LEFT;
+      direction = 'LEFT';
     }
     else if (inputManager.isActiveAction('RIGHT')) {
       moving = true;
-      direction = DIRECTION.RIGHT;
+      direction = 'RIGHT';
     }
     else if (inputManager.isActiveAction('UP')) {
       moving = true;
-      direction = DIRECTION.FORWARD;
+      direction = 'FORWARD';
     }
     else if (inputManager.isActiveAction('DOWN')) {
       moving = true;
-      direction = DIRECTION.BACKWARD;
+      direction = 'BACKWARD';
     }
 
     if (moving) {
       let mx = DIRECTION_TO_VEC2[direction][0] * this.controller.getSpeed() * ts;
       let my = DIRECTION_TO_VEC2[direction][1] * this.controller.getSpeed() * ts;
       this.controller.move(mx, my, direction);
+      this.controller.play('RUN_' + direction, true);
     }
     else {
-      this.controller.move(0, 0);
+      this.controller.play('IDLE_' + this.controller.getDirection(), true);
     }
 
     let cameraMinX = gfx2Manager.getWidth() * 0.5;
@@ -96,20 +96,20 @@ class TilemapScreen extends Screen {
     this.layerForeground.draw();
   }
 
-  handleControllerMoved({ moveX, moveY }) {
-    let nextPosition = this.controller.getNextPosition();
+  handleControllerMoved({ old, moveX, moveY }) {
+    let position = this.controller.getPosition();
     let collisionLayer = this.collisionMap.getTileLayer(0);
     if (!collisionLayer) {
       return;
     }
 
-    let loc00X = this.collisionMap.getLocationCol(nextPosition[0] + this.controller.getCollider1X());
-    let loc00Y = this.collisionMap.getLocationCol(nextPosition[1] + this.controller.getCollider1Y());
-    let loc01X = this.collisionMap.getLocationCol(nextPosition[0] + this.controller.getCollider2X());
-    let loc01Y = this.collisionMap.getLocationCol(nextPosition[1] + this.controller.getCollider2Y());
+    let loc00X = this.collisionMap.getLocationCol(position[0] + this.controller.getCollider1X());
+    let loc00Y = this.collisionMap.getLocationCol(position[1] + this.controller.getCollider1Y());
+    let loc01X = this.collisionMap.getLocationCol(position[0] + this.controller.getCollider2X());
+    let loc01Y = this.collisionMap.getLocationCol(position[1] + this.controller.getCollider2Y());
 
     if (collisionLayer.getTile(loc00X, loc00Y) == 1 || collisionLayer.getTile(loc01X, loc01Y) == 1) {
-      this.controller.setVelocity(0, 0);
+      this.controller.setPosition(old[0], old[1]);
     }
   }
 }

@@ -40,7 +40,7 @@ class Frag extends Gfx3BoundingBox {
     this.c[1] = vertices[(2 * SHADER_VERTEX_ATTR_COUNT) + 1];
     this.c[2] = vertices[(2 * SHADER_VERTEX_ATTR_COUNT) + 2];
 
-    this.n = UT.VEC3_TRIANGLE_NORMAL(this.a, this.b, this.c);
+    this.n = UT.TRI3_NORMAL(this.a, this.b, this.c);
     this.t = UT.VEC3_CROSS([0, 1, 0], this.n);
     super.fromVertices([...this.a, ...this.b, ...this.c], 3);
   }
@@ -69,7 +69,7 @@ class Gfx3MeshNav {
     }
   }
 
-  moveWalker(center: vec3, size: vec3, move: vec3): NavInfo {
+  move(center: vec3, size: vec3, move: vec3): NavInfo {
     const aabb = Gfx3BoundingBox.createFromCenter(center[0], center[1], center[2], size[0], size[1], size[2]);
     const res: NavInfo = {
       move: [move[0], move[1], move[2]],
@@ -160,7 +160,7 @@ function MOVE(frags: Array<Frag>, point: vec3, move: vec2, i: number = 0): vec2 
 
   for (const frag of frags) {
     const outIntersect: vec3 = [0, 0, 0];
-    if (UT.RAY_PLAN(point, [move[0], 0, move[1]], frag.a, frag.b, frag.c, frag.n, true, outIntersect)) {
+    if (UT.RAY_PLAN(point, [move[0], 0, move[1]], frag.a, frag.n, true, outIntersect)) {
       const pen = UT.VEC3_SUBSTRACT(outIntersect, point);
       const penLength = UT.VEC3_LENGTH(pen);
       if (penLength <= UT.VEC2_LENGTH(move) + 0.001 && penLength < minFragLength) {

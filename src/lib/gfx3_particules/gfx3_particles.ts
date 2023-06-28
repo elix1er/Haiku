@@ -1,6 +1,7 @@
 import { gfx3ParticlesRenderer } from './gfx3_particles_renderer';
 import { gfx3Manager, UniformGroupBitmaps } from '../gfx3/gfx3_manager';
-import { UT, TweenNumber, TweenVEC3 } from '../core/utils';
+import { UT } from '../core/utils';
+import { TweenNumber, TweenVEC3 } from '../core/tween';
 import { Gfx3Drawable } from '../gfx3/gfx3_drawable';
 import { Gfx3Texture } from '../gfx3/gfx3_texture';
 import { SHADER_VERTEX_ATTR_COUNT } from './gfx3_particles_shader';

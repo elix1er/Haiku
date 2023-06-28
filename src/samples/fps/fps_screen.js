@@ -97,7 +97,9 @@ class FPSScreen extends Screen {
   }
 
   handleCameraMoved({ moveX, moveY, moveZ }) {
-    const navInfo = this.nav.moveWalker(this.camera.getPosition(), PLAYER_SIZE, [moveX, moveY, moveZ]);
+    const navInfo = this.nav.move(this.camera.getPosition(), PLAYER_SIZE, [moveX, moveY, moveZ]);
+
+    console.log('navInfo:', navInfo.move[1]);
 
     if (navInfo.collideFloor) {
       this.cameraGravitySpeed = 0;

@@ -27,10 +27,9 @@ Important note: This engine comes with a dozen of diverse and varied examples.
 You need to install [nodejs](https://nodejs.org/en/download/). 
 Once installation is done, let's build our first project.     
 
-Clone this repo, go to the root of project and launch the build with the following command:
 ```
-// you need to install dependencies
-# npm install
+// create your haiku project
+# npm i create-haiku your_project_name
 
 // now, you can start with
 # npm run dev

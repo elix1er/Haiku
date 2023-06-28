@@ -1,4 +1,3 @@
-import { gfx3DebugRenderer } from '../../lib/gfx3/gfx3_debug_renderer';
 import { Screen } from '../../lib/screen/screen';
 // ---------------------------------------------------------------------------------------
 import { Room } from './room';

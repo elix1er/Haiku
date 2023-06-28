@@ -18,6 +18,7 @@
     "JASFile": "samples/prerendered-isometric/kid.jas",
     "TextureFile": "samples/prerendered-isometric/kid.png",
     "Radius": 0.1,
+    "Height": 1,
     "OffsetX": 8,
     "OffsetY": 16
   },
@@ -35,6 +36,7 @@
     "PositionY":-3.56,
     "PositionZ":-4.00,
     "Radius": 0.2,
+    "Height": 1,
     "OffsetX": 12,
     "OffsetY": 17.5,
     "OnActionBlockId": "0000"

@@ -1,3 +1,5 @@
+import { eventManager } from '../core/event_manager';
+import { inputManager } from '../input/input_manager';
 import { DNAComponent } from './dna_component';
 import { DNASystem } from './dna_system';
 
@@ -10,6 +12,18 @@ class DNAManager {
     this.entityIndex = 0;
     this.entities = new Map<number, Array<DNAComponent>>();
     this.systems = [];
+
+    eventManager.subscribe(inputManager, 'E_ACTION', this, (data: any) => {
+      for (let system of this.systems) {
+        system.onAction(data.actionId);
+      }
+    });
+
+    eventManager.subscribe(inputManager, 'E_ACTION_ONCE', this, (data: any) => {
+      for (let system of this.systems) {
+        system.onActionOnce(data.actionId);
+      }
+    });
   }
 
   update(ts: number): void {

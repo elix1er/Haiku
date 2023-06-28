@@ -6,6 +6,7 @@ class Trigger extends Gfx3Transformable {
   constructor() {
     super();
     this.radius = 0;
+    this.height = 1;
     this.hovered = false;
     this.onEnterBlockId = '';
     this.onLeaveBlockId = '';
@@ -28,6 +29,10 @@ class Trigger extends Gfx3Transformable {
 
   getRadius() {
     return this.radius;
+  }
+
+  getHeight() {
+    return this.height;
   }
 
   isHovered() {

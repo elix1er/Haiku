@@ -1,6 +1,7 @@
 class UT {
   static DEG_TO_RAD_RATIO = Math.PI / 180;
   static EPSILON = 0.0000001;
+  static BIG_EPSILON = 0.0001;
   static VEC2_SIZE = 8;
   static VEC2_ZERO: vec2 = [0, 0];
   static VEC2_LEFT: vec2 = [-1, 0];
@@ -157,6 +158,10 @@ class UT {
     return a[0] * b[0] + a[1] * b[1];
   }
 
+  static VEC2_CROSS(a: vec2, b: vec2): number {
+    return a[0] * b[1] - a[1] * b[0];
+  }
+
   static VEC2_ADD(a: vec2, b: vec2, out: vec2 = [0, 0]): vec2 {
     out[0] = a[0] + b[0];
     out[1] = a[1] + b[1];
@@ -273,7 +278,7 @@ class UT {
     return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
   }
 
-  static VEC3_CROSS(a: vec3, b: vec3 | vec4, out: vec3 = [0, 0, 0]): vec3 {
+  static VEC3_CROSS(a: vec3, b: vec3, out: vec3 = [0, 0, 0]): vec3 {
     out[0] = (a[1] * b[2]) - (a[2] * b[1]);
     out[1] = (a[2] * b[0]) - (a[0] * b[2]);
     out[2] = (a[0] * b[1]) - (a[1] * b[0]);
@@ -310,87 +315,6 @@ class UT {
 
   static VEC3_ISEQUAL(a: vec3, b: vec3): boolean {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
-  }
-
-  // @todo: check on review
-  static VEC3_TRIANGLE_POINT_ELEVATION(a: vec3, b: vec3, c: vec3, p: vec2): number {
-    const ab = UT.VEC3_CREATE(b[0] - a[0], 0, b[2] - a[2]);
-    const ca = UT.VEC3_CREATE(a[0] - c[0], 0, a[2] - c[2]);
-    const ap = UT.VEC3_CREATE(p[0] - a[0], 0, p[1] - a[2]);
-    const bp = UT.VEC3_CREATE(p[0] - b[0], 0, p[1] - b[2]);
-    const cp = UT.VEC3_CREATE(p[0] - c[0], 0, p[1] - c[2]);
-
-    const area = UT.VEC3_LENGTH(UT.VEC3_CROSS(ab, ca));
-    const wa = UT.VEC3_LENGTH(UT.VEC3_CROSS(bp, cp)) / area;
-    const wb = UT.VEC3_LENGTH(UT.VEC3_CROSS(ap, cp)) / area;
-    const wc = UT.VEC3_LENGTH(UT.VEC3_CROSS(ap, bp)) / area;
-
-    const total = UT.TO_FIXED_NUMBER(wa + wb + wc, 5);
-    if (total > 1) {
-      return Infinity;
-    }
-
-    // pour finir, nous déterminons la coordonnée 'y' grâce aux poids precedemment trouvés.
-    // celà est possible car : wa*HA + wb*HB = 0 et wa+wb*GH + wc*GC = 0.
-    const vert = a[1] + ((b[1] - a[1]) * (wb / (wa + wb)));
-    const elev = vert + ((c[1] - vert) * (wc / (wa + wb + wc)));
-    return UT.TO_FIXED_NUMBER(elev, 5);
-  }
-
-  // @todo: check on review (pass on vec2)
-  static VEC3_TRIANGLE_POINT_OUTSIDES(a: vec3, b: vec3, c: vec3, p: vec2): { ab: boolean, bc: boolean, ca: boolean } {
-    const ab = UT.VEC3_CREATE(b[0] - a[0], 0, b[2] - a[2]);
-    const bc = UT.VEC3_CREATE(c[0] - b[0], 0, c[2] - b[2]);
-    const ca = UT.VEC3_CREATE(a[0] - c[0], 0, a[2] - c[2]);
-    const ap = UT.VEC3_CREATE(p[0] - a[0], 0, p[1] - a[2]);
-    const bp = UT.VEC3_CREATE(p[0] - b[0], 0, p[1] - b[2]);
-    const cp = UT.VEC3_CREATE(p[0] - c[0], 0, p[1] - c[2]);
-    const crossAPAB = UT.VEC3_CROSS(ap, ab);
-    const crossBPBC = UT.VEC3_CROSS(bp, bc);
-    const crossCPCA = UT.VEC3_CROSS(cp, ca);
-    return {
-      ab: UT.TO_FIXED_NUMBER(crossAPAB[1], 5) > 0,
-      bc: UT.TO_FIXED_NUMBER(crossBPBC[1], 5) > 0,
-      ca: UT.TO_FIXED_NUMBER(crossCPCA[1], 5) > 0
-    }
-  }
-
-  // @todo: check on review (pass on vec2)
-  static VEC3_TRIANGLE_POINT_IS_INSIDE(a: vec3, b: vec3, c: vec3, p: vec2): boolean {
-    const sides = UT.VEC3_TRIANGLE_POINT_OUTSIDES(a, b, c, p);
-    return !sides.ab && !sides.bc && !sides.ca;
-  }
-
-  static VEC3_INSIDE_TRIANGLE(p: vec3, a: vec3, b: vec3, c: vec3, n: vec3): boolean {
-    const ab = UT.VEC3_SUBSTRACT(b, a);
-    const bc = UT.VEC3_SUBSTRACT(c, b);
-    const ca = UT.VEC3_SUBSTRACT(a, c);
-    const ap = UT.VEC3_SUBSTRACT(p, a);
-    const bp = UT.VEC3_SUBSTRACT(p, b);
-    const cp = UT.VEC3_SUBSTRACT(p, c);
-
-    const crossAPAB = UT.VEC3_CROSS(ab, ap);
-    if (UT.VEC3_DOT(crossAPAB, n) < UT.EPSILON) {
-      return false;
-    }
-
-    const crossBPBC = UT.VEC3_CROSS(bc, bp);
-    if (UT.VEC3_DOT(crossBPBC, n) < UT.EPSILON) {
-      return false;
-    }
-
-    const crossCPCA = UT.VEC3_CROSS(ca, cp);
-    if (UT.VEC3_DOT(crossCPCA, n) < UT.EPSILON) {
-      return false;
-    }
-
-    return true;
-  }
-
-  static VEC3_TRIANGLE_NORMAL(a: vec3, b: vec3, c: vec3, out: vec3 = [0, 0, 0]): vec3 {
-    const ab = UT.VEC3_SUBSTRACT(b, a);
-    const ac = UT.VEC3_SUBSTRACT(c, a);
-    return UT.VEC3_CROSS(ab, ac, out);
   }
 
   static VEC3_QUADRATIC_BEZIER(p0: vec3, p1: vec3, p2: vec3, t: number, out: vec3 = [0, 0, 0]): vec3 {
@@ -1060,19 +984,32 @@ class UT {
   /* COLLIDE */
   /**************************************************************************/
 
-  static COLLIDE_CIRCLE_TO_CIRCLE(c1: vec3, r1: number, c2: vec3, r2: number, outVelocity: vec2 = [0, 0]): boolean {
-    const delta = UT.VEC3_SUBSTRACT(c1, c2);
-    const distance = UT.VEC3_LENGTH(delta);
+  static COLLIDE_CIRCLE(c1: vec2, r1: number, c2: vec2, r2: number, outVelocity: vec2 = [0, 0]): boolean {
+    const delta = UT.VEC2_SUBSTRACT(c1, c2);
+    const distance = UT.VEC2_LENGTH(delta);
     const distanceMin = r1 + r2;
 
     if (distance > distanceMin) {
       return false;
     }
 
-    const c = Math.PI * 2 - (Math.PI * 2 - Math.atan2(delta[2], delta[0]));
+    const c = Math.PI * 2 - (Math.PI * 2 - Math.atan2(delta[1], delta[0]));
     outVelocity[0] = Math.cos(c) * (distanceMin - distance);
     outVelocity[1] = Math.sin(c) * (distanceMin - distance);
     return true;
+  }
+
+  static COLLIDE_CYLINDER(c1: vec3, r1: number, h1: number, c2: vec3, r2: number, h2: number, outVelocity: vec2 = [0, 0]): boolean {
+    let isCollide = UT.COLLIDE_CIRCLE([c1[0], c1[2]], r1, [c2[0], c2[2]], r2, outVelocity);
+    if (!isCollide) {
+      return false;
+    }
+
+    let min1 = c1[1];
+    let max1 = c1[1] + h1;
+    let min2 = c2[1];
+    let max2 = c2[1] + h2;
+    return min1 <= max2 && max1 >= min2;
   }
 
   static COLLIDE_POINT_TO_RECT(p: vec2, min: vec2, max: vec2): boolean {
@@ -1106,22 +1043,107 @@ class UT {
   }
 
   /**************************************************************************/
+  /* TRI */
+  /**************************************************************************/
+
+  static TRI2_POINT_INSIDE(p: vec2, a: vec2, b: vec2, c: vec2): number {
+    const ab = UT.VEC2_SUBSTRACT(b, a);
+    const bc = UT.VEC2_SUBSTRACT(c, b);
+    const ca = UT.VEC2_SUBSTRACT(a, c);
+    const ap = UT.VEC2_SUBSTRACT(p, a);
+    const bp = UT.VEC2_SUBSTRACT(p, b);
+    const cp = UT.VEC2_SUBSTRACT(p, c);
+
+    const crossAPAB = UT.VEC2_CROSS(ap, ab);
+    if (crossAPAB < UT.EPSILON) {
+      return -1;
+    }
+  
+    const crossBPBC = UT.VEC2_CROSS(bp, bc);
+    if (crossBPBC < UT.EPSILON) {
+      return -2;
+    }
+
+    const crossCPCA = UT.VEC2_CROSS(cp, ca);
+    if (crossCPCA < UT.EPSILON) {
+      return -3;
+    }
+
+    return 1;
+  }
+
+  static TRI3_NORMAL(a: vec3, b: vec3, c: vec3, out: vec3 = [0, 0, 0]): vec3 {
+    const ab = UT.VEC3_SUBSTRACT(b, a);
+    const ac = UT.VEC3_SUBSTRACT(c, a);
+    return UT.VEC3_CROSS(ab, ac, out);
+  }
+
+  static TRI3_POINT_INSIDE(p: vec3, a: vec3, b: vec3, c: vec3, n?: vec3): boolean {
+    if (!n) {
+      n = UT.TRI3_NORMAL(a, b, c);
+    }
+
+    const ab = UT.VEC3_SUBSTRACT(b, a);
+    const bc = UT.VEC3_SUBSTRACT(c, b);
+    const ca = UT.VEC3_SUBSTRACT(a, c);
+    const ap = UT.VEC3_SUBSTRACT(p, a);
+    const bp = UT.VEC3_SUBSTRACT(p, b);
+    const cp = UT.VEC3_SUBSTRACT(p, c);
+
+    const crossAPAB = UT.VEC3_CROSS(ab, ap);
+    if (UT.VEC3_DOT(crossAPAB, n) < UT.EPSILON) {
+      return false;
+    }
+
+    const crossBPBC = UT.VEC3_CROSS(bc, bp);
+    if (UT.VEC3_DOT(crossBPBC, n) < UT.EPSILON) {
+      return false;
+    }
+
+    const crossCPCA = UT.VEC3_CROSS(ca, cp);
+    if (UT.VEC3_DOT(crossCPCA, n) < UT.EPSILON) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static TRI3_POINT_ELEVATION(p: vec2, a: vec3, b: vec3, c: vec3): number {
+    const ab = UT.VEC3_CREATE(b[0] - a[0], 0, b[2] - a[2]);
+    const ca = UT.VEC3_CREATE(a[0] - c[0], 0, a[2] - c[2]);
+    const ap = UT.VEC3_CREATE(p[0] - a[0], 0, p[1] - a[2]);
+    const bp = UT.VEC3_CREATE(p[0] - b[0], 0, p[1] - b[2]);
+    const cp = UT.VEC3_CREATE(p[0] - c[0], 0, p[1] - c[2]);
+
+    const area = UT.VEC3_LENGTH(UT.VEC3_CROSS(ab, ca));
+    const wa = UT.VEC3_LENGTH(UT.VEC3_CROSS(bp, cp)) / area;
+    const wb = UT.VEC3_LENGTH(UT.VEC3_CROSS(ap, cp)) / area;
+    const wc = UT.VEC3_LENGTH(UT.VEC3_CROSS(ap, bp)) / area;
+    if (wa + wb + wc > 1 + UT.BIG_EPSILON) {
+      return Infinity;
+    }
+
+    // nous déterminons la coordonnée 'y' grâce aux poids precedemment trouvés.
+    // celà est possible car : wa*HA + wb*HB = 0 et wa+wb*GH + wc*GC = 0.
+    const vert = a[1] + ((b[1] - a[1]) * (wb / (wa + wb)));
+    const elev = vert + ((c[1] - vert) * (wc / (wa + wb + wc)));
+    return elev;
+  }
+
+  /**************************************************************************/
   /* RAY */
   /**************************************************************************/
 
   static RAY_TRIANGLE(origin: vec3, dir: vec3, a: vec3, b: vec3, c: vec3, culling: boolean = false, outIntersectPoint: vec3 = [0, 0, 0]): boolean {
-    const ab = UT.VEC3_SUBSTRACT(b, a);
-    const ac = UT.VEC3_SUBSTRACT(c, a);
-    const n = UT.VEC3_CROSS(ab, ac);
-
-    if (!UT.RAY_PLAN(origin, dir, a, b, c, n, culling, outIntersectPoint)) {
+    const n = UT.TRI3_NORMAL(a, b, c);
+    if (!UT.RAY_PLAN(origin, dir, a, n, culling, outIntersectPoint)) {
       return false;
     }
 
-    return UT.VEC3_INSIDE_TRIANGLE(outIntersectPoint, a, b, c, n);
+    return UT.TRI3_POINT_INSIDE(outIntersectPoint, a, b, c, n);
   }
 
-  static RAY_PLAN(origin: vec3, dir: vec3, a: vec3, b: vec3, c: vec3, n: vec3, culling: boolean, outIntersectPoint: vec3 = [0, 0, 0]): boolean {
+  static RAY_PLAN(origin: vec3, dir: vec3, a: vec3, n: vec3, culling: boolean, outIntersectPoint: vec3 = [0, 0, 0]): boolean {
     const s = UT.VEC3_DOT(dir, n);
     if (culling && s >= 0) {
       return false;
@@ -1210,60 +1232,4 @@ class UT {
   }
 }
 
-class TweenAbstract<T> {
-  times: Array<number>;
-  values: Array<T>;
-  fns: Array<Function>;
-  defaultFn: Function;
-
-  constructor(times: Array<number>, values: Array<T>, defaultFn: Function, fns: Array<Function> = []) {
-    this.times = times;
-    this.values = values;
-    this.fns = fns;
-    this.defaultFn = defaultFn;
-  }
-
-  interpolate(t: number): T {
-    let i = 0;
-    let n = this.times.length;
-
-    while (i < n && t > this.times[i]) i++;
-    if (i == 0) return this.values[0];
-    if (i == n) return this.values[n - 1];
-
-    const beginValue = this.values[i - 1];
-    const endValue = this.values[i];
-    const currentT = t - this.times[i - 1];
-    const currentDuration = this.times[i] - this.times[i - 1];
-
-    if (this.fns[i]) {
-      return this.fns[i](currentT, beginValue, endValue, currentDuration);
-    }
-
-    return this.defaultFn(currentT, beginValue, endValue, currentDuration);
-  }
-
-  isEmpty(): boolean {
-    return this.times.length == 0 || this.values.length == 0;
-  }
-}
-
-class TweenNumber extends TweenAbstract<number> {
-  constructor(times: Array<number> = [], values: Array<number> = []) {
-    super(times, values, UT.LINEAR);
-  }
-}
-
-class TweenVEC2 extends TweenAbstract<vec2> {
-  constructor(times: Array<number> = [], values: Array<vec2> = []) {
-    super(times, values, UT.LINEAR_VEC2);
-  }
-}
-
-class TweenVEC3 extends TweenAbstract<vec3> {
-  constructor(times: Array<number> = [], values: Array<vec3> = []) {
-    super(times, values, UT.LINEAR_VEC3);
-  }
-}
-
-export { UT, TweenNumber, TweenVEC2, TweenVEC3 };
+export { UT };

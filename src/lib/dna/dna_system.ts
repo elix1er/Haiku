@@ -1,4 +1,4 @@
-import { DNAComponent } from "./dna_component";
+import { DNAComponent } from './dna_component';
 
 class DNASystem {
   entities: Array<number>;
@@ -13,7 +13,7 @@ class DNASystem {
     this.onBeforeUpdate(ts);
 
     for (const entity of this.entities) {
-      this.onUpdate(ts, entity);
+      this.onEntityUpdate(ts, entity);
     }
 
     this.onAfterUpdate(ts);
@@ -24,6 +24,7 @@ class DNASystem {
       throw new Error('DNASystem::bindEntity(): Entity already exist in this system');
     }
 
+    this.onEntityBind(index);
     this.entities.push(index);
   }
 
@@ -32,6 +33,7 @@ class DNASystem {
       throw new Error('DNASystem::unbindEntity(): Entity not exist in this system');
     }
 
+    this.onEntityUnbind(index);
     this.entities.splice(this.entities.indexOf(index), 1);
   }
 
@@ -57,16 +59,32 @@ class DNASystem {
     return true;
   }
 
+  onAction(actionId: string): void {
+    // virtual method called when action occured !
+  }
+
+  onActionOnce(actionId: string): void {
+    // virtual method called when action occured once !
+  }
+
   onBeforeUpdate(ts: number): void {
     // virtual method called during before update phase !
   }
 
-  onUpdate(ts:number, entity: number): void {
+  onEntityUpdate(ts:number, entity: number): void {
     // virtual method called during update phase !
   }
 
   onAfterUpdate(ts: number): void {
     // virtual method called during after update phase !
+  }
+
+  onEntityBind(entity: number): void {
+    // virtual method called during entity binding !
+  }
+
+  onEntityUnbind(entity: number): void {
+    // virtual method called during entity unbinding !
   }
 }
 

@@ -29,7 +29,7 @@ Once installation is done, let's build our first project.
 
 ```
 // create your haiku project
-# npm i create-haiku your_project_name
+# npx create-haiku your_project_name
 
 // now, you can start with
 # npm run dev

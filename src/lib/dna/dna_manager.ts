@@ -32,6 +32,12 @@ class DNAManager {
     }
   }
 
+  draw(): void {
+    for (const system of this.systems) {
+      system.draw();
+    }
+  }
+  
   setup(systems: Array<DNASystem>): void {
     this.entities.clear();
     this.systems = systems;

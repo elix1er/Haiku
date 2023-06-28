@@ -19,6 +19,12 @@ class DNASystem {
     this.onAfterUpdate(ts);
   }
 
+  draw(): void {
+    for (const entity of this.entities) {
+      this.onEntityDraw(entity);
+    }
+  }
+  
   bindEntity(index: number): void {
     if (this.entities.indexOf(index) != -1) {
       throw new Error('DNASystem::bindEntity(): Entity already exist in this system');
@@ -79,6 +85,10 @@ class DNASystem {
     // virtual method called during after update phase !
   }
 
+  onEntityDraw(entity: number): void {
+    // virtual method called during draw phase !
+  }
+  
   onEntityBind(entity: number): void {
     // virtual method called during entity binding !
   }

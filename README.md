@@ -57,7 +57,7 @@ If you have a suggestion that would make this better, please fork the repo and c
 4. Push to the Branch (git push origin new_feature)
 5. Open a Pull Request
 
-## Some parts taken from this work
+## Some parts taken for this work
 - Use DOM for UI elements
 - Use human readable custom format for all graphics stuff
 - No physics engine, we assume if you need one there is many pretty lib for that like ammo.js or canon.js

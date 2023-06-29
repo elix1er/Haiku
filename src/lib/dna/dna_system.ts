@@ -1,12 +1,12 @@
 import { DNAComponent } from './dna_component';
 
 class DNASystem {
-  entities: Array<number>;
-  requiredComponentTypenames: Array<string>;
+  entities: Set<number>;
+  requiredComponentTypenames: Set<string>;
 
   constructor() {
-    this.entities = [];
-    this.requiredComponentTypenames = [];
+    this.entities = new Set<number>();
+    this.requiredComponentTypenames = new Set<string>();
   }
 
   update(ts: number): void {
@@ -37,44 +37,47 @@ class DNASystem {
     }
   }
 
-  bindEntity(index: number): void {
-    if (this.entities.indexOf(index) != -1) {
+  bindEntity(entity: number): void {
+    if (this.entities.has(entity)) {
       throw new Error('DNASystem::bindEntity(): Entity already exist in this system');
     }
 
-    this.onEntityBind(index);
-    this.entities.push(index);
+    this.onEntityBind(entity);
+    this.entities.add(entity);
   }
 
-  unbindEntity(index: number): void {
-    if (this.entities.indexOf(index) == -1) {
+  unbindEntity(entity: number): void {
+    if (!this.entities.has(entity)) {
       throw new Error('DNASystem::unbindEntity(): Entity not exist in this system');
     }
 
-    this.onEntityUnbind(index);
-    this.entities.splice(this.entities.indexOf(index), 1);
+    this.onEntityUnbind(entity);
+    this.entities.delete(entity);
   }
 
-  hasEntity(index: number): boolean {
-    return this.entities.indexOf(index) != -1;
+  hasEntity(entity: number): boolean {
+    return this.entities.has(entity);
   }
 
   addRequiredComponentTypename(typename: string): void {
-    if (this.requiredComponentTypenames.indexOf(typename) != -1) {
+    if (this.requiredComponentTypenames.has(typename)) {
       throw new Error('DNASystem::addRequiredComponentTypename(): Required typename already set in this system');
     }
 
-    this.requiredComponentTypenames.push(typename);
+    this.requiredComponentTypenames.add(typename);
   }
 
-  isMatchingComponentRequirements(components: Array<DNAComponent>): boolean {
-    for (const typename of this.requiredComponentTypenames) {
-      if (!components.find(c => c.getTypename() == typename)) {
-        return false;
+  isMatchingComponentRequirements(components: IterableIterator<DNAComponent>): boolean {
+    let numRequiredComponents = this.requiredComponentTypenames.size;
+    let numMatchingComponents = 0;
+
+    for (const component of components) {
+      if (this.requiredComponentTypenames.has(component.getTypename())) {
+        numMatchingComponents++;
       }
     }
 
-    return true;
+    return numMatchingComponents == numRequiredComponents;
   }
 
   onAction(actionId: string, entity: number): void {

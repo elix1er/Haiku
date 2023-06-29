@@ -5,12 +5,12 @@ import { DNASystem } from './dna_system';
 
 class DNAManager {
   entityIndex: number;
-  entities: Map<number, Array<DNAComponent>>;
+  entities: Map<number, Map<string, DNAComponent>>;
   systems: Array<DNASystem>;
 
   constructor() {
     this.entityIndex = 0;
-    this.entities = new Map<number, Array<DNAComponent>>();
+    this.entities = new Map<number, Map<string, DNAComponent>>();
     this.systems = [];
 
     eventManager.subscribe(inputManager, 'E_ACTION', this, (data: any) => {
@@ -44,11 +44,11 @@ class DNAManager {
   }
 
   createEntity(): number {
-    this.entities.set(this.entityIndex, []);
+    this.entities.set(this.entityIndex, new Map<string, DNAComponent>());
     return this.entityIndex++;
   }
 
-  getEntity(index: number): Array<DNAComponent> {
+  getEntity(index: number): Map<string, DNAComponent> {
     const found = this.entities.get(index);
     if (!found) {
       throw new Error('DNAManager::getEntity(): Entity not found');
@@ -79,8 +79,8 @@ class DNAManager {
   findEntities(componentTypeName: string): Array<number> {
     const entities = Array<number>();
 
-    for (let entity of this.entities.keys()) {
-      if (this.hasComponent(entity, componentTypeName)) {
+    for (let [entity, components] of this.entities) {
+      if (components.has(componentTypeName)) {
         entities.push(entity);
       }
     }
@@ -89,8 +89,8 @@ class DNAManager {
   }
 
   findEntity(componentTypeName: string): number {
-    for (let entity of this.entities.keys()) {
-      if (this.hasComponent(entity, componentTypeName)) {
+    for (let [entity, components] of this.entities) {
+      if (components.has(componentTypeName)) {
         return entity;
       }
     }
@@ -98,53 +98,53 @@ class DNAManager {
     return -1;
   }
 
-  addComponent(index: number, component: DNAComponent): void {
-    const entity = this.entities.get(index);
-    if (!entity) {
+  addComponent(entity: number, component: DNAComponent): void {
+    const components = this.entities.get(entity);
+    if (!components) {
       throw new Error('DNAManager::addComponent(): Entity not found');
     }
 
-    const found = entity.find(c => c.getTypename() == component.getTypename());
+    const found = components.has(component.getTypename());
     if (found) {
-      throw new Error('ECSEntity::addComponent(): Entity already has ' + component.typename);
+      throw new Error('ECSEntity::addComponent(): Entity already has ' + component.getTypename());
     }
 
-    entity.push(component);
+    components.set(component.getTypename(), component);
 
     for (const system of this.systems) {
-      if (system.isMatchingComponentRequirements(entity) && !system.hasEntity(index)) {
-        system.bindEntity(index);
+      if (system.isMatchingComponentRequirements(components.values()) && !system.hasEntity(entity)) {
+        system.bindEntity(entity);
       }
     }
   }
 
-  removeComponent(index: number, typename: string): void {
-    const entity = this.entities.get(index);
-    if (!entity) {
+  removeComponent(entity: number, typename: string): void {
+    const components = this.entities.get(entity);
+    if (!components) {
       throw new Error('DNAManager::removeComponent(): Entity not found');
     }
 
-    const found = entity.find(c => c.getTypename() == typename);
+    const found = components.has(typename);
     if (!found) {
       throw new Error('DNAManager::removeComponent(): Entity has not ' + typename);
     }
 
-    entity.splice(entity.indexOf(found), 1);
+    components.delete(typename);
 
     for (const system of this.systems) {
-      if (!system.isMatchingComponentRequirements(entity) && system.hasEntity(index)) {
-        system.unbindEntity(index);
+      if (!system.isMatchingComponentRequirements(components.values()) && system.hasEntity(entity)) {
+        system.unbindEntity(entity);
       }
     }
   }
 
-  getComponent(index: number, typename: string): DNAComponent {
-    const entity = this.entities.get(index);
-    if (!entity) {
+  getComponent(entity: number, typename: string): DNAComponent {
+    const components = this.entities.get(entity);
+    if (!components) {
       throw new Error('DNAManager::getComponent(): Entity not found');
     }
 
-    const found = entity.find(c => c.getTypename() == typename);
+    const found = components.get(typename);
     if (!found) {
       throw new Error('DNAManager::getComponent(): Entity has not ' + typename);
     }
@@ -152,14 +152,13 @@ class DNAManager {
     return found;
   }
 
-  hasComponent(index: number, typename: string): boolean {
-    const entity = this.entities.get(index);
-    if (!entity) {
+  hasComponent(entity: number, typename: string): boolean {
+    const components = this.entities.get(entity);
+    if (!components) {
       throw new Error('DNAManager::hasComponent(): Entity not found');
     }
 
-    const found = entity.find(c => c.getTypename() == typename);
-    return found ? true : false;
+    return components.has(typename);
   }
 }
 

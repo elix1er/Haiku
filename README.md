@@ -2,12 +2,12 @@
     <img src="https://raw.githubusercontent.com/jay19240/WebStationX/main/public/textures/banner.jpg" alt="logo"/>
 </p>
 
-![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.7-blue)
+![Drag Racing](https://img.shields.io/badge/lang-typescript-f39f37) ![Drag Racing](https://img.shields.io/badge/version-1.0.8-blue)
 
 **Haiku** is video game engine based on WebGPU written in Typescript.   
 We provide a simple, pragmatic and lightweight development kit to build web games with high performance.  
 Our priority is to eliminate black boxes and giving a maximum control to the user.  
-Important note: This engine comes with a dozen of diverse and varied examples.
+Important note: This engine comes with a dozen of diverse and varied examples [here](https://jay19240.github.io/).
 
 ## General features
 - 👾 2D - Sprite, tilemap with animations

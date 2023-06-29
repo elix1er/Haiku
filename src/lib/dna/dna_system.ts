@@ -24,7 +24,19 @@ class DNASystem {
       this.onEntityDraw(entity);
     }
   }
-  
+
+  action(actionId: string): void {
+    for (const entity of this.entities) {
+      this.onAction(actionId, entity);
+    }
+  }
+
+  actionOnce(actionId: string): void {
+    for (const entity of this.entities) {
+      this.onActionOnce(actionId, entity);
+    }
+  }
+
   bindEntity(index: number): void {
     if (this.entities.indexOf(index) != -1) {
       throw new Error('DNASystem::bindEntity(): Entity already exist in this system');
@@ -65,11 +77,11 @@ class DNASystem {
     return true;
   }
 
-  onAction(actionId: string): void {
+  onAction(actionId: string, entity: number): void {
     // virtual method called when action occured !
   }
 
-  onActionOnce(actionId: string): void {
+  onActionOnce(actionId: string, entity: number): void {
     // virtual method called when action occured once !
   }
 
@@ -88,7 +100,7 @@ class DNASystem {
   onEntityDraw(entity: number): void {
     // virtual method called during draw phase !
   }
-  
+
   onEntityBind(entity: number): void {
     // virtual method called during entity binding !
   }

@@ -15,13 +15,13 @@ class DNAManager {
 
     eventManager.subscribe(inputManager, 'E_ACTION', this, (data: any) => {
       for (let system of this.systems) {
-        system.onAction(data.actionId);
+        system.action(data.actionId);
       }
     });
 
     eventManager.subscribe(inputManager, 'E_ACTION_ONCE', this, (data: any) => {
       for (let system of this.systems) {
-        system.onActionOnce(data.actionId);
+        system.actionOnce(data.actionId);
       }
     });
   }
@@ -37,7 +37,7 @@ class DNAManager {
       system.draw();
     }
   }
-  
+
   setup(systems: Array<DNASystem>): void {
     this.entities.clear();
     this.systems = systems;
@@ -74,6 +74,28 @@ class DNAManager {
 
   hasEntity(index: number): boolean {
     return this.entities.has(index);
+  }
+
+  findEntities(componentTypeName: string): Array<number> {
+    const entities = Array<number>();
+
+    for (let entity of this.entities.keys()) {
+      if (this.hasComponent(entity, componentTypeName)) {
+        entities.push(entity);
+      }
+    }
+
+    return entities;
+  }
+
+  findEntity(componentTypeName: string): number {
+    for (let entity of this.entities.keys()) {
+      if (this.hasComponent(entity, componentTypeName)) {
+        return entity;
+      }
+    }
+
+    return -1;
   }
 
   addComponent(index: number, component: DNAComponent): void {

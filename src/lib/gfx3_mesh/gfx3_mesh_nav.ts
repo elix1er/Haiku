@@ -127,7 +127,10 @@ class Gfx3MeshNav {
 
     const footElevation = aabb.min[1];
     const elevation = GET_ELEVATION(floorFrags, [center[0] + res.move[0], center[1], center[2] + res.move[2]]);
+    console.log(elevation);
+
     if (elevation != Infinity) {
+
       res.collideFloor = true;
       res.move[1] = elevation - footElevation;
     }

@@ -72,6 +72,8 @@ If you have a suggestion that would make this better, please fork the repo and c
 ## First todo-list
 - Lens flare renderer
 - Sun renderer
+- Quaternion
+- Fog
 - Vertex Color Multiplier (Owner: me, Delay: N/A)
 - Add converter bsp -> grid for pathfinding (Owner: thetinyspark, Delay: 1 Mounth)
 - Add jumps in fps sample

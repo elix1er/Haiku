@@ -3,14 +3,40 @@ import { gfx2Manager } from './gfx2_manager';
 class Gfx2Drawable {
   position: vec2;
   rotation: number;
+  scale: vec2;
   offset: vec2;
   visible: boolean;
 
   constructor() {
     this.position = [0, 0];
     this.rotation = 0;
+    this.scale = [1, 1];
     this.offset = [0, 0];
     this.visible = true;
+  }
+
+  draw(): void {
+    if (!this.visible) {
+      return;
+    }
+
+    const ctx = gfx2Manager.getContext();
+
+    ctx.save();
+    ctx.translate(-this.offset[0], -this.offset[1]);
+    ctx.translate(this.position[0], this.position[1]);
+    ctx.rotate(this.rotation);
+    ctx.scale(this.scale[0], this.scale[1]);
+    this.paint();
+    ctx.restore();
+  }
+
+  update(ts: number): void {
+    // virtual method called during update phase !
+  }
+
+  paint() {
+    // virtual method called during draw phase !
   }
 
   getPosition(): vec2 {
@@ -38,6 +64,23 @@ class Gfx2Drawable {
     this.rotation = rotation;
   }
 
+  getScale(): vec2 {
+    return this.scale;
+  }
+
+  getScaleX(): number {
+    return this.scale[0];
+  }
+
+  getScaleY(): number {
+    return this.scale[1];
+  }
+
+  setScale(x: number, y: number): void {
+    this.scale[0] = x;
+    this.scale[1] = y;
+  }
+
   getOffset(): vec2 {
     return this.offset;
   }
@@ -61,29 +104,6 @@ class Gfx2Drawable {
 
   setVisible(visible: boolean): void {
     this.visible = visible;
-  }
-
-  draw(): void {
-    if (!this.visible) {
-      return;
-    }
-
-    const ctx = gfx2Manager.getContext();
-
-    ctx.save();
-    ctx.translate(-this.offset[0], -this.offset[1]);
-    ctx.translate(this.position[0], this.position[1]);
-    ctx.rotate(this.rotation);
-    this.paint();
-    ctx.restore();
-  }
-
-  update(ts: number): void {
-    // virtual method called during update phase !
-  }
-
-  paint() {
-    // virtual method called during draw phase !
   }
 }
 

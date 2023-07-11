@@ -16,6 +16,7 @@ interface JASAnimation {
 }
 
 class Gfx2SpriteJAS extends Gfx2Drawable {
+  flip: [boolean, boolean];
   animations: Array<JASAnimation>;
   texture: ImageBitmap | HTMLImageElement;
   currentAnimation: JASAnimation | null;
@@ -25,20 +26,13 @@ class Gfx2SpriteJAS extends Gfx2Drawable {
 
   constructor() {
     super();
+    this.flip = [false, false];
     this.animations = [];
     this.texture = gfx2Manager.getDefaultTexture();
     this.currentAnimation = null;
     this.currentAnimationFrameIndex = 0;
-    this.isLooped = false;
+    this.isLooped = false;    
     this.frameProgress = 0;
-  }
-
-  getTexture(): ImageBitmap | HTMLImageElement {
-    return this.texture;
-  }
-
-  setTexture(texture: ImageBitmap): void {
-    this.texture = texture;
   }
 
   update(ts: number): void {
@@ -70,14 +64,15 @@ class Gfx2SpriteJAS extends Gfx2Drawable {
     const ctx = gfx2Manager.getContext();
     const currentFrame = this.currentAnimation.frames[this.currentAnimationFrameIndex];
 
+    ctx.scale(this.flip[0] ? -1 : 1, this.flip[1] ? -1 : 1);
     ctx.drawImage(
       this.texture,
       currentFrame.x,
       currentFrame.y,
       currentFrame.width,
       currentFrame.height,
-      0,
-      0,
+      this.flip[0] ? currentFrame.width * -1 : 0,
+      this.flip[1] ? currentFrame.height * -1 : 0,
       currentFrame.width,
       currentFrame.height
     );
@@ -126,6 +121,26 @@ class Gfx2SpriteJAS extends Gfx2Drawable {
     this.currentAnimation = null;
     this.currentAnimationFrameIndex = 0;
     this.frameProgress = 0;
+  }
+
+  getFlip(): [boolean, boolean] {
+    return this.flip;
+  }
+
+  setFlipX(x: boolean): void {
+    this.flip[0] = x;
+  }
+
+  setFlipY(y: boolean): void {
+    this.flip[1] = y;
+  }
+
+  getTexture(): ImageBitmap | HTMLImageElement {
+    return this.texture;
+  }
+
+  setTexture(texture: ImageBitmap): void {
+    this.texture = texture;
   }
 }
 

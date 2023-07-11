@@ -77,14 +77,18 @@ class Gfx3SpriteJAS extends Gfx3Sprite {
     const uy = (currentFrame.y / this.texture.gpuTexture.height);
     const vx = (currentFrame.x + currentFrame.width) / this.texture.gpuTexture.width;
     const vy = (currentFrame.y + currentFrame.height) / this.texture.gpuTexture.height;
+    const fux = this.flip[0] ? 1 - ux : ux;
+    const fuy = this.flip[1] ? 1 - uy : uy;
+    const fvx = this.flip[0] ? 1 - vx : vx;
+    const fvy = this.flip[1] ? 1 - vy : vy;
 
     this.beginVertices(6);
-    this.defineVertex(minX, maxY, 0, ux, uy);
-    this.defineVertex(minX, minY, 0, ux, vy);
-    this.defineVertex(maxX, minY, 0, vx, vy);
-    this.defineVertex(maxX, minY, 0, vx, vy);
-    this.defineVertex(maxX, maxY, 0, vx, uy);
-    this.defineVertex(minX, maxY, 0, ux, uy);
+    this.defineVertex(minX, maxY, 0, fux, fuy);
+    this.defineVertex(minX, minY, 0, fux, fvy);
+    this.defineVertex(maxX, minY, 0, fvx, fvy);
+    this.defineVertex(maxX, minY, 0, fvx, fvy);
+    this.defineVertex(maxX, maxY, 0, fvx, fuy);
+    this.defineVertex(minX, maxY, 0, fux, fuy);
     this.endVertices();
 
     if (this.frameProgress >= this.currentAnimation.frameDuration) {

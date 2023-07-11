@@ -7,6 +7,7 @@ import { SHADER_VERTEX_ATTR_COUNT } from './gfx3_sprite_shader';
 
 class Gfx3Sprite extends Gfx3Drawable {
   offset: vec2;
+  flip: [boolean, boolean];
   pixelsPerUnit: number;
   billboardMode: boolean;
   texture: Gfx3Texture;
@@ -16,6 +17,7 @@ class Gfx3Sprite extends Gfx3Drawable {
   constructor() {
     super(SHADER_VERTEX_ATTR_COUNT);
     this.offset = [0, 0];
+    this.flip = [false, false];
     this.pixelsPerUnit = 100;
     this.billboardMode = false;
 
@@ -57,6 +59,18 @@ class Gfx3Sprite extends Gfx3Drawable {
 
   setOffset(offsetX: number, offsetY: number): void {
     this.offset = [offsetX, offsetY];
+  }
+
+  getFlip(): [boolean, boolean] {
+    return this.flip;
+  }
+
+  setFlipX(x: boolean): void {
+    this.flip[0] = x;
+  }
+
+  setFlipY(y: boolean): void {
+    this.flip[1] = y;
   }
 
   getPixelsPerUnit(): number {

@@ -138,6 +138,15 @@ class DNAManager {
     }
   }
 
+  removeComponentIfExist(entity: number, typename: string): boolean {
+    if (this.hasComponent(entity, typename)) {
+      this.removeComponent(entity, typename);
+      return true;
+    }
+
+    return false;
+  }
+  
   getComponent(entity: number, typename: string): DNAComponent {
     const components = this.entities.get(entity);
     if (!components) {
